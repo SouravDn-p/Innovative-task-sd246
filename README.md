@@ -1,101 +1,36 @@
-# 💡 Innovative Task Earn
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-A professional **Task & Earning Platform** with **role-based access control** designed for scalability, security, and smooth user experience.  
-The platform allows users to complete tasks, earn rewards, advertisers to launch campaigns, and admins/managers to oversee the system efficiently.  
+## Getting Started
 
----
+First, run the development server:
 
-## 🚀 Features
-
-### 👑 Super Admin
-- Manage all **users, tasks, advertisements, payouts, team members, and platform settings**.  
-- Assign or revoke manager roles to ensure secure delegation.  
-- Access **comprehensive analytics & monitoring dashboards**.  
-
-### 🛠️ Manager Roles (Assignable)
-- **Task Manager** → Create, verify, and monitor tasks.  
-- **Payout Manager** → Handle withdrawal requests, approve payouts, manage wallet transactions.  
-- **Advertiser Manager** → Approve & review ad campaigns.  
-- **KYC/Fraud Manager** → Approve/reject KYC submissions, flag suspicious activity.  
-- **Support Agent** → Resolve tickets, disputes, and user complaints.  
-- **Analyst (Read-Only)** → Access reports, insights, and analytics without editing rights.  
-
-### 📢 Advertiser
-- Create and manage **ad campaigns**.  
-- Track campaign **performance reports** in real time.  
-- **Top-up wallet** using integrated payment gateways.  
-
-### 🙋 User
-- **Complete tasks** and earn money or rewards.  
-- **Refer & invite friends** for referral bonuses.  
-- Manage **wallet**: deposit, withdraw, and track transactions.  
-- Must complete **KYC verification** to withdraw.  
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend** → [Next.js](https://nextjs.org/) + [React](https://react.dev/)  
-- **Styling** → [Tailwind CSS](https://tailwindcss.com/)  
-- **State Management** → Redux Toolkit / RTK Query  
-- **Backend** → Node.js + Express.js  
-- **Database** → MongoDB  
-- **Authentication** → JWT / NextAuth  
-- **Payments** → Stripe / PayPal Integration  
-- **Deployment** → Vercel (Frontend) + Render/Railway (Backend)  
-
----
-
-
----
-
-## ⚡ Getting Started
-
-### 🔧 Prerequisites
-- Node.js (>= 18)  
-- MongoDB Atlas / Local MongoDB  
-- Git & npm/yarn  
-
-### 🔨 Installation
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/innovative-task-earn.git
-
-# Navigate into project
-cd innovative-task-earn
-
-# Install dependencies for frontend
-cd frontend
-npm install
-
-# Install dependencies for backend
-cd ../backend
-npm install
-
-
-# Innovative Task Earn
-
-Running the Project
-# Start backend server
-cd backend
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-# Start frontend server
-cd frontend
-npm run dev
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-App will be available at:
-👉 http://localhost:3000
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Learn More
 
+To learn more about Next.js, take a look at the following resources:
 
-👨‍💻 Author
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Sourav Debnath
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-🌐 Portfolio
+## Deploy on Vercel
 
-📧 Email: sdsouravdebnath26@gmail.com
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-💼 Passionate Web Developer | MERN & Next.js Enthusiast
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
