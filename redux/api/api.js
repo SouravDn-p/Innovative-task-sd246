@@ -87,6 +87,13 @@ export const api = createApi({
       }),
       invalidatesTags: ["Task"],
     }),
+    submitTaskProof: builder.mutation({
+      query: ({ taskId, proof }) => ({
+        url: `/tasks/${taskId}/proof`,
+        method: "POST",
+        body: { proof }, // proof = image url / text etc
+      }),
+    }),
     // Referral Endpoints
     getReferrals: builder.query({
       query: () => "referrals/my",
@@ -95,6 +102,11 @@ export const api = createApi({
     // Referral Management Endpoints
     getAllReferrals: builder.query({
       query: () => "referrals",
+      providesTags: ["Referral"],
+    }),
+
+    getReferralStats: builder.query({
+      query: () => "referrals/stats", // ✅ stats API route
       providesTags: ["Referral"],
     }),
     // Wallet Endpoints
@@ -216,6 +228,20 @@ export const api = createApi({
       }),
       invalidatesTags: ["Blog"],
     }),
+
+    // Task Submissions Endpoints
+    getTaskSubmissions: builder.query({
+      query: () => "task-submissions", // adjust this to your API route
+      providesTags: ["Task"],
+    }),
+    reviewTaskSubmission: builder.mutation({
+      query: ({ submissionId, status }) => ({
+        url: `task-submissions/${submissionId}/review`, // adjust API route
+        method: "PUT",
+        body: { status },
+      }),
+      invalidatesTags: ["Task"],
+    }),
   }),
 });
 
@@ -234,10 +260,12 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
+  useSubmitTaskProofMutation,
 
   // Referral hooks
   useGetReferralsQuery,
   useGetAllReferralsQuery,
+  useGetReferralStatsQuery,
 
   // Wallet hooks
   useGetWalletQuery,
@@ -265,4 +293,8 @@ export const {
   useCreateBlogMutation,
   useUpdateBlogMutation,
   useDeleteBlogMutation,
+
+  // Task Submissions hooks
+  useGetTaskSubmissionsQuery,
+  useReviewTaskSubmissionMutation,
 } = api;

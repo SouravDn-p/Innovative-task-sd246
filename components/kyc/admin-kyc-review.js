@@ -1,11 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +26,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { CheckCircle, X, Eye, Clock, AlertTriangle, FileText, User, Calendar, CreditCard, Download } from "lucide-react"
+} from "@/components/ui/dialog";
+import {
+  CheckCircle,
+  X,
+  Eye,
+  Clock,
+  AlertTriangle,
+  FileText,
+  User,
+  Calendar,
+  CreditCard,
+  Download,
+} from "lucide-react";
 
 export function AdminKYCReview({ userRole }) {
-  const [selectedApplication, setSelectedApplication] = useState(null)
-  const [reviewNotes, setReviewNotes] = useState("")
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [reviewNotes, setReviewNotes] = useState("");
 
   const kycApplications = [
     {
@@ -78,45 +102,45 @@ export function AdminKYCReview({ userRole }) {
       priority: "high",
       assignedTo: "Admin User",
     },
-  ]
+  ];
 
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "under_review":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "approved":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "rejected":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       case "normal":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "low":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
       default:
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
     }
-  }
+  };
 
   const handleApprove = (applicationId) => {
-    console.log("Approving KYC:", applicationId, "Notes:", reviewNotes)
-  }
+    console.log("Approving KYC:", applicationId, "Notes:", reviewNotes);
+  };
 
   const handleReject = (applicationId) => {
-    console.log("Rejecting KYC:", applicationId, "Notes:", reviewNotes)
-  }
+    console.log("Rejecting KYC:", applicationId, "Notes:", reviewNotes);
+  };
 
-  const canReviewKYC = userRole === "super_admin" || userRole === "kyc_manager"
+  const canReviewKYC = userRole === "admin" || userRole === "kyc_manager";
 
   if (!canReviewKYC) {
     return (
@@ -125,11 +149,13 @@ export function AdminKYCReview({ userRole }) {
           <CardContent className="p-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
             <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground">You don&apos;t have permission to access KYC review features.</p>
+            <p className="text-muted-foreground">
+              You don&apos;t have permission to access KYC review features.
+            </p>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -137,14 +163,21 @@ export function AdminKYCReview({ userRole }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">KYC Review</h1>
-          <p className="text-muted-foreground">Review and approve user KYC applications</p>
+          <p className="text-muted-foreground">
+            Review and approve user KYC applications
+          </p>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="bg-yellow-50">
-            {kycApplications.filter((app) => app.status === "pending").length} Pending
+            {kycApplications.filter((app) => app.status === "pending").length}{" "}
+            Pending
           </Badge>
           <Badge variant="outline" className="bg-blue-50">
-            {kycApplications.filter((app) => app.status === "under_review").length} Under Review
+            {
+              kycApplications.filter((app) => app.status === "under_review")
+                .length
+            }{" "}
+            Under Review
           </Badge>
         </div>
       </div>
@@ -153,7 +186,9 @@ export function AdminKYCReview({ userRole }) {
       <Card>
         <CardHeader>
           <CardTitle>KYC Applications</CardTitle>
-          <CardDescription>Review pending KYC verification requests</CardDescription>
+          <CardDescription>
+            Review pending KYC verification requests
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -172,8 +207,12 @@ export function AdminKYCReview({ userRole }) {
                   <TableCell>
                     <div>
                       <p className="font-medium">{application.userName}</p>
-                      <p className="text-sm text-muted-foreground">{application.email}</p>
-                      <p className="text-xs text-muted-foreground">{application.userId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {application.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {application.userId}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -183,23 +222,35 @@ export function AdminKYCReview({ userRole }) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(application.status)}>{application.status}</Badge>
+                    <Badge className={getStatusColor(application.status)}>
+                      {application.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getPriorityColor(application.priority)}>{application.priority}</Badge>
+                    <Badge className={getPriorityColor(application.priority)}>
+                      {application.priority}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedApplication(application)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedApplication(application)}
+                          >
                             <Eye className="h-3 w-3" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>KYC Review - {application.userName}</DialogTitle>
-                            <DialogDescription>Application ID: {application.id}</DialogDescription>
+                            <DialogTitle>
+                              KYC Review - {application.userName}
+                            </DialogTitle>
+                            <DialogDescription>
+                              Application ID: {application.id}
+                            </DialogDescription>
                           </DialogHeader>
                           {selectedApplication && (
                             <div className="space-y-6">
@@ -214,32 +265,58 @@ export function AdminKYCReview({ userRole }) {
                                 <CardContent>
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <span className="font-medium">Full Name:</span>{" "}
-                                      {selectedApplication.personalInfo.fullName}
+                                      <span className="font-medium">
+                                        Full Name:
+                                      </span>{" "}
+                                      {
+                                        selectedApplication.personalInfo
+                                          .fullName
+                                      }
                                     </div>
                                     <div>
-                                      <span className="font-medium">Date of Birth:</span>{" "}
-                                      {selectedApplication.personalInfo.dateOfBirth}
+                                      <span className="font-medium">
+                                        Date of Birth:
+                                      </span>{" "}
+                                      {
+                                        selectedApplication.personalInfo
+                                          .dateOfBirth
+                                      }
                                     </div>
                                     <div>
-                                      <span className="font-medium">Gender:</span>{" "}
+                                      <span className="font-medium">
+                                        Gender:
+                                      </span>{" "}
                                       {selectedApplication.personalInfo.gender}
                                     </div>
                                     <div>
-                                      <span className="font-medium">Phone:</span> {selectedApplication.phone}
+                                      <span className="font-medium">
+                                        Phone:
+                                      </span>{" "}
+                                      {selectedApplication.phone}
                                     </div>
                                     <div>
-                                      <span className="font-medium">Aadhar:</span>{" "}
-                                      {selectedApplication.personalInfo.aadharNumber}
+                                      <span className="font-medium">
+                                        Aadhar:
+                                      </span>{" "}
+                                      {
+                                        selectedApplication.personalInfo
+                                          .aadharNumber
+                                      }
                                     </div>
                                     <div>
                                       <span className="font-medium">PAN:</span>{" "}
-                                      {selectedApplication.personalInfo.panNumber}
+                                      {
+                                        selectedApplication.personalInfo
+                                          .panNumber
+                                      }
                                     </div>
                                   </div>
                                   <div className="mt-3 text-sm">
-                                    <span className="font-medium">Address:</span>{" "}
-                                    {selectedApplication.personalInfo.address}, {selectedApplication.personalInfo.city},{" "}
+                                    <span className="font-medium">
+                                      Address:
+                                    </span>{" "}
+                                    {selectedApplication.personalInfo.address},{" "}
+                                    {selectedApplication.personalInfo.city},{" "}
                                     {selectedApplication.personalInfo.state} -{" "}
                                     {selectedApplication.personalInfo.pincode}
                                   </div>
@@ -256,16 +333,25 @@ export function AdminKYCReview({ userRole }) {
                                 </CardHeader>
                                 <CardContent>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(selectedApplication.documents).map(([docType, doc]) => (
-                                      <div key={docType} className="border rounded-lg p-3">
+                                    {Object.entries(
+                                      selectedApplication.documents
+                                    ).map(([docType, doc]) => (
+                                      <div
+                                        key={docType}
+                                        className="border rounded-lg p-3"
+                                      >
                                         <div className="flex items-center justify-between mb-2">
                                           <h4 className="font-medium capitalize">
                                             {docType.replace(/([A-Z])/g, " $1")}
                                           </h4>
                                           {doc.uploaded ? (
-                                            <Badge className="bg-green-100 text-green-800">Uploaded</Badge>
+                                            <Badge className="bg-green-100 text-green-800">
+                                              Uploaded
+                                            </Badge>
                                           ) : (
-                                            <Badge variant="outline">Not Uploaded</Badge>
+                                            <Badge variant="outline">
+                                              Not Uploaded
+                                            </Badge>
                                           )}
                                         </div>
                                         {doc.uploaded && (
@@ -298,14 +384,17 @@ export function AdminKYCReview({ userRole }) {
                                   <div className="flex items-center gap-2">
                                     <Badge
                                       className={
-                                        selectedApplication.paymentStatus === "paid"
+                                        selectedApplication.paymentStatus ===
+                                        "paid"
                                           ? "bg-green-100 text-green-800"
                                           : "bg-red-100 text-red-800"
                                       }
                                     >
                                       {selectedApplication.paymentStatus}
                                     </Badge>
-                                    <span className="text-sm">KYC Fee: ₹99</span>
+                                    <span className="text-sm">
+                                      KYC Fee: ₹99
+                                    </span>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -313,27 +402,40 @@ export function AdminKYCReview({ userRole }) {
                               {/* Review Section */}
                               <Card>
                                 <CardHeader>
-                                  <CardTitle className="text-base">Review Decision</CardTitle>
+                                  <CardTitle className="text-base">
+                                    Review Decision
+                                  </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                   <div className="space-y-2">
-                                    <label className="text-sm font-medium">Review Notes</label>
+                                    <label className="text-sm font-medium">
+                                      Review Notes
+                                    </label>
                                     <Textarea
                                       placeholder="Add your review comments..."
                                       value={reviewNotes}
-                                      onChange={(e) => setReviewNotes(e.target.value)}
+                                      onChange={(e) =>
+                                        setReviewNotes(e.target.value)
+                                      }
                                       rows={3}
                                     />
                                   </div>
                                   <div className="flex gap-3">
                                     <Button
                                       className="bg-green-600 hover:bg-green-700"
-                                      onClick={() => handleApprove(selectedApplication.id)}
+                                      onClick={() =>
+                                        handleApprove(selectedApplication.id)
+                                      }
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
                                       Approve KYC
                                     </Button>
-                                    <Button variant="destructive" onClick={() => handleReject(selectedApplication.id)}>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() =>
+                                        handleReject(selectedApplication.id)
+                                      }
+                                    >
                                       <X className="h-4 w-4 mr-2" />
                                       Reject KYC
                                     </Button>
@@ -356,7 +458,11 @@ export function AdminKYCReview({ userRole }) {
                       >
                         <CheckCircle className="h-3 w-3" />
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleReject(application.id)}>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleReject(application.id)}
+                      >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
@@ -368,5 +474,5 @@ export function AdminKYCReview({ userRole }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

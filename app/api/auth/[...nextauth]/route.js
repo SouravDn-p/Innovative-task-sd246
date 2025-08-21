@@ -41,16 +41,12 @@ export const authOptions = {
           image:
             user.image ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-              session?.user?.name || "User"
+              user.name || "User"
             )}`,
         };
       },
     }),
 
-    GithubProvider({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
-    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
@@ -70,10 +66,7 @@ export const authOptions = {
     async jwt({ token, user, account, profile }) {
       const db = client.db("TaskEarnDB");
       // ⚠️ Handle OAuth logins (Google/GitHub)
-      if (
-        account &&
-        (account.provider === "google" || account.provider === "github")
-      ) {
+      if (account && account.provider === "google") {
         const email = user?.email || token.email;
         const name = user?.name || token.name;
         const image = user?.image || token.picture;
