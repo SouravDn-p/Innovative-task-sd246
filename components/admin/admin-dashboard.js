@@ -104,7 +104,7 @@ export function AdminDashboard({ userRole }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening on your platform today.</p>
+          <p className="text-muted-foreground">Welcome back! Here&apos;s what&apos;s happening on your platform today.</p>
         </div>
         <Badge variant="outline" className="text-sm">
           {userRole.replace("_", " ").toUpperCase()}

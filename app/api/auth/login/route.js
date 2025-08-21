@@ -6,7 +6,7 @@ import client from "@/lib/mongoClient";
 export async function POST(req) {
   const { email, password } = await req.json();
 
-  const db = client.db("BuckersAuctionDb");
+  const db = client.db("TaskEarnDB");
   const user = await db.collection("Users").findOne({ email });
 
   if (!user) {

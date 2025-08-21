@@ -19,7 +19,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         // const client = await clientPromise;
-        const db = client.db("BuckersAuctionDb");
+        const db = client.db("TaskEarnDB");
 
         const user = await db
           .collection("Users")
@@ -68,7 +68,7 @@ export const authOptions = {
 
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      const db = client.db("BuckersAuctionDb");
+      const db = client.db("TaskEarnDB");
       // ⚠️ Handle OAuth logins (Google/GitHub)
       if (
         account &&

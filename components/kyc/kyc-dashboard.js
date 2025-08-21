@@ -188,7 +188,7 @@ export function KYCDashboard({ userRole = "user" }) {
         <Alert>
           <Clock className="h-4 w-4" />
           <AlertDescription>
-            Your KYC documents are under review. We'll notify you once the verification is complete (usually within
+            Your KYC documents are under review. We&apos;ll notify you once the verification is complete (usually within
             24-48 hours).
           </AlertDescription>
         </Alert>

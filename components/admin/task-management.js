@@ -78,7 +78,7 @@ export function TaskManagement({ userRole }) {
           <CardContent className="p-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
             <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground">You don't have permission to access task management features.</p>
+            <p className="text-muted-foreground">You don&apos;t have permission to access task management features.</p>
           </CardContent>
         </Card>
       </div>

@@ -104,7 +104,7 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
                       </div>
                       <Separator />
                       <div className="flex justify-between font-semibold">
-                        <span>You'll Receive</span>
+                        <span>You&apos;ll Receive</span>
                         <span>₹{calculateNetAmount().toFixed(2)}</span>
                       </div>
                     </div>

@@ -241,7 +241,7 @@ export function AddFunds({ onBack }) {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Funds will be added to your wallet immediately after successful payment. You'll receive a confirmation
+                Funds will be added to your wallet immediately after successful payment. You&apos;ll receive a confirmation
                 email.
               </AlertDescription>
             </Alert>

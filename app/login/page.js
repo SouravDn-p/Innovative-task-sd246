@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react"; // Import Suspense
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -30,7 +30,20 @@ import {
 import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 
-export default function LoginPage() {
+// Fallback component for Suspense
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400 mb-4"></div>
+        <p className="text-gray-300">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main LoginPage component (same as provided)
+function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -320,5 +333,14 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Wrap the LoginPage in Suspense
+export default function LoginPageWithSuspense() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPage />
+    </Suspense>
   );
 }

@@ -13,7 +13,7 @@ export async function POST(req) {
     );
   }
 
-  const db = client.db("BuckersAuctionDb");
+  const db = client.db("TaskEarnDB");
   const userExists = await db.collection("Users").findOne({ email });
 
   if (userExists) {
