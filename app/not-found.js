@@ -12,11 +12,13 @@ const NotFoundPage = () => {
         <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"></div>
       </div>
 
+
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
+
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
@@ -31,6 +33,7 @@ const NotFoundPage = () => {
             </div>
           </div>
 
+
           {/* Error Message */}
           <div className="mb-12 space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -39,9 +42,10 @@ const NotFoundPage = () => {
             <p className="text-xl text-gray-300 leading-relaxed max-w-lg mx-auto">
               The page you&apos;re looking for seems to have vanished into the
               digital void. Don&apos;t worry, even the best explorers sometimes
-              take a wrong turn.
+              take a wrong turn
             </p>
           </div>
+
 
           {/* Decorative Elements */}
           <div className="mt-16 flex justify-center space-x-8 opacity-30">
@@ -51,6 +55,7 @@ const NotFoundPage = () => {
           </div>
         </div>
       </div>
+
 
       {/* Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -70,5 +75,6 @@ const NotFoundPage = () => {
     </div>
   );
 };
+
 
 export default NotFoundPage;

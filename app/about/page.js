@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export default function AboutPage() {
   return (
@@ -332,6 +333,7 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
