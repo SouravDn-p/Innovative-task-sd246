@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,7 +36,7 @@ export function Header() {
               whileHover={{ scale: 1.05 }}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 shadow-lg"
             >
-              <span className="font-semibold text-white">TE</span>
+              <Image src="/logos/logo.png" alt="TaskEarn Logo" height={32} width={32} />
             </motion.div>
             <div className="hidden md:flex flex-col leading-tight">
               <span className="text-lg font-bold text-gray-900 dark:text-gray-100">

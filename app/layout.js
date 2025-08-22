@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Innovative Task Earn - Task & Referral Platform",
   description: "Professional task and referral earning platform",
+  icons: {
+    icon: "/logos/logo.png"
+  },
 };
 
 export default function RootLayout({ children }) {
