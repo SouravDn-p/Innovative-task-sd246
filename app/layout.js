@@ -2,8 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/components/ReduxProvider";
 import SessionWrapper from "@/components/SessionWrapper";
-import { Footer } from "@/components/layout/footer";
-import { Header } from "@/components/layout/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Innovative Task Earn - Task & Referral Platform",
   description: "Professional task and referral earning platform",
+  icons: {
+    icon: "/logos/logo.png"
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -29,7 +30,6 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <SessionWrapper>
             {children}
-            <Footer />
           </SessionWrapper>
         </ReduxProvider>
       </body>
