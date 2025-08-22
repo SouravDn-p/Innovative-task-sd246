@@ -12,10 +12,12 @@ import {
   Globe,
   ArrowRight,
 } from "lucide-react";
+import { Header } from "@/components/layout/header";
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       {/* Hero Section */}
       <section className="py-20 lg:py-32">
         <div className="container">

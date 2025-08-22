@@ -135,6 +135,10 @@ export const api = createApi({
       }),
       invalidatesTags: ["Wallet"],
     }),
+    getTransactions: builder.query({
+      query: (userId) => `wallet/${userId}/transactions`,
+      providesTags: ["Wallet"],
+    }),
     // Product Management Endpoints for Future Expansion
     getProducts: builder.query({
       query: () => "products",
@@ -272,6 +276,7 @@ export const {
   useRequestWithdrawalMutation,
   useGetWithdrawalsQuery,
   useUpdateWithdrawalMutation,
+  useGetTransactionsQuery,
 
   // Product hooks
   useGetProductsQuery,

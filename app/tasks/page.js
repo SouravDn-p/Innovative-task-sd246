@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Header } from "@/components/layout/header";
 
 // Sample task data
 const tasks = [
@@ -111,6 +112,7 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Header />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16 sm:py-24">

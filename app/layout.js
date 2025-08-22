@@ -28,7 +28,6 @@ export default function RootLayout({ children }) {
       >
         <ReduxProvider>
           <SessionWrapper>
-            <Header />
             {children}
             <Footer />
           </SessionWrapper>

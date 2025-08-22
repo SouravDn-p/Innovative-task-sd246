@@ -20,10 +20,12 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+import { Header } from "@/components/layout/header";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-secondary/5 to-background">
         <div className="max-w-7xl mx-auto">
