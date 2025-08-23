@@ -81,7 +81,7 @@ export function Hero() {
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-4 text-center">
         {/* Pill */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-teal-300 bg-teal-100 px-4 py-2 text-teal-700 shadow-sm">
+        <div className="my-6 inline-flex items-center gap-2 rounded-full border border-teal-300 bg-teal-100 px-4 py-2 text-teal-700 shadow-sm">
           <Sparkles className="h-4 w-4" aria-hidden />
           <span className="text-sm font-medium tracking-wide">AI-Powered Task Matching</span>
         </div>
