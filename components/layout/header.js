@@ -98,11 +98,20 @@ export function Header() {
               whileHover={{ scale: 1.05 }}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 shadow-lg"
             >
-              <Image src="/logos/logo.png" alt="TaskEarn Logo" height={32} width={32} />
+              <Image
+                src="/logos/logo.png"
+                alt="TaskEarn Logo"
+                height={32}
+                width={32}
+              />
             </motion.div>
             <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">TaskEarn</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Smart task matching</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                TaskEarn
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Smart task matching
+              </span>
             </div>
           </Link>
 
@@ -113,7 +122,9 @@ export function Header() {
                 href={link.href}
                 className="relative text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:text-teal-600"
               >
-                <span className="inline-block py-2 px-1 cursor-pointer">{link.name}</span>
+                <span className="inline-block py-2 px-1 cursor-pointer">
+                  {link.name}
+                </span>
               </Link>
             ))}
           </nav>
@@ -165,7 +176,11 @@ export function Header() {
             ) : (
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="px-3 py-2 hover:text-teal-600 cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="px-3 py-2 hover:text-teal-100 cursor-pointer"
+                  >
                     Login
                   </Button>
                 </Link>
@@ -184,13 +199,18 @@ export function Header() {
                 aria-label="Toggle menu"
                 className="inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
               >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Mobile Sidebar */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -208,28 +228,32 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              // 🔒 Solid background instead of transparent
               className="fixed right-0 top-0 z-50 h-full w-64 bg-white dark:bg-gray-900 shadow-xl p-6 flex flex-col"
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={session?.user?.image || "/default-avatar.png"}
-                    alt="User Avatar"
-                    width={36}
-                    height={36}
-                    className="rounded-full border border-gray-300 dark:border-gray-700"
-                  />
-                  <span className="font-bold text-gray-900 dark:text-gray-100">
-                    {session?.user?.name || "Guest"}
-                  </span>
+              {/* Only show user info if logged in */}
+              {session && (
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src={session?.user?.image || "/default-avatar.png"}
+                      alt="User Avatar"
+                      width={36}
+                      height={36}
+                      className="rounded-full border border-gray-300 dark:border-gray-700"
+                    />
+                    <span className="font-bold text-gray-900 dark:text-gray-100">
+                      {session?.user?.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+              )}
 
               <nav className="flex flex-col gap-3">
                 {navLinks.map((link) => (
