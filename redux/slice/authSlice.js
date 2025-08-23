@@ -1,9 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  user: null,
-  token: null,
-  isLoggedIn: false,
+  user:
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user"))
+      : null,
+  token: typeof window !== "undefined" ? localStorage.getItem("token") : null,
+  isLoggedIn:
+    typeof window !== "undefined" ? !!localStorage.getItem("token") : false,
   loading: false,
   error: null,
 };
