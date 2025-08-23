@@ -1,10 +1,10 @@
 // app/api/auth/register/route.js
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs"; // updated
+import bcrypt from "bcryptjs";
 import client from "@/lib/mongoClient";
 
 export async function POST(req) {
-  const { name, email, password } = await req.json();
+  const { name, email, password, phone, role } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json(
@@ -25,15 +25,29 @@ export async function POST(req) {
   await db.collection("Users").insertOne({
     name,
     email,
+    phone,
     password: hashedPassword,
-    role: "user",
+    role,
     image: `https://ui-avatars.com/api/?name=${encodeURIComponent(
       name
     )}&background=random`,
-    cart: [],
-    wishlist: [],
-    shippingAddress: {},
+
+    kycStatus: "none",
+    kycPaidAt: null,
+    kycReferenceId: null,
+    isVerified: false,
+    isSuspended: false,
+    suspendedReason: null,
+    suspensionAt: null,
+    lastSuspensionCount: 0,
+    signupBonusEligibleAt: null,
+    referrerId: null,
+    dailyReferralsCount: 0,
+    weeklyEarnAmount: 0,
+    walletBalance: 0,
+
     createdAt: new Date(),
+    // updatedAt: new Date(),
   });
 
   return NextResponse.json(
