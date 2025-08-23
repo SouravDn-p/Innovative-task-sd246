@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Twitter, Linkedin, Github } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 
 export function Footer() {
   const [email, setEmail] = useState("");
@@ -32,7 +33,12 @@ export function Footer() {
         <div className="space-y-4">
           <div className="flex items-center space-x-3">
             <div className="h-11 w-11 rounded-lg bg-teal-600 flex items-center justify-center shadow-md transform transition-transform hover:scale-105">
-              <span className="text-white font-bold text-lg">T</span>
+              <Image
+                src="/logos/logo.png"
+                alt="Logo"
+                width={36}
+                height={36}
+              />
             </div>
             <div>
               <span className="font-bold text-xl text-gray-900 dark:text-gray-100">Innovative Task Earn</span>

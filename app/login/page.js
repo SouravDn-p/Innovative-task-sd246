@@ -1,7 +1,6 @@
 "use client";
 import { FcGoogle } from "react-icons/fc";
-
-import { useState, Suspense } from "react"; // Import Suspense
+import { useState, Suspense, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -16,47 +15,63 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useLoginUserMutation } from "@/redux/api/api";
 import { loginSuccess } from "@/redux/slice/authSlice";
-import {
-  CheckCircle,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-} from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, ShieldCheck } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
-// Fallback component for Suspense
 function LoginPageFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-teal-900 flex items-center justify-center">
       <div className="flex flex-col items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400 mb-4"></div>
-        <p className="text-gray-300">Loading...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400 mb-4"></div>
+        <p className="text-gray-200">Loading...</p>
       </div>
     </div>
   );
 }
 
-// Main LoginPage component (same as provided)
+export default function LoginPageWithSuspense() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <Header />
+      <LoginPage />
+      <Footer />
+    </Suspense>
+  );
+}
+
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [loginUser, { isLoading, error }] = useLoginUserMutation();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
   const { data: session } = useSession();
+
+  useEffect(() => {
+    if (message) {
+      Swal.fire({
+        toast: true,
+        icon: "success",
+        title: message,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#134e4a",
+        color: "#fff",
+      });
+    }
+  }, [message]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,38 +82,72 @@ function LoginPage() {
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.password) newErrors.password = "Password is required";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      Swal.fire({
+        toast: true,
+        icon: "error",
+        title: "Please fill in all required fields",
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#0f766e",
+        color: "#fff",
+      });
+      return;
+    }
 
     try {
       const result = await loginUser(formData).unwrap();
       dispatch(loginSuccess(result));
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+      if (signInResult?.error) {
+        throw new Error("Failed to update session");
+      }
       router.push("/");
     } catch (err) {
-      console.error("Login failed:", err);
+      Swal.fire({
+        toast: true,
+        icon: "error",
+        title: err?.data?.error || err?.message || "Login failed. Please try again.",
+        position: "top-end",
+        timer: 3500,
+        showConfirmButton: false,
+        background: "#164e63",
+        color: "#fff",
+      });
     }
   };
 
+  // small UI helpers for micro-interactions
+  const handleSocialSignIn = useCallback((provider) => {
+    signIn(provider, { callbackUrl: "/dashboard" });
+  }, []);
+
   if (session) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 flex items-center justify-center">
-        <Card className="bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl rounded-2xl p-8 max-w-md w-full text-center">
+      <section className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-teal-900 flex items-center justify-center py-12">
+        <Card className="bg-white/6 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl p-8 max-w-md w-full text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/8 border border-white/10">
+            <Sparkles className="h-7 w-7 text-teal-200" />
+          </div>
           <Image
             src={
               session?.user?.image ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 session?.user?.name || "User"
-              )}&background=0ea5e9&color=fff`
+              )}&background=14b8a6&color=fff`
             }
             alt={session?.user?.name || "User"}
             width={96}
@@ -106,225 +155,167 @@ function LoginPage() {
             className="mx-auto rounded-full shadow mb-4"
           />
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Welcome back, {session?.user?.name}!
+            <h1 className="text-2xl font-semibold text-white mb-1">
+              Welcome back,
+              <span className="text-teal-200 ml-2">{session?.user?.name}</span>
             </h1>
-            <p className="text-gray-400">{session?.user?.email}</p>
+            <p className="text-sm text-teal-100">{session?.user?.email}</p>
           </div>
           <Link href="/">
-            <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700">
+            <Button className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-medium">
               Go to Home
             </Button>
           </Link>
         </Card>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {/* Background Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(14,165,233,0.15),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(59,130,246,0.1),transparent_50%)]"></div>
+    <main className="relative min-h-screen bg-gradient-to-br from-teal-950 via-teal-900 to-teal-800 flex flex-col items-center justify-center overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+      {/* subtle grid and blobs for Pinterest/Dribbble inspiration */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(30%_25%_at_10%_20%,rgba(45,212,191,0.08),transparent),radial-gradient(30%_25%_at_90%_80%,rgba(16,185,129,0.06),transparent)] opacity-95" />
+        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-teal-500/12 blur-3xl animate-blob" />
+        <div className="absolute right-8 bottom-12 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-10" />
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="text-center">
-          <h2 className="text-4xl tracking-tight transition-all duration-300 font-serif font-bold bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">
-            Innovative Task Earn
-          </h2>
-          <p className="mt-3 text-black">
-            Welcome back to your earning journey
-          </p>
-          <p className="mt-2 text-sm text-gray-400">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="font-medium text-sky-400 hover:text-sky-300 transition-colors"
-            >
-              Create one here
-            </Link>
-          </p>
+      <header className="w-full max-w-md text-center z-10 mb-6">
+        <div className="inline-flex items-center justify-center gap-3 mb-4">
+          <div className="h-12 w-12 rounded-2xl bg-white/6 border border-white/10 flex items-center justify-center">
+            <Sparkles className="h-6 w-6 text-teal-200" />
+          </div>
         </div>
-      </div>
+        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-teal-300 to-emerald-200">
+          Innovative Task Earn
+        </h2>
+        <p className="mt-2 text-sm text-teal-100/80">Welcome back — continue earning today</p>
+        <p className="mt-2 text-sm text-teal-100/70">
+          New here?{' '}
+          <Link href="/register" className="font-medium text-teal-200 underline underline-offset-2">
+            Create account
+          </Link>
+        </p>
+      </header>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <Card className="bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl hover:shadow-sky-500/10 transition-all duration-300">
-          <CardHeader className="text-center">
-            <CardTitle className=" text-gray-800 text-3xl font-bold">
-              Sign In
-            </CardTitle>
-            <CardDescription className="text-black">
-              Choose your preferred sign-in method
-            </CardDescription>
-          </CardHeader>
+      <section className="w-full max-w-md z-10">
+        <Card className="bg-white/6 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+          <div className="p-6 sm:p-8">
+            <CardHeader className="text-center p-0 mb-4">
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-white">Sign in</CardTitle>
+              <CardDescription className="text-sm text-teal-100/80">Pick a quick sign-in method or use your email</CardDescription>
+            </CardHeader>
 
-          <CardContent className="space-y-6">
-            {message && (
-              <Alert className="border-sky-500/50 bg-sky-500/10 text-sky-300">
-                <CheckCircle className="h-4 w-4 text-sky-400" />
-                <AlertDescription>{message}</AlertDescription>
-              </Alert>
-            )}
+            <CardContent className="p-0 mt-4">
+              <div className="grid gap-3">
+                <Button
+                  onClick={() => handleSocialSignIn('google')}
+                  className="w-full flex items-center justify-center gap-3 bg-white/10 border border-white/12 text-white hover:bg-white/12 py-3 rounded-xl transition transform hover:-translate-y-0.5"
+                  disabled={isLoading}
+                >
+                  <FcGoogle className="h-5 w-5" />
+                  Continue with Google
+                </Button>
 
-            {error && (
-              <Alert className="border-red-500/50 bg-red-500/10 text-red-300">
-                <AlertCircle className="h-4 w-4 text-red-400" />
-                <AlertDescription>
-                  {error.data?.error || "Login failed. Please try again."}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="grid grid-cols-1 gap-4">
-              <Button
-                // variant="outline"
-                onClick={() =>
-                  signIn("google", {
-                    callbackUrl: "/dashboard",
-                  })
-                }
-                className="w-full bg-white/10 border-white/20 text-black hover:bg-gray-400 hover:text-white transition-all duration-200"
-              >
-                <FcGoogle className="" />
-                Continue with Google
-              </Button>
-            </div>
-
-            <Separator className="bg-white/20" />
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-black">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`pl-11 bg-white/5 border-white/20 text-black placeholder:text-gray-400 focus:border-sky-400 focus:ring-sky-400/20 ${
-                      errors.email ? "border-red-400" : ""
-                    }`}
-                    placeholder="Enter your email"
-                  />
+                <div className="relative my-2">
+                  <Separator className="bg-white/12" />
+                  <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-transparent text-xs text-teal-100 px-2">or sign in with email</span>
                 </div>
-                {errors.email && (
-                  <p className="text-sm text-red-400">{errors.email}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-black">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`pl-11 pr-11 bg-white/5 border-white/20 text-black placeholder:text-gray-400 focus:border-sky-400 focus:ring-sky-400/20 ${
-                      errors.password ? "border-red-400" : ""
-                    }`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="email" className="text-teal-100 text-sm">Email</Label>
+                    <div className="relative mt-2">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-200/70 h-5 w-5" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        className={`pl-11 pr-4 bg-white/8 border border-white/8 text-white placeholder:text-teal-100/60 rounded-lg h-11 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-shadow ${
+                          errors.email ? 'ring-red-400' : ''
+                        }`}
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                    {errors.email && <p className="text-xs text-red-300 mt-1">{errors.email}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="password" className="text-teal-100 text-sm flex items-center gap-2">
+                      Password <ShieldCheck className="h-4 w-4 text-teal-200/70" />
+                    </Label>
+                    <div className="relative mt-2">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-200/70 h-5 w-5" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        className={`pl-11 pr-12 bg-white/8 border border-white/8 text-white placeholder:text-teal-100/60 rounded-lg h-11 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-shadow ${
+                          errors.password ? 'ring-red-400' : ''
+                        }`}
+                        placeholder="Your secure password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((s) => !s)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-100/70"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-xs text-red-300 mt-1">{errors.password}</p>}
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" className="h-4 w-4 rounded border-white/10 bg-white/6 accent-teal-400" />
+                      <span className="text-teal-100">Remember me</span>
+                    </label>
+                    <Link href="/forgot-password" className="text-teal-200 underline underline-offset-2">Forgot?</Link>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full py-3 rounded-lg bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-medium shadow-lg hover:shadow-teal-500/30 transform transition hover:-translate-y-0.5"
+                    disabled={isLoading}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+                    {isLoading ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                        <span>Signing in...</span>
+                      </div>
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
+                      'Sign In'
                     )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-red-400">{errors.password}</p>
-                )}
-              </div>
+                  </Button>
+                </form>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-600 rounded bg-gray-800"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-black"
-                  >
-                    Remember me
-                  </label>
-                </div>
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-medium text-sky-400 hover:text-sky-300 transition-colors"
-                  >
-                    Forgot password?
-                  </a>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Secure</div>
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Fast</div>
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Role-based</div>
                 </div>
               </div>
+            </CardContent>
+          </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-medium py-2.5 transition-all duration-200"
-                disabled={isLoading}
-                size="lg"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-
-          <CardFooter className="justify-center">
-            <p className="text-sm text-gray-400 text-center">
-              By signing in, you agree to our{" "}
-              <Link
-                href="/terms"
-                className="text-sky-400 hover:text-sky-300 transition-colors"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="text-sky-400 hover:text-sky-300 transition-colors"
-              >
-                Privacy Policy
-              </Link>
+          <CardFooter className="mt-2 p-6 pt-0 bg-gradient-to-t from-transparent to-white/2">
+            <p className="text-xs text-teal-100/80 text-center">
+              By signing in you agree to our{' '}
+              <Link href="/terms" className="underline text-teal-200">Terms</Link> and{' '}
+              <Link href="/privacy" className="underline text-teal-200">Privacy</Link>.
             </p>
           </CardFooter>
         </Card>
-      </div>
-    </div>
-  );
-}
-
-// Wrap the LoginPage in Suspense
-export default function LoginPageWithSuspense() {
-  return (
-    <Suspense fallback={<LoginPageFallback />}>
-      <LoginPage />
-    </Suspense>
+      </section>
+    </main>
   );
 }
