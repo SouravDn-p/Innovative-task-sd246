@@ -7,8 +7,6 @@ import { UserDashboard } from "@/components/user/dashboard";
 import { TasksPage } from "@/components/user/tasks-page";
 import { ReferralsPage } from "@/components/user/referrals-page";
 import { MobileNav } from "@/components/user/mobile-nav";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 
 export default function UserPage() {
   const { data: session, status } = useSession();

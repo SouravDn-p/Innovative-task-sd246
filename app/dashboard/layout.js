@@ -25,8 +25,8 @@ import {
   Calendar,
   CheckCircle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
-// Mock data - replace with API calls in production
 const mockData = {
   user: {
     stats: {
@@ -114,93 +114,111 @@ const mockData = {
 };
 
 export default function DashboardPage() {
-  // Safely access role from Redux state
   const role = useSelector((state) => state?.auth?.role || "user");
   const data = mockData[role] || mockData.user;
 
-  // User Dashboard
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   const renderUserDashboard = () => (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-            <DollarSign
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Earned
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${data.stats.totalEarned.toFixed(2)}
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              ₹{data.stats.totalEarned.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <p className="text-xs text-teal-600">+12% from last month</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
               Tasks Completed
             </CardTitle>
-            <Target
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <Target className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.tasksCompleted}
             </div>
-            <p className="text-xs text-muted-foreground">+8 this week</p>
+            <p className="text-xs text-teal-600">+8 this week</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
               Active Referrals
             </CardTitle>
-            <Users
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <Users className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.activeReferrals}
             </div>
-            <p className="text-xs text-muted-foreground">+3 this month</p>
+            <p className="text-xs text-teal-600">+3 this month</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
               Current Streak
             </CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Zap className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.currentStreak} days
             </div>
-            <p className="text-xs text-muted-foreground">Keep it up!</p>
+            <p className="text-xs text-teal-600">Keep it up!</p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Tasks</CardTitle>
-            <CardDescription>Your latest task activity</CardDescription>
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <Card className="relative overflow-hidden border-teal-200 shadow-md">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <CardHeader className="relative">
+            <CardTitle className="text-teal-800">Recent Tasks</CardTitle>
+            <CardDescription className="text-teal-600">
+              Your latest task activity
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative">
             <div className="space-y-4">
               {data.recentTasks.map((task) => (
                 <div
@@ -214,29 +232,29 @@ export default function DashboardPage() {
                           ? "bg-green-500"
                           : "bg-yellow-500"
                       }`}
-                      aria-hidden="true"
                     />
                     <div>
-                      <p className="font-medium">{task.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {task.date}
-                      </p>
+                      <p className="font-medium text-teal-900">{task.title}</p>
+                      <p className="text-sm text-teal-600">{task.date}</p>
                     </div>
                   </div>
                   <Badge
                     variant={
                       task.status === "completed" ? "default" : "secondary"
                     }
-                    aria-label={`Reward: $${task.reward}`}
+                    className={
+                      task.status === "completed"
+                        ? "bg-teal-500"
+                        : "bg-teal-200 text-teal-800"
+                    }
                   >
-                    ${task.reward}
+                    ₹{task.reward}
                   </Badge>
                 </div>
               ))}
             </div>
             <Button
-              className="w-full mt-4"
-              variant="outline"
+              className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
               aria-label="View all tasks"
             >
               View All Tasks
@@ -244,327 +262,333 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Achievements */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Achievements</CardTitle>
-            <CardDescription>Your progress and milestones</CardDescription>
+        <Card className="relative overflow-hidden border-teal-200 shadow-md">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <CardHeader className="relative">
+            <CardTitle className="text-teal-800">Achievements</CardTitle>
+            <CardDescription className="text-teal-600">
+              Your progress and milestones
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative">
             <div className="space-y-4">
               {data.achievements.map((achievement, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <div
                     className={`p-2 rounded-lg ${
                       achievement.earned
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-teal-100 text-teal-600"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    <achievement.icon className="h-4 w-4" aria-hidden="true" />
+                    <achievement.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">{achievement.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-medium text-teal-900">
+                      {achievement.name}
+                    </p>
+                    <p className="text-sm text-teal-600">
                       {achievement.earned ? "Completed" : "In Progress"}
                     </p>
                   </div>
                   {achievement.earned && (
-                    <CheckCircle
-                      className="h-4 w-4 text-green-500"
-                      aria-hidden="true"
-                    />
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
                 </div>
               ))}
             </div>
             <Button
-              className="w-full mt-4"
-              variant="outline"
+              className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
               aria-label="View all achievements"
             >
               View All Achievements
             </Button>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 
-  // Advertiser Dashboard
   const renderAdvertiserDashboard = () => (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <DollarSign
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Spent
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${data.stats.totalSpent.toFixed(2)}
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              ₹{data.stats.totalSpent.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              +18% from last month
-            </p>
+            <p className="text-xs text-teal-600">+18% from last month</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
               Active Campaigns
             </CardTitle>
-            <BarChart3
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <BarChart3 className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.activeCampaigns}
             </div>
-            <p className="text-xs text-muted-foreground">2 launching soon</p>
+            <p className="text-xs text-teal-600">2 launching soon</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-            <TrendingUp
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Clicks
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.totalClicks.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">+25% this week</p>
+            <p className="text-xs text-teal-600">+25% this week</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
               Conversion Rate
             </CardTitle>
-            <Target
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <Target className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.conversionRate}%
             </div>
-            <p className="text-xs text-muted-foreground">+0.3% improvement</p>
+            <p className="text-xs text-teal-600">+0.3% improvement</p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
-      {/* Campaign Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Campaign Performance</CardTitle>
-          <CardDescription>Overview of your active campaigns</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {data.campaigns.map((campaign) => (
-              <div key={campaign.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{campaign.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${campaign.spent.toFixed(2)} / $
-                      {campaign.budget.toFixed(2)} •{" "}
-                      {campaign.clicks.toLocaleString()} clicks
-                    </p>
+      <motion.div variants={itemVariants}>
+        <Card className="relative overflow-hidden border-teal-200 shadow-md">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <CardHeader className="relative">
+            <CardTitle className="text-teal-800">
+              Campaign Performance
+            </CardTitle>
+            <CardDescription className="text-teal-600">
+              Overview of your active campaigns
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="space-y-4">
+              {data.campaigns.map((campaign) => (
+                <div key={campaign.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-teal-900">
+                        {campaign.name}
+                      </p>
+                      <p className="text-sm text-teal-600">
+                        ₹{campaign.spent.toFixed(2)} / ₹
+                        {campaign.budget.toFixed(2)} •{" "}
+                        {campaign.clicks.toLocaleString()} clicks
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        campaign.status === "active" ? "default" : "secondary"
+                      }
+                      className={
+                        campaign.status === "active"
+                          ? "bg-teal-500"
+                          : "bg-teal-200 text-teal-800"
+                      }
+                    >
+                      {campaign.status}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant={
-                      campaign.status === "active" ? "default" : "secondary"
-                    }
-                    aria-label={`Status: ${campaign.status}`}
-                  >
-                    {campaign.status}
-                  </Badge>
+                  <Progress
+                    value={(campaign.spent / campaign.budget) * 100}
+                    className="h-2"
+                  />
                 </div>
-                <Progress
-                  value={(campaign.spent / campaign.budget) * 100}
-                  className="h-2"
-                  aria-label={`Budget progress: ${
-                    (campaign.spent / campaign.budget) * 100
-                  }%`}
-                />
-              </div>
-            ))}
-          </div>
-          <Button
-            className="w-full mt-4"
-            variant="outline"
-            aria-label="View all campaigns"
-          >
-            <ArrowUpRight className="h-4 w-4 mr-2" aria-hidden="true" />
-            View All Campaigns
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+              ))}
+            </div>
+            <Button className="w-full mt-4 bg-teal-600 hover:bg-teal-700">
+              <ArrowUpRight className="h-4 w-4 mr-2" />
+              View All Campaigns
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 
-  // Admin Dashboard
   const renderAdminDashboard = () => (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Users
+            </CardTitle>
+            <Users className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
               {data.stats.totalUsers.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">+245 this week</p>
+            <p className="text-xs text-teal-600">+245 this week</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-            <Target
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Active Tasks
+            </CardTitle>
+            <Target className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.stats.activeTasks}</div>
-            <p className="text-xs text-muted-foreground">+12 today</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${data.stats.totalRevenue.toLocaleString()}
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              {data.stats.activeTasks}
             </div>
-            <p className="text-xs text-muted-foreground">+22% this month</p>
+            <p className="text-xs text-teal-600">+12 today</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
-            <Award
-              className="h-4 w-4 text-muted-foreground"
-              aria-hidden="true"
-            />
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Revenue
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-teal-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.stats.systemHealth}%</div>
-            <p className="text-xs text-muted-foreground">
-              All systems operational
-            </p>
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              ₹{data.stats.totalRevenue.toLocaleString()}
+            </div>
+            <p className="text-xs text-teal-600">+22% this month</p>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Platform Activity</CardTitle>
-          <CardDescription>Recent platform metrics and trends</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {data.recentActivity.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    {activity.type === "user_signup" && (
-                      <Users
-                        className="h-5 w-5 text-primary"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {activity.type === "task_completion" && (
-                      <Target
-                        className="h-5 w-5 text-primary"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {activity.type === "revenue" && (
-                      <DollarSign
-                        className="h-5 w-5 text-primary"
-                        aria-hidden="true"
-                      />
-                    )}
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              System Health
+            </CardTitle>
+            <Award className="h-4 w-4 text-teal-600" />
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              {data.stats.systemHealth}%
+            </div>
+            <p className="text-xs text-teal-600">All systems operational</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <Card className="relative overflow-hidden border-teal-200 shadow-md">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <CardHeader className="relative">
+            <CardTitle className="text-teal-800">Platform Activity</CardTitle>
+            <CardDescription className="text-teal-600">
+              Recent platform metrics and trends
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="space-y-4">
+              {data.recentActivity.map((activity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 border border-teal-100 rounded-lg bg-white/50"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                      {activity.type === "user_signup" && (
+                        <Users className="h-5 w-5 text-teal-600" />
+                      )}
+                      {activity.type === "task_completion" && (
+                        <Target className="h-5 w-5 text-teal-600" />
+                      )}
+                      {activity.type === "revenue" && (
+                        <DollarSign className="h-5 w-5 text-teal-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-teal-900 capitalize">
+                        {activity.type.replace("_", " ")}
+                      </p>
+                      <p className="text-sm text-teal-600">{activity.period}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium capitalize">
-                      {activity.type.replace("_", " ")}
+                  <div className="text-right">
+                    <p className="font-medium text-teal-900">
+                      {activity.count.toLocaleString()}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {activity.period}
-                    </p>
+                    <p className="text-sm text-green-600">{activity.change}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">
-                    {activity.count.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-green-600">{activity.change}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button
-            className="w-full mt-4"
-            variant="outline"
-            aria-label="View detailed analytics"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
-            View Detailed Analytics
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+              ))}
+            </div>
+            <Button className="w-full mt-4 bg-teal-600 hover:bg-teal-700">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              View Detailed Analytics
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <motion.div
+        className="space-y-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-teal-800">
               {role === "admin"
                 ? "Admin Dashboard"
                 : role === "advertiser"
                 ? "Advertiser Dashboard"
                 : "User Dashboard"}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-teal-600">
               {role === "admin"
                 ? "Monitor platform performance and manage users"
                 : role === "advertiser"
@@ -575,23 +599,22 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
-              aria-label="Select time range: Last 30 days"
+              className="border-teal-200 text-teal-600 hover:bg-teal-50"
             >
-              <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
+              <Calendar className="h-4 w-4 mr-2" />
               Last 30 days
             </Button>
-            <Button aria-label="View reports">
-              <TrendingUp className="h-4 w-4 mr-2" aria-hidden="true" />
+            <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+              <TrendingUp className="h-4 w-4 mr-2" />
               View Reports
             </Button>
           </div>
         </div>
 
-        {/* Role-specific content */}
         {role === "user" && renderUserDashboard()}
         {role === "advertiser" && renderAdvertiserDashboard()}
         {role === "admin" && renderAdminDashboard()}
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }

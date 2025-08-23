@@ -19,9 +19,9 @@ const navLinks = [
 ];
 
 const getDashboardRoute = (role) => {
-  if (role === "admin") return "/dashboard/admin";
-  if (role === "advertiser") return "/dashboard/advertiser";
-  return "/dashboard/user";
+  if (role === "admin") return "/dashboard";
+  if (role === "advertiser") return "/dashboard";
+  return "/dashboard";
 };
 
 export function Header() {
