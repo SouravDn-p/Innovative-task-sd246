@@ -18,7 +18,7 @@ export async function GET(req, context) {
 
   try {
     const client = await clientPromise;
-    const db = client.db("NextInvManager");
+    const db = client.db("TaskEarnDB");
     const users = db.collection("Users");
 
     const user = await users.findOne({ email });
@@ -79,7 +79,7 @@ export async function PUT(req, context) {
     updateFields.updatedAt = new Date();
 
     const client = await clientPromise;
-    const db = client.db("NextInvManager");
+    const db = client.db("TaskEarnDB");
     const users = db.collection("Users");
 
     const result = await users.updateOne(

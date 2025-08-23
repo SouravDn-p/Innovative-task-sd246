@@ -19,7 +19,7 @@ export default function DashboardSidebar({
   isMobile = false,
 }) {
   const { data: session, status } = useSession();
-  const role = session?.user?.userType?.toLowerCase() || "user";
+  const role = session?.user?.role?.toLowerCase() || "user";
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState([]);
   const isDesktopMobile = useIsMobile();
@@ -67,7 +67,9 @@ export default function DashboardSidebar({
   return (
     <motion.div
       className={cn(
-        "bg-white border-r border-teal-200 flex flex-col h-full transition-all duration-300 overflow-hidden shadow-lg",
+        `bg-white border-r border-teal-200 flex flex-col ${
+          isMobile ? "h-full" : ""
+        } transition-all duration-300 overflow-hidden shadow-lg`,
         isMobile ? "w-80" : collapsed ? "w-16" : "w-80",
         isMobile && "fixed left-0 top-0 z-50"
       )}

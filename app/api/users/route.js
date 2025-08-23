@@ -19,11 +19,11 @@ export async function GET(req) {
   }
 
   try {
-    const db = client.db("NextInvManager");
+    const db = client.db("TaskEarnDB");
     const users = await db
       .collection("Users")
       .find({})
-      .project({ password: 0 }) // never expose password if exists
+      .project({ password: 0 })
       .toArray();
 
     return NextResponse.json({ users }, { status: 200 });

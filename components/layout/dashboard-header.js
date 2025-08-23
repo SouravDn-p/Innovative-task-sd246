@@ -53,8 +53,8 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
   }, []);
 
   const getUserRole = () => {
-    if (user?.userType) {
-      return user.userType.toLowerCase();
+    if (user?.role) {
+      return user.role.toLowerCase();
     }
     return "user";
   };

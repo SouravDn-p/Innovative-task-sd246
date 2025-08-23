@@ -26,6 +26,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 
 const mockData = {
   user: {
@@ -114,7 +115,9 @@ const mockData = {
 };
 
 export default function DashboardPage() {
-  const role = useSelector((state) => state?.auth?.role || "user");
+  const { data: session, status } = useSession();
+  const role = session?.user?.role?.toLowerCase() || "user";
+  // const role = useSelector((state) => state?.auth?.role || "user");
   const data = mockData[role] || mockData.user;
 
   const containerVariants = {

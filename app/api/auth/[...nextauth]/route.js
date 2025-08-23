@@ -9,17 +9,26 @@ export const authOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "sourav@example.com" },
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "sourav@example.com",
+        },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
         const db = client.db("TaskEarnDB");
-        const user = await db.collection("Users").findOne({ email: credentials.email });
+        const user = await db
+          .collection("Users")
+          .findOne({ email: credentials.email });
         if (!user) throw new Error("No user found");
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!isValid) throw new Error("Invalid password");
 
         return {
@@ -29,7 +38,9 @@ export const authOptions = {
           role: user.role || "user",
           image:
             user.image ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || "User")}`,
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+              user.name || "User"
+            )}`,
         };
       },
     }),
@@ -84,19 +95,19 @@ export const authOptions = {
 
       // Handle Credentials login
       if (account?.provider === "credentials" && user) {
-        token.id = (user).id;
-        token.role = (user).role;
+        token.id = user.id;
+        token.role = user.role;
         token.name = user.name;
         token.email = user.email;
-        token.picture = (user).image;
+        token.picture = user.image;
       }
 
       return token;
     },
 
     async session({ session, token }) {
-      (session.user).id = token.id;
-      (session.user).role = (token).role;
+      session.user.id = token.id;
+      session.user.role = token.role;
       session.user.name = token.name;
       session.user.email = token.email;
       session.user.image = token.picture;
