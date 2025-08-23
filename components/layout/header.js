@@ -30,7 +30,7 @@ export function Header() {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
 
-  // Show login toast when session changes to authenticated
+  // Show login toast
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       Swal.fire({
@@ -56,7 +56,7 @@ export function Header() {
     };
   }, [isMenuOpen]);
 
-  // Handle logout with confirmation
+  // Logout with confirmation
   const handleLogout = async () => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -89,14 +89,22 @@ export function Header() {
     }
   };
 
+  // Close sidebar when clicking outside
+  const handleOutsideClick = (e) => {
+    if (e.target.closest(".sidebar") === null) {
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-lg dark:bg-gray-900/70 border-b border-gray-100 dark:border-gray-800 shadow-md">
+    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 border-b border-gray-100 dark:border-gray-800 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 shadow-lg"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 shadow-md"
             >
               <Image
                 src="/logos/logo.png"
@@ -115,6 +123,7 @@ export function Header() {
             </div>
           </Link>
 
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -129,6 +138,7 @@ export function Header() {
             ))}
           </nav>
 
+          {/* Right Actions */}
           <div className="flex items-center gap-3">
             {status === "authenticated" && session ? (
               <div className="relative hidden md:flex items-center gap-3">
@@ -192,6 +202,7 @@ export function Header() {
               </div>
             )}
 
+            {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center">
               <button
                 onClick={() => setIsMenuOpen((s) => !s)}
@@ -214,86 +225,105 @@ export function Header() {
       <AnimatePresence>
         {isMenuOpen && (
           <>
+            {/* Dark Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
+              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+              onClick={handleOutsideClick}
             />
 
+            {/* Sidebar */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              // 🔒 Solid background instead of transparent
-              className="fixed right-0 top-0 z-50 h-full w-64 bg-white dark:bg-gray-900 shadow-xl p-6 flex flex-col"
+              className="sidebar z-[9999] w-[85vw] max-w-[400px] min-w-[320px] bg-white dark:bg-gray-900 shadow-2xl flex flex-col md:hidden"
+              style={{ 
+                position: 'fixed', 
+                right: 0, 
+                top: 0, 
+                bottom: 0,
+                height: '100vh'
+              }}
             >
-              {/* Only show user info if logged in */}
-              {session && (
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-600 to-teal-500 text-white">
+                {session ? (
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <Image
                       src={session?.user?.image || "/default-avatar.png"}
                       alt="User Avatar"
-                      width={36}
-                      height={36}
-                      className="rounded-full border border-gray-300 dark:border-gray-700"
+                      width={44}
+                      height={44}
+                      className="rounded-full border-2 border-white shadow-sm flex-shrink-0"
                     />
-                    <span className="font-bold text-gray-900 dark:text-gray-100">
-                      {session?.user?.name}
-                    </span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-semibold text-lg truncate">
+                        {session?.user?.name}
+                      </span>
+                      <span className="text-sm opacity-90">
+                        Welcome back 👋
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
+                ) : (
+                  <span className="font-semibold text-xl">Menu</span>
+                )}
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="rounded-full p-3 hover:bg-white/20 transition-colors cursor-pointer flex-shrink-0 ml-3"
+                  aria-label="Close menu"
+                >
+                  <X className="h-6 w-6 text-white" />
+                </button>
+              </div>
 
-              <nav className="flex flex-col gap-3">
+              {/* Navigation (scrollable middle section) */}
+              <nav className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    className="block rounded-lg px-4 py-4 text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
                   >
                     {link.name}
                   </Link>
                 ))}
               </nav>
 
-              <div className="mt-auto">
+              {/* Footer (sticks at bottom) */}
+              <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 {session ? (
-                  <div className="flex flex-col gap-3 mt-6">
+                  <div className="space-y-4">
                     <Link
                       href={getDashboardRoute(session.user?.role)}
                       onClick={() => setIsMenuOpen(false)}
-                      className="w-full text-center rounded-md bg-teal-600 text-white px-3 py-2 text-sm font-medium hover:bg-teal-500 transition cursor-pointer"
+                      className="block w-full text-center rounded-lg bg-teal-600 text-white px-4 py-4 text-lg font-medium hover:bg-teal-500 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
                     >
                       Dashboard
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm hover:bg-teal-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-4 text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer"
                     >
                       Sign out
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 mt-6">
+                  <div className="space-y-4">
                     <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm hover:bg-teal-50 dark:hover:bg-gray-800 transition cursor-pointer">
+                      <button className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-4 text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer">
                         Login
                       </button>
                     </Link>
                     <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-md bg-teal-600 text-white px-3 py-2 text-sm font-medium hover:bg-teal-500 transition cursor-pointer">
+                      <button className="w-full rounded-lg bg-teal-600 text-white px-4 py-4 text-lg font-medium hover:bg-teal-500 transition-all duration-200 hover:scale-[1.02] cursor-pointer">
                         Get Started
                       </button>
                     </Link>
