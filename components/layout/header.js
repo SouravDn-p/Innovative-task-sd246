@@ -30,20 +30,28 @@ export function Header() {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
 
-  // Show login toast
+  // Show login toast once per session
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      Swal.fire({
-        toast: true,
-        icon: "success",
-        title: `Hi ${session.user.name}!`,
-        text: "You are logged in 🎉",
-        position: "top-end",
-        timer: 1800,
-        showConfirmButton: false,
-        background: "#1e3a8a",
-        color: "#fff",
-      });
+      const hasWelcomed = sessionStorage.getItem("welcomed");
+      if (!hasWelcomed) {
+        Swal.fire({
+          toast: true,
+          icon: "success",
+          title: `Hi ${session.user.name}!`,
+          text: "You are logged in 🎉",
+          position: "top-end",
+          timer: 1800,
+          showConfirmButton: false,
+          background: "#1e3a8a",
+          color: "#fff",
+          customClass: {
+            popup: "max-w-xs w-full text-sm break-words", // fixes overflow
+            title: "truncate text-ellipsis", // keep title short
+          },
+        });
+        sessionStorage.setItem("welcomed", "true");
+      }
     }
   }, [status, session]);
 
@@ -232,7 +240,13 @@ export function Header() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="fixed inset-0 bg-black/50 z-[9998] md:hidden"
-              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
               onClick={handleOutsideClick}
             />
 
@@ -243,12 +257,12 @@ export function Header() {
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="sidebar z-[9999] w-[85vw] max-w-[400px] min-w-[320px] bg-white dark:bg-gray-900 shadow-2xl flex flex-col md:hidden"
-              style={{ 
-                position: 'fixed', 
-                right: 0, 
-                top: 0, 
+              style={{
+                position: "fixed",
+                right: 0,
+                top: 0,
                 bottom: 0,
-                height: '100vh'
+                height: "100vh",
               }}
             >
               {/* Header */}

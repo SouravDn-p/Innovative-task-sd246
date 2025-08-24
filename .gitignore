@@ -1,9 +1,9 @@
 node_modules
 .next
-.env.local
 
 package-lock.json
 package.json
 
 
 .vercel
+config.bat
