@@ -29,7 +29,7 @@ export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
-
+  console.log(session);
   // Show login toast once per session
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
