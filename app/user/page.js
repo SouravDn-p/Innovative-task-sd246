@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { UserDashboard } from "@/components/user/dashboard";
-import { TasksPage } from "@/components/user/tasks-page";
+import { TasksPage } from "@/components/user/task/tasks-page";
 import { ReferralsPage } from "@/components/user/referrals-page";
 import { MobileNav } from "@/components/user/mobile-nav";
 
