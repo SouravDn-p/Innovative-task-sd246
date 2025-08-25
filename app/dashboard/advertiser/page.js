@@ -9,26 +9,55 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, DollarSign, Award, BarChart3 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  DollarSign,
+  BarChart3,
+  TrendingUp,
+  Target,
+  ArrowUpRight,
+} from "lucide-react";
 
 const mockData = {
-  admin: {
+  advertiser: {
     stats: {
-      totalUsers: 15420,
-      activeTasks: 342,
-      totalRevenue: 125000,
-      systemHealth: 98.5,
+      totalSpent: 5420.0,
+      activeCampaigns: 8,
+      totalClicks: 12450,
+      conversionRate: 3.2,
     },
-    recentActivity: [
-      { type: "user_signup", count: 45, change: "+12%", period: "today" },
-      { type: "task_completion", count: 234, change: "+8%", period: "today" },
-      { type: "revenue", count: 3420, change: "+15%", period: "this week" },
+    campaigns: [
+      {
+        id: 1,
+        name: "Summer Sale Campaign",
+        budget: 1200,
+        spent: 890,
+        clicks: 3420,
+        status: "active",
+      },
+      {
+        id: 2,
+        name: "Product Launch",
+        budget: 800,
+        spent: 650,
+        clicks: 2100,
+        status: "active",
+      },
+      {
+        id: 3,
+        name: "Brand Awareness",
+        budget: 500,
+        spent: 500,
+        clicks: 1800,
+        status: "completed",
+      },
     ],
   },
 };
 
-export default function AdminDashboard() {
-  const data = mockData.admin;
+export default function AdvertiserDashboard() {
+  const data = mockData.advertiser;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -58,47 +87,15 @@ export default function AdminDashboard() {
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
-              Total Users
-            </CardTitle>
-            <Users className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-teal-900">
-              {data.stats.totalUsers.toLocaleString()}
-            </div>
-            <p className="text-xs text-teal-600">+245 this week</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-teal-800">
-              Active Tasks
-            </CardTitle>
-            <Target className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-teal-900">
-              {data.stats.activeTasks}
-            </div>
-            <p className="text-xs text-teal-600">+12 today</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-teal-800">
-              Total Revenue
+              Total Spent
             </CardTitle>
             <DollarSign className="h-4 w-4 text-teal-600" />
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              ₹{data.stats.totalRevenue.toLocaleString()}
+              ₹{data.stats.totalSpent.toFixed(2)}
             </div>
-            <p className="text-xs text-teal-600">+22% this month</p>
+            <p className="text-xs text-teal-600">+18% from last month</p>
           </CardContent>
         </Card>
 
@@ -106,15 +103,47 @@ export default function AdminDashboard() {
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
-              System Health
+              Active Campaigns
             </CardTitle>
-            <Award className="h-4 w-4 text-teal-600" />
+            <BarChart3 className="h-4 w-4 text-teal-600" />
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.systemHealth}%
+              {data.stats.activeCampaigns}
             </div>
-            <p className="text-xs text-teal-600">All systems operational</p>
+            <p className="text-xs text-teal-600">2 launching soon</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Total Clicks
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-teal-600" />
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              {data.stats.totalClicks.toLocaleString()}
+            </div>
+            <p className="text-xs text-teal-600">+25% this week</p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Conversion Rate
+            </CardTitle>
+            <Target className="h-4 w-4 text-teal-600" />
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              {data.stats.conversionRate}%
+            </div>
+            <p className="text-xs text-teal-600">+0.3% improvement</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -123,49 +152,51 @@ export default function AdminDashboard() {
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
           <CardHeader className="relative">
-            <CardTitle className="text-teal-800">Platform Activity</CardTitle>
+            <CardTitle className="text-teal-800">
+              Campaign Performance
+            </CardTitle>
             <CardDescription className="text-teal-600">
-              Recent platform metrics and trends
+              Overview of your active campaigns
             </CardDescription>
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-4">
-              {data.recentActivity.map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 border border-teal-100 rounded-lg bg-white/50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      {activity.type === "user_signup" && (
-                        <Users className="h-5 w-5 text-teal-600" />
-                      )}
-                      {activity.type === "task_completion" && (
-                        <Target className="h-5 w-5 text-teal-600" />
-                      )}
-                      {activity.type === "revenue" && (
-                        <DollarSign className="h-5 w-5 text-teal-600" />
-                      )}
-                    </div>
+              {data.campaigns.map((campaign) => (
+                <div key={campaign.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-teal-900 capitalize">
-                        {activity.type.replace("_", " ")}
+                      <p className="font-medium text-teal-900">
+                        {campaign.name}
                       </p>
-                      <p className="text-sm text-teal-600">{activity.period}</p>
+                      <p className="text-sm text-teal-600">
+                        ₹{campaign.spent.toFixed(2)} / ₹
+                        {campaign.budget.toFixed(2)} •{" "}
+                        {campaign.clicks.toLocaleString()} clicks
+                      </p>
                     </div>
+                    <Badge
+                      variant={
+                        campaign.status === "active" ? "default" : "secondary"
+                      }
+                      className={
+                        campaign.status === "active"
+                          ? "bg-teal-500"
+                          : "bg-teal-200 text-teal-800"
+                      }
+                    >
+                      {campaign.status}
+                    </Badge>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-teal-900">
-                      {activity.count.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-green-600">{activity.change}</p>
-                  </div>
+                  <Progress
+                    value={(campaign.spent / campaign.budget) * 100}
+                    className="h-2"
+                  />
                 </div>
               ))}
             </div>
             <Button className="w-full mt-4 bg-teal-600 hover:bg-teal-700">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              View Detailed Analytics
+              <ArrowUpRight className="h-4 w-4 mr-2" />
+              View All Campaigns
             </Button>
           </CardContent>
         </Card>
