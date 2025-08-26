@@ -192,9 +192,9 @@ const InteroDigital = () => {
           </h1>
           <p className="text-xl text-indigo-100 max-w-2xl mb-8 leading-relaxed">
             InteroBOT® emulates search engine crawlers, enabling our digital
-            marketing team to view your site just as search engines would. It's
-            our secret weapon for testing opportunities and more accurately
-            forecasting search results.
+            marketing team to view your site just as search engines would.
+            It&apos;s our secret weapon for testing opportunities and more
+            accurately forecasting search results.
           </p>
           <button className="bg-white text-indigo-700 hover:bg-indigo-50 font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105">
             SEE MORE
