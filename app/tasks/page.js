@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Filter, ArrowUpDown, Target, TrendingUp } from "lucide-react";
 import { TaskCard } from "@/components/shared/task-card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,

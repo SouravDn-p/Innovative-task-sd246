@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import DashboardLayout from "./layout";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -24,17 +23,15 @@ export default function DashboardPage() {
   }, [status, role, router]);
 
   return (
-    <DashboardLayout>
-      <motion.div
-        className="space-y-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center justify-center">
-          <p className="text-teal-600">Redirecting to your dashboard...</p>
-        </div>
-      </motion.div>
-    </DashboardLayout>
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex items-center justify-center">
+        <p className="text-teal-600">Redirecting to your dashboard...</p>
+      </div>
+    </motion.div>
   );
 }
