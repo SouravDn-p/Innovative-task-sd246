@@ -7,13 +7,16 @@ export async function POST(req, context) {
   try {
     const { params } = await context;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      );
     }
 
     const userId = params.id;
@@ -21,7 +24,10 @@ export async function POST(req, context) {
     const { reason, duration, customReason } = body;
 
     if (!reason) {
-      return NextResponse.json({ error: "Suspension reason is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Suspension reason is required" },
+        { status: 400 }
+      );
     }
 
     const client = await clientPromise;
@@ -30,7 +36,9 @@ export async function POST(req, context) {
     // Find user
     let user;
     if (ObjectId.isValid(userId)) {
-      user = await db.collection("Users").findOne({ _id: new ObjectId(userId) });
+      user = await db
+        .collection("Users")
+        .findOne({ _id: new ObjectId(userId) });
     } else {
       user = await db.collection("Users").findOne({ email: userId });
     }
@@ -40,17 +48,22 @@ export async function POST(req, context) {
     }
 
     if (user.isSuspended) {
-      return NextResponse.json({ error: "User is already suspended" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User is already suspended" },
+        { status: 400 }
+      );
     }
 
     const suspensionDate = new Date();
     const suspensionReason = reason === "custom" ? customReason : reason;
-    
+
     // Calculate suspension end date if duration is provided
     let suspensionEndDate = null;
     if (duration && duration !== "permanent") {
       const durationDays = parseInt(duration);
-      suspensionEndDate = new Date(suspensionDate.getTime() + (durationDays * 24 * 60 * 60 * 1000));
+      suspensionEndDate = new Date(
+        suspensionDate.getTime() + durationDays * 24 * 60 * 60 * 1000
+      );
     }
 
     // Prepare suspension record
@@ -75,13 +88,18 @@ export async function POST(req, context) {
       },
     };
 
-    const result = await db.collection("Users").updateOne(
-      { email: user.email },
-      { $set: updateFields, $push: { suspensionHistory: suspensionRecord } }
-    );
+    const result = await db
+      .collection("Users")
+      .updateOne(
+        { email: user.email },
+        { $set: updateFields, $push: { suspensionHistory: suspensionRecord } }
+      );
 
     if (result.modifiedCount === 0) {
-      return NextResponse.json({ error: "Failed to suspend user" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to suspend user" },
+        { status: 500 }
+      );
     }
 
     // Log admin action

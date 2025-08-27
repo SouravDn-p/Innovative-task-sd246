@@ -11,7 +11,15 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "Task", "Referral", "Wallet", "UserTasks", "KYC"],
+  tagTypes: [
+    "User",
+    "Task",
+    "Referral",
+    "Wallet",
+    "UserTasks",
+    "KYC",
+    "AdminUsers",
+  ],
   endpoints: (builder) => ({
     // User Authentication and Management
     registerUser: builder.mutation({
@@ -248,6 +256,103 @@ export const api = createApi({
       query: (userId) => `wallet/${userId}/transactions`,
       providesTags: ["Wallet"],
     }),
+
+    // Admin User Management Endpoints
+    getAdminUsers: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/users?${searchParams.toString()}`;
+      },
+      providesTags: ["AdminUsers"],
+    }),
+    getAdminUserDetails: builder.query({
+      query: (userId) => `admin/users/${userId}`,
+      providesTags: (result, error, userId) => [
+        { type: "AdminUsers", id: userId },
+      ],
+    }),
+    suspendUser: builder.mutation({
+      query: ({ userId, reason, duration, customReason }) => ({
+        url: `admin/users/${userId}/suspend`,
+        method: "POST",
+        body: { reason, duration, customReason },
+      }),
+      invalidatesTags: ["AdminUsers", "User"],
+    }),
+    reactivateUser: builder.mutation({
+      query: ({ userId, feeCollected, feeAmount, paymentReference, note }) => ({
+        url: `admin/users/${userId}/reactivate`,
+        method: "POST",
+        body: { feeCollected, feeAmount, paymentReference, note },
+      }),
+      invalidatesTags: ["AdminUsers", "User"],
+    }),
+    adjustUserWallet: builder.mutation({
+      query: ({ userId, type, amount, note, reference }) => ({
+        url: `admin/users/${userId}/wallet-adjust`,
+        method: "POST",
+        body: { type, amount, note, reference },
+      }),
+      invalidatesTags: ["AdminUsers", "User", "Wallet"],
+    }),
+    resetUserPassword: builder.mutation({
+      query: ({ userId, newPassword, sendNotification }) => ({
+        url: `admin/users/${userId}/reset-password`,
+        method: "POST",
+        body: { newPassword, sendNotification },
+      }),
+      invalidatesTags: ["AdminUsers"],
+    }),
+    deleteUser: builder.mutation({
+      query: ({ userId, reason, confirmDelete }) => ({
+        url: `admin/users/${userId}/delete`,
+        method: "DELETE",
+        body: { reason, confirmDelete },
+      }),
+      invalidatesTags: ["AdminUsers", "User"],
+    }),
+    bulkSuspendUsers: builder.mutation({
+      query: ({ userIds, reason, duration, customReason }) => ({
+        url: "admin/users/bulk-suspend",
+        method: "POST",
+        body: { userIds, reason, duration, customReason },
+      }),
+      invalidatesTags: ["AdminUsers", "User"],
+    }),
+    bulkReactivateUsers: builder.mutation({
+      query: ({ userIds, feeCollected, feeAmount }) => ({
+        url: "admin/users/bulk-reactivate",
+        method: "POST",
+        body: { userIds, feeCollected, feeAmount },
+      }),
+      invalidatesTags: ["AdminUsers", "User"],
+    }),
+    exportUsers: builder.query({
+      query: (filters = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(filters).forEach((key) => {
+          if (filters[key]) searchParams.append(key, filters[key]);
+        });
+        return `admin/users/export?${searchParams.toString()}`;
+      },
+    }),
+    sendUserNotification: builder.mutation({
+      query: ({ userId, channel, message, subject }) => ({
+        url: `admin/users/${userId}/notify`,
+        method: "POST",
+        body: { channel, message, subject },
+      }),
+    }),
+    bulkNotifyUsers: builder.mutation({
+      query: ({ userIds, channel, message, subject }) => ({
+        url: "admin/users/notify-bulk",
+        method: "POST",
+        body: { userIds, channel, message, subject },
+      }),
+    }),
   }),
 });
 
@@ -291,4 +396,18 @@ export const {
   useGetWithdrawalsQuery,
   useUpdateWithdrawalMutation,
   useGetTransactionsQuery,
+
+  // Admin User Management exports
+  useGetAdminUsersQuery,
+  useGetAdminUserDetailsQuery,
+  useSuspendUserMutation,
+  useReactivateUserMutation,
+  useAdjustUserWalletMutation,
+  useResetUserPasswordMutation,
+  useDeleteUserMutation,
+  useBulkSuspendUsersMutation,
+  useBulkReactivateUsersMutation,
+  useExportUsersQuery,
+  useSendUserNotificationMutation,
+  useBulkNotifyUsersMutation,
 } = api;

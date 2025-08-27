@@ -7,18 +7,26 @@ export async function POST(req, context) {
   try {
     const { params } = await context;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      );
     }
 
     const userId = params.id;
     const body = await req.json();
-    const { feeCollected = false, feeAmount = 49, paymentReference, note } = body;
+    const {
+      feeCollected = false,
+      feeAmount = 49,
+      paymentReference,
+      note,
+    } = body;
 
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
@@ -26,7 +34,9 @@ export async function POST(req, context) {
     // Find user
     let user;
     if (ObjectId.isValid(userId)) {
-      user = await db.collection("Users").findOne({ _id: new ObjectId(userId) });
+      user = await db
+        .collection("Users")
+        .findOne({ _id: new ObjectId(userId) });
     } else {
       user = await db.collection("Users").findOne({ email: userId });
     }
@@ -36,7 +46,10 @@ export async function POST(req, context) {
     }
 
     if (!user.isSuspended) {
-      return NextResponse.json({ error: "User is not suspended" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User is not suspended" },
+        { status: 400 }
+      );
     }
 
     const reactivationDate = new Date();
@@ -63,14 +76,17 @@ export async function POST(req, context) {
 
     const result = await db.collection("Users").updateOne(
       { email: user.email },
-      { 
+      {
         $set: updateFields,
-        $push: { reactivationHistory: reactivationRecord }
+        $push: { reactivationHistory: reactivationRecord },
       }
     );
 
     if (result.modifiedCount === 0) {
-      return NextResponse.json({ error: "Failed to reactivate user" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to reactivate user" },
+        { status: 500 }
+      );
     }
 
     // Create wallet transaction if fee was collected
@@ -89,10 +105,12 @@ export async function POST(req, context) {
       });
 
       // Update user wallet balance
-      await db.collection("Users").updateOne(
-        { email: user.email },
-        { $set: { walletBalance: (user.walletBalance || 0) - feeAmount } }
-      );
+      await db
+        .collection("Users")
+        .updateOne(
+          { email: user.email },
+          { $set: { walletBalance: (user.walletBalance || 0) - feeAmount } }
+        );
     }
 
     // Log admin action

@@ -7,13 +7,16 @@ export async function POST(req, context) {
   try {
     const { params } = await context;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      );
     }
 
     const userId = params.id;
@@ -22,15 +25,24 @@ export async function POST(req, context) {
 
     // Validate input
     if (!type || !["credit", "debit"].includes(type)) {
-      return NextResponse.json({ error: "Invalid transaction type. Must be 'credit' or 'debit'" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid transaction type. Must be 'credit' or 'debit'" },
+        { status: 400 }
+      );
     }
 
     if (!amount || amount <= 0) {
-      return NextResponse.json({ error: "Amount must be a positive number" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Amount must be a positive number" },
+        { status: 400 }
+      );
     }
 
     if (!note || note.trim() === "") {
-      return NextResponse.json({ error: "Note/reason is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Note/reason is required" },
+        { status: 400 }
+      );
     }
 
     const client = await clientPromise;
@@ -39,7 +51,9 @@ export async function POST(req, context) {
     // Find user
     let user;
     if (ObjectId.isValid(userId)) {
-      user = await db.collection("Users").findOne({ _id: new ObjectId(userId) });
+      user = await db
+        .collection("Users")
+        .findOne({ _id: new ObjectId(userId) });
     } else {
       user = await db.collection("Users").findOne({ email: userId });
     }
@@ -55,12 +69,17 @@ export async function POST(req, context) {
       newBalance = currentBalance + parseFloat(amount);
     } else {
       newBalance = currentBalance - parseFloat(amount);
-      
+
       // Check if user has sufficient balance for debit
       if (newBalance < 0) {
-        return NextResponse.json({ 
-          error: `Insufficient balance. Current balance: ₹${currentBalance.toFixed(2)}` 
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: `Insufficient balance. Current balance: ₹${currentBalance.toFixed(
+              2
+            )}`,
+          },
+          { status: 400 }
+        );
       }
     }
 
@@ -80,31 +99,36 @@ export async function POST(req, context) {
     };
 
     // Insert transaction
-    const transactionResult = await db.collection("walletTransactions").insertOne(transaction);
+    const transactionResult = await db
+      .collection("walletTransactions")
+      .insertOne(transaction);
 
     // Update user wallet balance
     const userUpdateResult = await db.collection("Users").updateOne(
       { email: user.email },
-      { 
-        $set: { 
+      {
+        $set: {
           walletBalance: newBalance,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       }
     );
 
     if (userUpdateResult.modifiedCount === 0) {
-      return NextResponse.json({ error: "Failed to update user balance" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update user balance" },
+        { status: 500 }
+      );
     }
 
     // Update total earnings if it's a credit
     if (type === "credit") {
       await db.collection("Users").updateOne(
         { email: user.email },
-        { 
-          $inc: { 
-            totalEarn: parseFloat(amount)
-          }
+        {
+          $inc: {
+            totalEarn: parseFloat(amount),
+          },
         }
       );
     }

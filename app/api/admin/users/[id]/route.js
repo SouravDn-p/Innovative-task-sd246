@@ -7,13 +7,16 @@ export async function GET(req, context) {
   try {
     const { params } = await context;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      );
     }
 
     const userId = params.id;
@@ -24,15 +27,16 @@ export async function GET(req, context) {
     // Get user by ID or email
     let user;
     if (ObjectId.isValid(userId)) {
-      user = await db.collection("Users").findOne(
-        { _id: new ObjectId(userId) },
-        { projection: { password: 0 } }
-      );
+      user = await db
+        .collection("Users")
+        .findOne(
+          { _id: new ObjectId(userId) },
+          { projection: { password: 0 } }
+        );
     } else {
-      user = await db.collection("Users").findOne(
-        { email: userId },
-        { projection: { password: 0 } }
-      );
+      user = await db
+        .collection("Users")
+        .findOne({ email: userId }, { projection: { password: 0 } });
     }
 
     if (!user) {
@@ -40,13 +44,28 @@ export async function GET(req, context) {
     }
 
     // Get comprehensive user data
-    const userTasks = await db.collection("userTasks").find({ userEmail: user.email }).toArray();
-    const taskSubmissions = await db.collection("taskSubmissions").find({ userEmail: user.email }).toArray();
-    const walletTransactions = await db.collection("walletTransactions").find({ userEmail: user.email }).sort({ createdAt: -1 }).limit(50).toArray();
-    
+    const userTasks = await db
+      .collection("userTasks")
+      .find({ userEmail: user.email })
+      .toArray();
+    const taskSubmissions = await db
+      .collection("taskSubmissions")
+      .find({ userEmail: user.email })
+      .toArray();
+    const walletTransactions = await db
+      .collection("walletTransactions")
+      .find({ userEmail: user.email })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+
     // Get referral information
-    const referrals = await db.collection("Users").find({ referrerId: user.referralId }).project({ name: 1, email: 1, createdAt: 1, totalEarn: 1 }).toArray();
-    
+    const referrals = await db
+      .collection("Users")
+      .find({ referrerId: user.referralId })
+      .project({ name: 1, email: 1, createdAt: 1, totalEarn: 1 })
+      .toArray();
+
     // Get suspension history
     const suspensionHistory = user.suspensionHistory || [];
 
@@ -57,7 +76,7 @@ export async function GET(req, context) {
     const userProfile = {
       ...user,
       _id: user._id.toString(),
-      
+
       // Personal Information
       personalInfo: {
         name: user.name,
@@ -66,8 +85,12 @@ export async function GET(req, context) {
         dateOfBirth: user.dateOfBirth,
         bio: user.bio,
         location: user.location,
-        joinDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : null,
-        lastActive: user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : null,
+        joinDate: user.createdAt
+          ? new Date(user.createdAt).toISOString().split("T")[0]
+          : null,
+        lastActive: user.updatedAt
+          ? new Date(user.updatedAt).toISOString().split("T")[0]
+          : null,
       },
 
       // Account Status
@@ -99,7 +122,7 @@ export async function GET(req, context) {
         referralEarnings: user.referralEarnings || 0,
         taskEarnings: user.taskEarnings || 0,
         weeklyEarnAmount: user.weeklyEarnAmount || 0,
-        transactions: walletTransactions.map(tx => ({
+        transactions: walletTransactions.map((tx) => ({
           ...tx,
           _id: tx._id.toString(),
         })),
@@ -108,15 +131,23 @@ export async function GET(req, context) {
       // Task Statistics
       taskStats: {
         totalTasks: userTasks.length,
-        completedTasks: userTasks.filter(task => 
-          task.status === "completed" || task.paymentReceivedStatus === "completed"
+        completedTasks: userTasks.filter(
+          (task) =>
+            task.status === "completed" ||
+            task.paymentReceivedStatus === "completed"
         ).length,
-        pendingTasks: userTasks.filter(task => task.status === "pending").length,
-        activeTasks: userTasks.filter(task => task.status === "active").length,
+        pendingTasks: userTasks.filter((task) => task.status === "pending")
+          .length,
+        activeTasks: userTasks.filter((task) => task.status === "active")
+          .length,
         totalSubmissions: taskSubmissions.length,
-        approvedSubmissions: taskSubmissions.filter(sub => sub.status === "approved").length,
-        rejectedSubmissions: taskSubmissions.filter(sub => sub.status === "rejected").length,
-        recentTasks: userTasks.slice(0, 10).map(task => ({
+        approvedSubmissions: taskSubmissions.filter(
+          (sub) => sub.status === "approved"
+        ).length,
+        rejectedSubmissions: taskSubmissions.filter(
+          (sub) => sub.status === "rejected"
+        ).length,
+        recentTasks: userTasks.slice(0, 10).map((task) => ({
           ...task,
           _id: task._id.toString(),
         })),
@@ -128,14 +159,14 @@ export async function GET(req, context) {
         referrerId: user.referrerId,
         totalReferrals: referrals.length,
         dailyReferralsCount: user.dailyReferralsCount || 0,
-        referrals: referrals.map(ref => ({
+        referrals: referrals.map((ref) => ({
           ...ref,
           _id: ref._id.toString(),
         })),
       },
 
       // Suspension History
-      suspensionHistory: suspensionHistory.map(suspension => ({
+      suspensionHistory: suspensionHistory.map((suspension) => ({
         ...suspension,
         date: suspension.date ? new Date(suspension.date).toISOString() : null,
       })),

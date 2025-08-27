@@ -6,13 +6,16 @@ import { ObjectId } from "mongodb";
 export async function GET(req) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      );
     }
 
     const url = new URL(req.url);
@@ -29,12 +32,12 @@ export async function GET(req) {
 
     // Build filter query
     const filter = {};
-    
+
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } }
+        { phone: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -72,29 +75,47 @@ export async function GET(req) {
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         // Get user tasks statistics
-        const userTasks = await db.collection("userTasks").find({ userEmail: user.email }).toArray();
-        const taskSubmissions = await db.collection("taskSubmissions").find({ userEmail: user.email }).toArray();
+        const userTasks = await db
+          .collection("userTasks")
+          .find({ userEmail: user.email })
+          .toArray();
+        const taskSubmissions = await db
+          .collection("taskSubmissions")
+          .find({ userEmail: user.email })
+          .toArray();
 
         return {
           ...user,
           _id: user._id.toString(),
           // Task statistics
-          tasksCompleted: userTasks.filter(task => 
-            task.status === "completed" || task.paymentReceivedStatus === "completed"
+          tasksCompleted: userTasks.filter(
+            (task) =>
+              task.status === "completed" ||
+              task.paymentReceivedStatus === "completed"
           ).length,
-          pendingTasks: userTasks.filter(task => task.status === "pending").length,
-          activeTasks: userTasks.filter(task => task.status === "active").length,
+          pendingTasks: userTasks.filter((task) => task.status === "pending")
+            .length,
+          activeTasks: userTasks.filter((task) => task.status === "active")
+            .length,
           totalSubmissions: taskSubmissions.length,
-          approvedSubmissions: taskSubmissions.filter(sub => sub.status === "approved").length,
-          rejectedSubmissions: taskSubmissions.filter(sub => sub.status === "rejected").length,
+          approvedSubmissions: taskSubmissions.filter(
+            (sub) => sub.status === "approved"
+          ).length,
+          rejectedSubmissions: taskSubmissions.filter(
+            (sub) => sub.status === "rejected"
+          ).length,
           // Referral statistics
           totalReferrals: user.Recent_Referrals?.length || 0,
           // Wallet information
           walletBalance: user.walletBalance || 0,
           totalEarn: user.totalEarn || 0,
           // Dates
-          joinDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : null,
-          lastActive: user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : null,
+          joinDate: user.createdAt
+            ? new Date(user.createdAt).toISOString().split("T")[0]
+            : null,
+          lastActive: user.updatedAt
+            ? new Date(user.updatedAt).toISOString().split("T")[0]
+            : null,
         };
       })
     );
@@ -102,11 +123,21 @@ export async function GET(req) {
     // Calculate summary statistics
     const summary = {
       totalUsers,
-      activeUsers: await usersCollection.countDocuments({ isSuspended: { $ne: true } }),
-      suspendedUsers: await usersCollection.countDocuments({ isSuspended: true }),
-      verifiedKyc: await usersCollection.countDocuments({ kycStatus: "verified" }),
-      pendingKyc: await usersCollection.countDocuments({ kycStatus: "pending" }),
-      rejectedKyc: await usersCollection.countDocuments({ kycStatus: "rejected" }),
+      activeUsers: await usersCollection.countDocuments({
+        isSuspended: { $ne: true },
+      }),
+      suspendedUsers: await usersCollection.countDocuments({
+        isSuspended: true,
+      }),
+      verifiedKyc: await usersCollection.countDocuments({
+        kycStatus: "verified",
+      }),
+      pendingKyc: await usersCollection.countDocuments({
+        kycStatus: "pending",
+      }),
+      rejectedKyc: await usersCollection.countDocuments({
+        kycStatus: "rejected",
+      }),
     };
 
     return NextResponse.json({
