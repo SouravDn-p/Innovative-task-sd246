@@ -46,6 +46,19 @@ export const api = createApi({
         { type: "User", id: email },
       ],
     }),
+    // Profile-specific endpoints
+    getUserProfile: builder.query({
+      query: () => "user/profile",
+      providesTags: ["User"],
+    }),
+    updateUserProfile: builder.mutation({
+      query: (profileData) => ({
+        url: "user/profile",
+        method: "PUT",
+        body: profileData,
+      }),
+      invalidatesTags: ["User"],
+    }),
 
     // Inside endpoints: (builder) => ({
     setReferralId: builder.mutation({
@@ -130,11 +143,15 @@ export const api = createApi({
     getUserTasks: builder.query({
       query: (userEmail) => `user/getUserTasks/${userEmail}`,
       providesTags: ["UserTasks"],
-      transformResponse: (response) =>
-        response.map((task) => ({
-          ...task,
-          _id: task._id.$oid,
-        })),
+      transformResponse: (response) => ({
+        userTasks:
+          response.userTasks?.map((task) => ({
+            ...task,
+            _id: task._id,
+          })) || [],
+        statistics: response.statistics || {},
+        recentTasks: response.recentTasks || [],
+      }),
     }),
     deleteMyTask: builder.mutation({
       query: (taskId) => ({
@@ -240,6 +257,8 @@ export const {
   useGetAllUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserMutation,
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
 
   useSetReferralIdMutation,
   useAddReferralMutation,

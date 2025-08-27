@@ -6,8 +6,6 @@ import { useIsMobile } from "@/hooks/use-mobiles";
 import DashboardSidebar from "./dashboard-sidebar";
 import DashboardHeader from "./dashboard-header";
 import { MobileNav } from "@/components/user/mobile-nav";
-import ReduxProvider from "@/components/ReduxProvider";
-import SessionWrapper from "@/components/SessionWrapper";
 
 function DashboardContent({ children }) {
   const role = useSelector((state) => state?.auth?.role) || "user";
@@ -70,11 +68,5 @@ function DashboardContent({ children }) {
 }
 
 export default function DashboardLayout({ children }) {
-  return (
-    <ReduxProvider>
-      <SessionWrapper>
-        <DashboardContent>{children}</DashboardContent>
-      </SessionWrapper>
-    </ReduxProvider>
-  );
+  return <DashboardContent>{children}</DashboardContent>;
 }

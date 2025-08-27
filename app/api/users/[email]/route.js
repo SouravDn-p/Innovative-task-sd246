@@ -35,7 +35,7 @@ export async function GET(req, context) {
 }
 
 export async function PUT(req, context) {
-  const { params } = context;
+  const { params } = await context;
   const email = params?.email;
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -59,6 +59,7 @@ export async function PUT(req, context) {
     if (body.name) updateFields.name = body.name;
     if (body.image) updateFields.image = body.image;
     if (body.phone) updateFields.phone = body.phone;
+    if (body.dateOfBirth) updateFields.dateOfBirth = body.dateOfBirth;
     if (body.bio) updateFields.bio = body.bio;
     if (body.department) updateFields.department = body.department;
     if (body.location) updateFields.location = body.location;

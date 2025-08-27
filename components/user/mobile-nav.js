@@ -21,7 +21,7 @@ export function MobileNav({ activeTab, onTabChange }) {
   const simplifiedMenus = {
     user: [
       { title: "Dashboard", icon: Home, href: "/" },
-      { title: "Tasks", icon: CheckCircle, href: "/user/task" },
+      { title: "Tasks", icon: CheckCircle, href: "/dashboard/user/task" },
       { title: "Wallet", icon: DollarSign, href: "/dashboard/user/wallet" },
       { title: "Profile", icon: User, href: "/dashboard/user/profile" },
       { title: "Home", icon: HomeIcon, href: "/" },

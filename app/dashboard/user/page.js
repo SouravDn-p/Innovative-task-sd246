@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -17,49 +19,80 @@ import {
   Zap,
   CheckCircle,
   Star,
+  Loader2,
 } from "lucide-react";
-
-const mockData = {
-  user: {
-    stats: {
-      totalEarned: 1247.5,
-      tasksCompleted: 156,
-      activeReferrals: 23,
-      currentStreak: 12,
-    },
-    recentTasks: [
-      {
-        id: 1,
-        title: "Product Review",
-        reward: 15,
-        status: "completed",
-        date: "2024-01-15",
-      },
-      {
-        id: 2,
-        title: "Survey Completion",
-        reward: 8,
-        status: "in-progress",
-        date: "2024-01-14",
-      },
-      {
-        id: 3,
-        title: "Data Entry",
-        reward: 25,
-        status: "completed",
-        date: "2024-01-13",
-      },
-    ],
-    achievements: [
-      { name: "First Steps", icon: Target, earned: true },
-      { name: "Streak Master", icon: Zap, earned: true },
-      { name: "Social Butterfly", icon: Star, earned: false },
-    ],
-  },
-};
+import { useGetUserByEmailQuery, useGetUserTasksQuery } from "@/redux/api/api";
+import { useRouter } from "next/navigation";
 
 export default function UserDashboard() {
-  const data = mockData.user;
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [currentStreak, setCurrentStreak] = useState(0);
+
+  // Get user data
+  const {
+    data: userData,
+    isLoading: userLoading,
+    error: userError,
+  } = useGetUserByEmailQuery(session?.user?.email, {
+    skip: !session?.user?.email,
+  });
+
+  // Get user tasks data
+  const {
+    data: userTasksData,
+    isLoading: tasksLoading,
+    error: tasksError,
+  } = useGetUserTasksQuery(session?.user?.email, {
+    skip: !session?.user?.email,
+  });
+
+  // Calculate current streak based on recent task activity
+  useEffect(() => {
+    if (userTasksData?.recentTasks) {
+      // Simple streak calculation based on consecutive days with completed tasks
+      const today = new Date();
+      const recentDays = [];
+
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split("T")[0];
+
+        const hasTaskOnDate = userTasksData.recentTasks.some(
+          (task) => task.status === "completed" && task.date === dateStr
+        );
+
+        if (hasTaskOnDate) {
+          recentDays.push(dateStr);
+        } else if (i === 0) {
+          // If no task today, streak is 0
+          break;
+        } else {
+          // Gap in streak
+          break;
+        }
+      }
+
+      setCurrentStreak(recentDays.length);
+    }
+  }, [userTasksData]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  const user = userData?.user;
+  const userTasks = userTasksData?.userTasks || [];
+  const statistics = userTasksData?.statistics || {};
+  const recentTasks = userTasksData?.recentTasks || [];
+
+  // Calculate referrals from user data
+  const activeReferrals =
+    user?.Recent_Referrals?.length || user?.recentReferrals?.length || 0;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -73,6 +106,35 @@ export default function UserDashboard() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+  // Loading state
+  if (status === "loading" || userLoading || tasksLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <span className="ml-2 text-teal-800">Loading dashboard...</span>
+      </div>
+    );
+  }
+
+  // Error state
+  if (userError || tasksError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Error loading dashboard data</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated
+  if (status === "unauthenticated") {
+    return null;
+  }
 
   return (
     <motion.div
@@ -95,9 +157,13 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              ₹{data.stats.totalEarned.toFixed(2)}
+              ₹{user?.totalEarn || user?.walletBalance || 0}
             </div>
-            <p className="text-xs text-teal-600">+12% from last month</p>
+            <p className="text-xs text-teal-600">
+              {statistics.totalEarned > 0
+                ? `+₹${statistics.totalEarned} this month`
+                : "Start earning today!"}
+            </p>
           </CardContent>
         </Card>
 
@@ -111,9 +177,13 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.tasksCompleted}
+              {statistics.tasksCompleted || 0}
             </div>
-            <p className="text-xs text-teal-600">+8 this week</p>
+            <p className="text-xs text-teal-600">
+              {statistics.activeTasks > 0
+                ? `${statistics.activeTasks} active`
+                : "No active tasks"}
+            </p>
           </CardContent>
         </Card>
 
@@ -127,9 +197,13 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.activeReferrals}
+              {activeReferrals}
             </div>
-            <p className="text-xs text-teal-600">+3 this month</p>
+            <p className="text-xs text-teal-600">
+              {user?.dailyReferralsCount > 0
+                ? `+${user.dailyReferralsCount} today`
+                : "Share your link!"}
+            </p>
           </CardContent>
         </Card>
 
@@ -143,9 +217,11 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.currentStreak} days
+              {currentStreak} days
             </div>
-            <p className="text-xs text-teal-600">Keep it up!</p>
+            <p className="text-xs text-teal-600">
+              {currentStreak > 0 ? "Keep it up!" : "Start your streak!"}
+            </p>
           </CardContent>
         </Card>
       </motion.div>
@@ -164,42 +240,55 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-4">
-              {data.recentTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        task.status === "completed"
-                          ? "bg-green-500"
-                          : "bg-yellow-500"
-                      }`}
-                    />
-                    <div>
-                      <p className="font-medium text-teal-900">{task.title}</p>
-                      <p className="text-sm text-teal-600">{task.date}</p>
-                    </div>
-                  </div>
-                  <Badge
-                    variant={
-                      task.status === "completed" ? "default" : "secondary"
-                    }
-                    className={
-                      task.status === "completed"
-                        ? "bg-teal-500"
-                        : "bg-teal-200 text-teal-800"
-                    }
+              {recentTasks.length > 0 ? (
+                recentTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between"
                   >
-                    ₹{task.reward}
-                  </Badge>
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          task.status === "completed"
+                            ? "bg-green-500"
+                            : "bg-yellow-500"
+                        }`}
+                      />
+                      <div>
+                        <p className="font-medium text-teal-900">
+                          {task.title}
+                        </p>
+                        <p className="text-sm text-teal-600">{task.date}</p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={
+                        task.status === "completed" ? "default" : "secondary"
+                      }
+                      className={
+                        task.status === "completed"
+                          ? "bg-teal-500"
+                          : "bg-teal-200 text-teal-800"
+                      }
+                    >
+                      ₹{task.reward}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Target className="h-12 w-12 text-teal-300 mx-auto mb-3" />
+                  <p className="text-teal-600">No recent tasks found</p>
+                  <p className="text-sm text-teal-500">
+                    Start working on tasks to see them here!
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
             <Button
               className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
               aria-label="View all tasks"
+              onClick={() => router.push("/dashboard/user/task")}
             >
               View All Tasks
             </Button>
@@ -216,7 +305,38 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-4">
-              {data.achievements.map((achievement, index) => (
+              {[
+                {
+                  name: "First Steps",
+                  icon: Target,
+                  earned: statistics.tasksCompleted > 0,
+                  description: "Complete your first task",
+                },
+                {
+                  name: "Streak Master",
+                  icon: Zap,
+                  earned: currentStreak >= 7,
+                  description: "Maintain a 7-day streak",
+                },
+                {
+                  name: "Social Butterfly",
+                  icon: Star,
+                  earned: activeReferrals >= 5,
+                  description: "Refer 5 or more users",
+                },
+                {
+                  name: "Task Expert",
+                  icon: CheckCircle,
+                  earned: statistics.tasksCompleted >= 50,
+                  description: "Complete 50 tasks",
+                },
+                {
+                  name: "High Earner",
+                  icon: DollarSign,
+                  earned: (user?.totalEarn || user?.walletBalance || 0) >= 1000,
+                  description: "Earn ₹1000 or more",
+                },
+              ].map((achievement, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <div
                     className={`p-2 rounded-lg ${
@@ -232,7 +352,9 @@ export default function UserDashboard() {
                       {achievement.name}
                     </p>
                     <p className="text-sm text-teal-600">
-                      {achievement.earned ? "Completed" : "In Progress"}
+                      {achievement.earned
+                        ? "Completed"
+                        : achievement.description}
                     </p>
                   </div>
                   {achievement.earned && (
@@ -244,6 +366,7 @@ export default function UserDashboard() {
             <Button
               className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
               aria-label="View all achievements"
+              onClick={() => router.push("/dashboard/user")}
             >
               View All Achievements
             </Button>

@@ -204,7 +204,7 @@ function TasksPage() {
                             <div className="space-y-2">
                               <Label>Requirements:</Label>
                               <ul className="text-sm text-muted-foreground space-y-1">
-                                {task.requirements.map((req, index) => (
+                                {task.requirements?.map((req, index) => (
                                   <li
                                     key={index}
                                     className="flex items-center gap-2"
