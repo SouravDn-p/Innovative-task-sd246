@@ -19,6 +19,7 @@ export const api = createApi({
     "UserTasks",
     "KYC",
     "AdminUsers",
+    "AdminTasks",
   ],
   endpoints: (builder) => ({
     // User Authentication and Management
@@ -353,6 +354,115 @@ export const api = createApi({
         body: { userIds, channel, message, subject },
       }),
     }),
+
+    // Admin Task Management Endpoints
+    getAdminTasks: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/tasks?${searchParams.toString()}`;
+      },
+      providesTags: ["AdminTasks"],
+    }),
+    getAdminTaskDetails: builder.query({
+      query: (taskId) => `admin/tasks/${taskId}`,
+      providesTags: (result, error, taskId) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+      ],
+    }),
+    createAdminTask: builder.mutation({
+      query: (taskData) => ({
+        url: "admin/tasks",
+        method: "POST",
+        body: taskData,
+      }),
+      invalidatesTags: ["AdminTasks", "Task"],
+    }),
+    updateAdminTask: builder.mutation({
+      query: ({ taskId, ...data }) => ({
+        url: `admin/tasks/${taskId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+        "AdminTasks",
+      ],
+    }),
+    deleteAdminTask: builder.mutation({
+      query: ({ taskId, reason, confirmDelete }) => ({
+        url: `admin/tasks/${taskId}`,
+        method: "DELETE",
+        body: { reason, confirmDelete },
+      }),
+      invalidatesTags: ["AdminTasks", "Task"],
+    }),
+    approveTask: builder.mutation({
+      query: ({ taskId, note }) => ({
+        url: `admin/tasks/${taskId}/approve`,
+        method: "POST",
+        body: { note },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+        "AdminTasks",
+      ],
+    }),
+    pauseResumeTask: builder.mutation({
+      query: ({ taskId, action, reason, duration }) => ({
+        url: `admin/tasks/${taskId}/pause-resume`,
+        method: "POST",
+        body: { action, reason, duration },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+        "AdminTasks",
+      ],
+    }),
+    completeTask: builder.mutation({
+      query: ({ taskId, forceComplete, reason, refundRemaining }) => ({
+        url: `admin/tasks/${taskId}/complete`,
+        method: "POST",
+        body: { forceComplete, reason, refundRemaining },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+        "AdminTasks",
+        "Wallet",
+      ],
+    }),
+    reviewTaskSubmissions: builder.mutation({
+      query: ({ taskId, submissionIds, action, feedback, bulkReason }) => ({
+        url: `admin/tasks/${taskId}/submissions`,
+        method: "POST",
+        body: { submissionIds, action, feedback, bulkReason },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+        { type: "Task", id: taskId },
+        "AdminTasks",
+        "Wallet",
+      ],
+    }),
+    getTaskSubmissions: builder.query({
+      query: ({ taskId, status, page = 1, limit = 20 }) => {
+        const searchParams = new URLSearchParams();
+        if (status) searchParams.append("status", status);
+        searchParams.append("page", page.toString());
+        searchParams.append("limit", limit.toString());
+        return `admin/tasks/${taskId}/submissions?${searchParams.toString()}`;
+      },
+      providesTags: (result, error, { taskId }) => [
+        { type: "AdminTasks", id: taskId },
+      ],
+    }),
   }),
 });
 
@@ -410,4 +520,16 @@ export const {
   useExportUsersQuery,
   useSendUserNotificationMutation,
   useBulkNotifyUsersMutation,
+
+  // Admin Task Management exports
+  useGetAdminTasksQuery,
+  useGetAdminTaskDetailsQuery,
+  useCreateAdminTaskMutation,
+  useUpdateAdminTaskMutation,
+  useDeleteAdminTaskMutation,
+  useApproveTaskMutation,
+  usePauseResumeTaskMutation,
+  useCompleteTaskMutation,
+  useReviewTaskSubmissionsMutation,
+  useGetTaskSubmissionsQuery,
 } = api;
