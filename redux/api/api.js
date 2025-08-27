@@ -46,6 +46,22 @@ export const api = createApi({
         { type: "User", id: email },
       ],
     }),
+    // Inside endpoints: (builder) => ({
+    setReferralId: builder.mutation({
+      query: () => ({
+        url: "user/setReferralId",
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    addReferral: builder.mutation({
+      query: ({ referrerId, newUser }) => ({
+        url: `/user/addReferral/${referrerId}`,
+        method: "POST",
+        body: { referrerId, newUser },
+      }),
+      invalidatesTags: ["User", "Referral", "Wallet"],
+    }),
 
     // Task-Related Endpoints: Manage tasks, submissions, and user-specific tasks
     getTasks: builder.query({
@@ -196,12 +212,17 @@ export const {
   useGetAllUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserMutation,
+  
+  useSetReferralIdMutation,
+  useAddReferralMutation,
+
   useGetTasksQuery,
   useGetTaskByIdQuery,
   useCreateTaskMutation,
   useStartTaskMutation,
   useGetUserTasksQuery,
   useDeleteMyTaskMutation,
+
   useGetMyTasksQuery,
   useUpdateMyTaskMutation,
   useGetMyTaskSubmissionsQuery,

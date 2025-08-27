@@ -92,6 +92,7 @@ export const authOptions = {
               dailyReferralsCount: 0,
               weeklyEarnAmount: 0,
               walletBalance: 0,
+              Recent_Referrals: [],
               createdAt: new Date(),
               updatedAt: new Date(),
             });

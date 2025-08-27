@@ -49,7 +49,8 @@ export async function POST(req) {
       dailyReferralsCount: 0,
       weeklyEarnAmount: 0,
       walletBalance: 0,
-
+      totalEarn : 0,
+      Recent_Referrals: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
