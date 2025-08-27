@@ -15,7 +15,6 @@ export default function KYCPage() {
     }
   }, [status, router]);
 
-  // Show loading while checking authentication
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -24,14 +23,13 @@ export default function KYCPage() {
     );
   }
 
-  // Redirect if not authenticated
   if (status === "unauthenticated") {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <KYCDashboard />
+      <KYCDashboard userEmail={session.user.email} />
     </div>
   );
 }

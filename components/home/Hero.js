@@ -1,11 +1,9 @@
 "use client";
 
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Search, Star, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
-
 
 export function Hero() {
   // Simple inspiring quotes rotator (no external libs)
@@ -17,15 +15,13 @@ export function Hero() {
     { text: "Make it simple, make it useful, make it ship.", author: "AM" },
   ];
 
-
   const [quoteIndex, setQuoteIndex] = useState(0);
   useEffect(() => {
     const id = setInterval(() => {
       setQuoteIndex((i) => (i + 1) % quotes.length);
     }, 3800);
     return () => clearInterval(id);
-  }, []);
-
+  }, [quotes.length]);
 
   return (
     <section
@@ -38,17 +34,19 @@ export function Hero() {
           <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50 p-3 text-teal-700 shadow-md backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
             <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
               <p className="text-sm sm:text-base">
-                ✨ New: Smart matching gets you higher-paying tasks in less time.
+                ✨ New: Smart matching gets you higher-paying tasks in less
+                time.
               </p>
               <div className="flex items-center gap-2">
                 <div className="hidden h-2 w-2 animate-pulse rounded-full bg-teal-500 sm:block" />
-                <span className="text-xs text-teal-600">Live · Updated in real-time</span>
+                <span className="text-xs text-teal-600">
+                  Live · Updated in real-time
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
 
       {/* Decorative background grid + animated orbs */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -56,10 +54,24 @@ export function Hero() {
         <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-teal-200/50 blur-3xl" />
         <div className="absolute -bottom-32 -right-40 h-[28rem] w-[28rem] animate-pulse rounded-full bg-cyan-200/40 blur-3xl animation-delay-1000" />
         {/* grid + network */}
-        <svg className="absolute inset-0 h-full w-full opacity-10" viewBox="0 0 1200 800" fill="none">
+        <svg
+          className="absolute inset-0 h-full w-full opacity-10"
+          viewBox="0 0 1200 800"
+          fill="none"
+        >
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#14b8a6" strokeWidth="0.8" />
+            <pattern
+              id="grid"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 40 0 L 0 0 0 40"
+                fill="none"
+                stroke="#14b8a6"
+                strokeWidth="0.8"
+              />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
@@ -70,22 +82,54 @@ export function Hero() {
           <circle cx="860" cy="260" r="3" fill="#14b8a6" />
           <circle cx="1040" cy="180" r="3" fill="#14b8a6" />
           {/* links */}
-          <line x1="200" y1="150" x2="420" y2="220" stroke="#14b8a6" strokeWidth="1" opacity="0.45" />
-          <line x1="420" y1="220" x2="640" y2="120" stroke="#14b8a6" strokeWidth="1" opacity="0.45" />
-          <line x1="640" y1="120" x2="860" y2="260" stroke="#14b8a6" strokeWidth="1" opacity="0.45" />
-          <line x1="860" y1="260" x2="1040" y2="180" stroke="#14b8a6" strokeWidth="1" opacity="0.45" />
+          <line
+            x1="200"
+            y1="150"
+            x2="420"
+            y2="220"
+            stroke="#14b8a6"
+            strokeWidth="1"
+            opacity="0.45"
+          />
+          <line
+            x1="420"
+            y1="220"
+            x2="640"
+            y2="120"
+            stroke="#14b8a6"
+            strokeWidth="1"
+            opacity="0.45"
+          />
+          <line
+            x1="640"
+            y1="120"
+            x2="860"
+            y2="260"
+            stroke="#14b8a6"
+            strokeWidth="1"
+            opacity="0.45"
+          />
+          <line
+            x1="860"
+            y1="260"
+            x2="1040"
+            y2="180"
+            stroke="#14b8a6"
+            strokeWidth="1"
+            opacity="0.45"
+          />
         </svg>
       </div>
-
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-4 text-center">
         {/* Pill */}
         <div className="my-6 inline-flex items-center gap-2 rounded-full border border-teal-300 bg-teal-100 px-4 py-2 text-teal-700 shadow-sm">
           <Sparkles className="h-4 w-4" aria-hidden />
-          <span className="text-sm font-medium tracking-wide">AI-Powered Task Matching</span>
+          <span className="text-sm font-medium tracking-wide">
+            AI-Powered Task Matching
+          </span>
         </div>
-
 
         {/* Heading */}
         <h1 className="mb-4 text-5xl font-bold leading-tight text-gray-900 sm:text-6xl lg:text-7xl">
@@ -95,12 +139,11 @@ export function Hero() {
           </span>
         </h1>
 
-
         {/* Subheading */}
         <p className="mx-auto mb-10 max-w-3xl text-lg text-gray-700 sm:text-xl">
-          Our AI connects you with tasks that fit your skills, experience, and goals—so you earn faster with smart, high-match referrals.
+          Our AI connects you with tasks that fit your skills, experience, and
+          goals—so you earn faster with smart, high-match referrals.
         </p>
-
 
         {/* CTAs */}
         <div className="group mb-12 flex flex-col items-center gap-4 sm:flex-row">
@@ -115,7 +158,6 @@ export function Hero() {
             </Link>
           </Button>
 
-
           <Button
             asChild
             variant="outline"
@@ -127,7 +169,6 @@ export function Hero() {
             </Link>
           </Button>
         </div>
-
 
         {/* Trust / Stats row */}
         <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
@@ -155,13 +196,14 @@ export function Hero() {
               <div className="absolute inset-0 bg-gradient-to-r from-teal-100/0 via-teal-100/40 to-cyan-100/0 opacity-0 transition group-hover/card:opacity-100" />
               <div className="mb-2 inline-flex items-center gap-2 text-teal-600">
                 {item.icon}
-                <span className="text-sm font-medium tracking-wide">{item.title}</span>
+                <span className="text-sm font-medium tracking-wide">
+                  {item.title}
+                </span>
               </div>
               <p className="text-sm text-gray-600">{item.desc}</p>
             </div>
           ))}
         </div>
-
 
         {/* Quotes ticker */}
         <div className="mt-10 w-full">
@@ -170,17 +212,20 @@ export function Hero() {
               <Star className="h-4 w-4 shrink-0" aria-hidden />
               <p className="select-none text-sm sm:text-base">
                 “{quotes[quoteIndex].text}”
-                <span className="ml-2 text-teal-500">— {quotes[quoteIndex].author}</span>
+                <span className="ml-2 text-teal-500">
+                  — {quotes[quoteIndex].author}
+                </span>
               </p>
             </div>
           </div>
         </div>
 
-
         {/* Subtle bottom glow */}
-        <div aria-hidden className="pointer-events-none mt-14 h-px w-64 bg-gradient-to-r from-transparent via-teal-400/60 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none mt-14 h-px w-64 bg-gradient-to-r from-transparent via-teal-400/60 to-transparent"
+        />
       </div>
-
 
       {/* Decorative bottom waves */}
       <div aria-hidden className="absolute inset-x-0 bottom-0">
@@ -203,7 +248,6 @@ export function Hero() {
           </defs>
         </svg>
       </div>
-
 
       {/* Minor style helpers */}
       <style jsx>{`

@@ -5,6 +5,7 @@ import clientPromise from "@/lib/mongoClient";
 export async function GET(req, context) {
   const { params } = await context;
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  console.log({ token });
 
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

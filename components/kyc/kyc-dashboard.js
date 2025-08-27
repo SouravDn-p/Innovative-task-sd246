@@ -1,328 +1,446 @@
-"use client"
-
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   UserCheck,
-  FileText,
   CreditCard,
   CheckCircle,
   Clock,
   AlertTriangle,
   X,
-  Upload,
-  Eye,
-  RefreshCw,
-} from "lucide-react"
+  Shield,
+  FileText,
+  Banknote,
+} from "lucide-react";
+import { FileUploadZone } from "./FileUploadZone";
+import { useGetKYCDataQuery, useUpdateKYCDataMutation } from "@/redux/api/api";
+import { useToast } from "@/hooks/use-toast";
 
-export function KYCDashboard({ userRole = "user" }) {
-  const [kycData] = useState({
-    status: "pending", // not_started, pending, under_review, verified, rejected
-    submittedAt: "2024-01-20 14:30",
-    reviewedAt: null,
-    documents: {
-      aadhar: { uploaded: true, status: "approved", url: "aadhar.jpg" },
-      pan: { uploaded: true, status: "pending", url: "pan.jpg" },
-      selfie: { uploaded: true, status: "rejected", url: "selfie.jpg", reason: "Image not clear" },
-      bankStatement: { uploaded: false, status: "not_uploaded", url: null },
-    },
-    paymentStatus: "paid", // not_paid, paid, failed
+export const KYCDashboard = ({ userEmail }) => {
+  const { toast } = useToast();
+  const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
+  const [updateKYCData, { isLoading: isSubmitting }] =
+    useUpdateKYCDataMutation();
+
+  const [localKycData, setLocalKycData] = useState({
+    status: "none",
+    documents: {},
+    paymentStatus: "not_paid",
     paymentAmount: 99,
+    completionPercentage: 0,
+    submittedAt: null,
     rejectionReason: null,
-    completionPercentage: 75,
-  })
+  });
+
+  useEffect(() => {
+    if (kycData) {
+      setLocalKycData({
+        status: kycData.status || "none",
+        documents: kycData.documents || {},
+        paymentStatus: kycData.paymentStatus || "not_paid",
+        paymentAmount: kycData.paymentAmount || 99,
+        completionPercentage: kycData.completionPercentage || 0,
+        submittedAt: kycData.submittedAt ? new Date(kycData.submittedAt) : null,
+        rejectionReason: kycData.rejectionReason || null,
+      });
+    }
+  }, [kycData]);
+
+  const handleFileUpload = async (documentType, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("documentType", documentType);
+      formData.append("file", file.file);
+
+      await updateKYCData(formData).unwrap();
+      refetch();
+      toast({
+        title: "Document uploaded",
+        description: `${documentType} has been uploaded successfully.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Upload failed",
+        description: err.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const calculateCompletionPercentage = (documents) => {
+    const requiredDocs = ["aadhar", "pan", "selfie"];
+    const uploadedRequired = requiredDocs.filter(
+      (doc) => documents[doc]?.url
+    ).length;
+    const optionalUploaded = documents.bankStatement?.url ? 1 : 0;
+    return Math.round(
+      ((uploadedRequired + optionalUploaded) / (requiredDocs.length + 1)) * 100
+    );
+  };
+
+  const handlePayment = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("paymentStatus", "paid");
+
+      await updateKYCData(formData).unwrap();
+      refetch();
+      toast({
+        title: "Payment successful",
+        description:
+          "KYC verification fee has been paid. You can now upload your documents.",
+      });
+    } catch (error) {
+      toast({
+        title: "Payment failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmitKYC = async () => {
+    const requiredDocs = ["aadhar", "pan", "selfie"];
+    const missingDocs = requiredDocs.filter(
+      (doc) => !localKycData.documents[doc]?.url
+    );
+
+    if (missingDocs.length > 0) {
+      toast({
+        title: "Missing documents",
+        description: `Please upload: ${missingDocs.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (localKycData.paymentStatus !== "paid") {
+      toast({
+        title: "Payment required",
+        description: "Please complete the KYC verification fee payment first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateKYCData({ documents: localKycData.documents }).unwrap();
+      refetch();
+      toast({
+        title: "KYC submitted successfully",
+        description:
+          "Your documents are now under review. We'll notify you within 24-48 hours.",
+      });
+    } catch (error) {
+      toast({
+        title: "Submission failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
       case "verified":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-success-light text-success border-success/20";
       case "pending":
       case "under_review":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+        return "bg-warning-light text-warning-foreground border-warning/20";
       case "rejected":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-      case "not_started":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-destructive/10 text-destructive border-destructive/20";
       default:
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-info-light text-info border-info/20";
     }
-  }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case "verified":
-      case "approved":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case "pending":
       case "under_review":
-        return <Clock className="h-4 w-4 text-yellow-500" />
+        return <Clock className="h-5 w-5 text-warning" />;
       case "rejected":
-        return <X className="h-4 w-4 text-red-500" />
+        return <X className="h-5 w-5 text-destructive" />;
       default:
-        return <AlertTriangle className="h-4 w-4 text-gray-500" />
+        return <AlertTriangle className="h-5 w-5 text-info" />;
     }
+  };
+
+  const canStartKYC = localKycData.status === "none";
+  const canResubmit = localKycData.status === "rejected";
+  const isUnderReview =
+    localKycData.status === "pending" || localKycData.status === "under_review";
+  const isVerified = localKycData.status === "verified";
+  const canUploadDocuments =
+    localKycData.paymentStatus === "paid" && (canStartKYC || canResubmit);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
   }
 
-  const getDocumentStatusColor = (status) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-      case "rejected":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-      case "not_uploaded":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-      default:
-        return "bg-blue-100 text-blue-800"
-    }
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Alert variant="destructive">
+          <AlertDescription>
+            Error loading KYC data. Please try again.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
-
-  const documentTypes = [
-    {
-      key: "aadhar",
-      name: "Aadhar Card",
-      description: "Government issued identity proof",
-      required: true,
-    },
-    {
-      key: "pan",
-      name: "PAN Card",
-      description: "Permanent Account Number card",
-      required: true,
-    },
-    {
-      key: "selfie",
-      name: "Selfie with Aadhar",
-      description: "Clear selfie holding your Aadhar card",
-      required: true,
-    },
-    {
-      key: "bankStatement",
-      name: "Bank Statement",
-      description: "Last 3 months bank statement (Optional)",
-      required: false,
-    },
-  ]
-
-  const canStartKYC = kycData.status === "not_started"
-  const canResubmit = kycData.status === "rejected"
-  const isUnderReview = kycData.status === "under_review" || kycData.status === "pending"
-  const isVerified = kycData.status === "verified"
 
   return (
-    <div className="p-6 space-y-6">
-      {/* KYC Status Header */}
-      <Card
-        className={`border-2 ${isVerified ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950" : isUnderReview ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950" : "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950"}`}
-      >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-background rounded-full">
-                <UserCheck className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">KYC Verification</h2>
-                <p className="text-muted-foreground">Complete your identity verification to unlock withdrawals</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <Badge className={getStatusColor(kycData.status)} variant="outline">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(kycData.status)}
-                  {kycData.status.replace("_", " ").toUpperCase()}
-                </div>
-              </Badge>
-              {kycData.submittedAt && (
-                <p className="text-sm text-muted-foreground mt-1">Submitted: {kycData.submittedAt}</p>
-              )}
-            </div>
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">KYC Verification</h1>
+          <p className="text-muted-foreground">
+            Complete your identity verification to unlock all features
+          </p>
+        </div>
 
-          {kycData.status !== "not_started" && (
-            <div className="mt-6">
-              <div className="flex justify-between text-sm mb-2">
-                <span>Completion Progress</span>
-                <span>{kycData.completionPercentage}%</span>
-              </div>
-              <Progress value={kycData.completionPercentage} className="h-2" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Status-specific Alerts */}
-      {kycData.status === "not_started" && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Complete KYC verification to unlock withdrawal features. Verification fee: ₹{kycData.paymentAmount}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {kycData.status === "rejected" && kycData.rejectionReason && (
-        <Alert variant="destructive">
-          <X className="h-4 w-4" />
-          <AlertDescription>
-            <strong>KYC Rejected:</strong> {kycData.rejectionReason}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {kycData.status === "verified" && (
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Congratulations!</strong> Your KYC verification is complete. You can now withdraw funds.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isUnderReview && (
-        <Alert>
-          <Clock className="h-4 w-4" />
-          <AlertDescription>
-            Your KYC documents are under review. We&apos;ll notify you once the verification is complete (usually within
-            24-48 hours).
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Payment Status */}
-      {kycData.paymentStatus !== "paid" && (
-        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
-          <CardContent className="p-4">
+        <Card className={`border-2 ${getStatusColor(localKycData.status)}`}>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-orange-600" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-background rounded-full shadow-sm">
+                  <UserCheck className="h-8 w-8 text-primary" />
+                </div>
                 <div>
-                  <p className="font-medium text-orange-800 dark:text-orange-200">KYC Verification Fee</p>
-                  <p className="text-sm text-orange-600 dark:text-orange-400">
-                    Pay ₹{kycData.paymentAmount} to start verification process
+                  <h2 className="text-2xl font-bold">Verification Status</h2>
+                  <p className="text-sm opacity-90">
+                    {isVerified
+                      ? "Your identity has been verified successfully"
+                      : isUnderReview
+                      ? "Your documents are being reviewed"
+                      : "Complete verification to unlock withdrawals"}
                   </p>
                 </div>
               </div>
-              <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
-                Pay Now
-              </Button>
+              <div className="text-right">
+                <Badge variant="outline" className="bg-background/50">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(localKycData.status)}
+                    {localKycData.status.replace("_", " ").toUpperCase()}
+                  </div>
+                </Badge>
+                {localKycData.submittedAt && (
+                  <p className="text-xs opacity-75 mt-1">
+                    Submitted: {localKycData.submittedAt.toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="flex justify-between text-sm mb-2">
+                <span>Completion Progress</span>
+                <span>{localKycData.completionPercentage}%</span>
+              </div>
+              <Progress
+                value={localKycData.completionPercentage}
+                className="h-3"
+              />
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Document Upload Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Document Verification</CardTitle>
-          <CardDescription>Upload required documents for identity verification</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {documentTypes.map((docType) => {
-              const doc = kycData.documents[docType.key]
-              return (
-                <div key={docType.key} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-background rounded-full">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{docType.name}</h3>
-                        {docType.required && <Badge variant="outline">Required</Badge>}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{docType.description}</p>
-                      {doc.status === "rejected" && doc.reason && (
-                        <p className="text-sm text-red-600 mt-1">Reason: {doc.reason}</p>
-                      )}
-                    </div>
+        {localKycData.status === "none" && (
+          <Alert className="border-info/20 bg-info-light">
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
+              Complete KYC verification to unlock withdrawal features and
+              increase your task limits.
+              <strong> Verification fee: ₹{localKycData.paymentAmount}</strong>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {localKycData.status === "rejected" && localKycData.rejectionReason && (
+          <Alert variant="destructive">
+            <X className="h-4 w-4" />
+            <AlertDescription>
+              <strong>KYC Rejected:</strong> {localKycData.rejectionReason}
+              <br />
+              Please resubmit your documents with the required corrections.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {localKycData.status === "verified" && (
+          <Alert className="border-success/20 bg-success-light">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Congratulations!</strong> Your KYC verification is
+              complete. You can now withdraw funds and access premium features.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isUnderReview && (
+          <Alert className="border-warning/20 bg-warning-light">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              Your KYC documents are under review. We&apos;ll notify you once
+              verification is complete (usually within 24-48 hours).
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {localKycData.paymentStatus !== "paid" && (
+          <Card className="border-warning/20 bg-warning-light">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-background rounded-full">
+                    <CreditCard className="h-6 w-6 text-warning" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={getDocumentStatusColor(doc.status)}>
-                      <div className="flex items-center gap-1">
-                        {getStatusIcon(doc.status)}
-                        {doc.status.replace("_", " ")}
-                      </div>
-                    </Badge>
-                    <div className="flex gap-2">
-                      {doc.uploaded && (
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {(doc.status === "not_uploaded" || doc.status === "rejected") && (
-                        <Button variant="outline" size="sm">
-                          <Upload className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {doc.status === "rejected" && (
-                        <Button variant="outline" size="sm">
-                          <RefreshCw className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
+                  <div>
+                    <h3 className="font-semibold text-warning-foreground">
+                      KYC Verification Fee
+                    </h3>
+                    <p className="text-sm text-warning-foreground/80">
+                      One-time payment of ₹{localKycData.paymentAmount} to start
+                      verification
+                    </p>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                <Button
+                  onClick={handlePayment}
+                  disabled={isSubmitting}
+                  className="bg-warning hover:bg-warning/90 text-warning-foreground"
+                >
+                  {isSubmitting
+                    ? "Processing..."
+                    : `Pay ₹${localKycData.paymentAmount}`}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        {canStartKYC && (
-          <Button className="bg-primary hover:bg-primary/90">
-            <UserCheck className="h-4 w-4 mr-2" />
-            Start KYC Verification
-          </Button>
-        )}
-        {canResubmit && (
-          <Button className="bg-orange-600 hover:bg-orange-700">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Resubmit Documents
-          </Button>
-        )}
-        {kycData.status !== "not_started" && (
-          <Button variant="outline">
-            <Eye className="h-4 w-4 mr-2" />
-            View Submission
-          </Button>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Document Upload
+            </CardTitle>
+            <CardDescription>
+              Upload the required documents for identity verification
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <FileUploadZone
+              documentType="aadhar"
+              onFileUpload={(file) => handleFileUpload("aadhar", file)}
+              existingFile={localKycData.documents.aadhar}
+              required
+              disabled={!canUploadDocuments}
+            />
+
+            <FileUploadZone
+              documentType="pan"
+              onFileUpload={(file) => handleFileUpload("pan", file)}
+              existingFile={localKycData.documents.pan}
+              required
+              disabled={!canUploadDocuments}
+            />
+
+            <FileUploadZone
+              documentType="selfie"
+              onFileUpload={(file) => handleFileUpload("selfie", file)}
+              existingFile={localKycData.documents.selfie}
+              required
+              disabled={!canUploadDocuments}
+            />
+
+            <FileUploadZone
+              documentType="bankStatement"
+              onFileUpload={(file) => handleFileUpload("bankStatement", file)}
+              existingFile={localKycData.documents.bankStatement}
+              disabled={!canUploadDocuments}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-4 justify-center">
+          {canStartKYC && localKycData.paymentStatus === "paid" && (
+            <Button
+              onClick={handleSubmitKYC}
+              disabled={isSubmitting || localKycData.completionPercentage < 75}
+              size="lg"
+              className="px-8"
+            >
+              {isSubmitting ? "Submitting..." : "Submit for Verification"}
+            </Button>
+          )}
+
+          {canResubmit && (
+            <Button
+              onClick={handleSubmitKYC}
+              disabled={isSubmitting}
+              variant="default"
+              size="lg"
+              className="px-8"
+            >
+              {isSubmitting ? "Resubmitting..." : "Resubmit Documents"}
+            </Button>
+          )}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5" />
+              Verification Benefits
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Unlock withdrawal features</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Higher task earning limits</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Priority customer support</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Enhanced account security</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Access to premium tasks</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-success" />
+                <span className="text-sm">Faster payment processing</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* KYC Benefits */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Benefits of KYC Verification</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Unlock withdrawal features</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Higher task limits</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Priority customer support</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Enhanced account security</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
-  )
-}
+  );
+};

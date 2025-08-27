@@ -1,5 +1,5 @@
 import { getToken } from "next-auth/jwt";
-import client from "@/lib/mongoClient";
+import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 
 export async function POST(req) {
@@ -23,8 +23,9 @@ export async function POST(req) {
       );
     }
 
+    const client = await clientPromise;
     const db = client.db("TaskEarnDB");
-    const users = db.collection("users");
+    const users = db.collection("Users");
 
     // Find referrer
     const referrer = await users.findOne({ _id: new ObjectId(referrerId) });

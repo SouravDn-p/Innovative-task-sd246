@@ -11,7 +11,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "Task", "Referral", "Wallet", "UserTasks"],
+  tagTypes: ["User", "Task", "Referral", "Wallet", "UserTasks", "KYC"],
   endpoints: (builder) => ({
     // User Authentication and Management
     registerUser: builder.mutation({
@@ -46,6 +46,7 @@ export const api = createApi({
         { type: "User", id: email },
       ],
     }),
+
     // Inside endpoints: (builder) => ({
     setReferralId: builder.mutation({
       query: () => ({
@@ -61,6 +62,33 @@ export const api = createApi({
         body: { referrerId, newUser },
       }),
       invalidatesTags: ["User", "Referral", "Wallet"],
+    }),
+
+    getKYCData: builder.query({
+      query: () => "user/kyc-verification",
+      providesTags: ["KYC"],
+    }),
+    updateKYCData: builder.mutation({
+      query: (kycData) => ({
+        url: "user/kyc-verification",
+        method: "POST",
+        body: kycData,
+      }),
+      invalidatesTags: ["KYC"],
+    }),
+    uploadFile: builder.mutation({
+      query: ({ file, documentType }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("documentType", documentType);
+
+        return {
+          url: "user/kyc-verification", // 👈 Prefer this over `upload`
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["KYC"],
     }),
 
     // Task-Related Endpoints: Manage tasks, submissions, and user-specific tasks
@@ -212,9 +240,16 @@ export const {
   useGetAllUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserMutation,
-  
+
   useSetReferralIdMutation,
   useAddReferralMutation,
+
+  // Add to exports (for KYC):
+  useUploadFileMutation,
+
+  // Add to exports:
+  useGetKYCDataQuery,
+  useUpdateKYCDataMutation,
 
   useGetTasksQuery,
   useGetTaskByIdQuery,
@@ -228,4 +263,13 @@ export const {
   useGetMyTaskSubmissionsQuery,
   useReviewMyTaskSubmissionMutation,
   useSubmitTaskProofMutation, // Added missing export
+
+  useGetReferralsQuery,
+  useGetAllReferralsQuery,
+  useGetReferralStatsQuery,
+  useGetWalletQuery,
+  useRequestWithdrawalMutation,
+  useGetWithdrawalsQuery,
+  useUpdateWithdrawalMutation,
+  useGetTransactionsQuery,
 } = api;

@@ -1,24 +1,22 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useParams } from "next/navigation"; // ✅ useParams import
 import { useSession, signIn } from "next-auth/react";
 import { useAddReferralMutation } from "@/redux/api/api";
 import Swal from "sweetalert2";
-import { useSearchParams } from "next/navigation";
 
-export default function JoinPage({ context }) {
-  const { params } = context;
-  const referrerId = params.id;
-  const { data: session } = useSession();
-  // const searchParams = useSearchParams();
-  const { id } = params;
+export default function JoinReferralPage() {
+  const params = useParams();
+  const id = params?.referId;
   console.log("Referral ID from URL:", id);
 
+  const { data: session } = useSession();
   const [addReferral] = useAddReferralMutation();
 
   useEffect(() => {
     const handleReferral = async () => {
-      if (!session?.user || !referrerId) return;
+      if (!session?.user || !id) return;
 
       try {
         const newUser = {
@@ -26,7 +24,7 @@ export default function JoinPage({ context }) {
           email: session.user.email,
         };
 
-        const res = await addReferral({ referrerId, newUser }).unwrap();
+        const res = await addReferral({ referrerId: id, newUser }).unwrap();
 
         Swal.fire({
           icon: "success",
@@ -43,7 +41,7 @@ export default function JoinPage({ context }) {
     };
 
     handleReferral();
-  }, [session, referrerId, addReferral]);
+  }, [session, id, addReferral]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">

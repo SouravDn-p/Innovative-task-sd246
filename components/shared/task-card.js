@@ -22,7 +22,7 @@ export function TaskCard({ title, reward, description, difficulty, taskId }) {
   const config = difficultyConfig[normalizedDifficulty];
   const [taskStarted, setTaskStarted] = useState(false);
   const [startTask] = useStartTaskMutation();
-  const { data: session, status } = useSession(); // Use useSession hook
+  const { data: session, status } = useSession();
 
   const handleStartTask = async () => {
     if (taskStarted) {
@@ -49,6 +49,11 @@ export function TaskCard({ title, reward, description, difficulty, taskId }) {
         icon: "error",
         title: "Not logged in",
         text: "Please log in to start a task.",
+        confirmButtonText: "Go to Login",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/login"; // 👈 তোমার login route
+        }
       });
       return;
     }

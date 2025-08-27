@@ -3,8 +3,7 @@ import clientPromise from "@/lib/mongoClient";
 
 export async function POST(req, { params }) {
   const { referrerId } = params;
-  const body = await req.json(); // { name, email }
-
+  const body = await req.json();
   const client = await clientPromise;
   const db = client.db("TaskEarnDB");
   const users = db.collection("Users");
