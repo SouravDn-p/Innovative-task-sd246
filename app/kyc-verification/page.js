@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { KYCDashboard } from "@/components/kyc/kyc-dashboard";
+import KYCDashboard from "@/components/kyc/kyc-dashboard";
 
 export default function KYCPage() {
   const { data: session, status } = useSession();

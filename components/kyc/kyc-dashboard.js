@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertCircle } from "../ui/alert";
 import {
   UserCheck,
   CreditCard,
@@ -21,11 +21,11 @@ import {
   FileText,
   Banknote,
 } from "lucide-react";
-import { FileUploadZone } from "./FileUploadZone";
+import FileUploadZone from "./FileUploadZone";
 import { useGetKYCDataQuery, useUpdateKYCDataMutation } from "@/redux/api/api";
 import { useToast } from "@/hooks/use-toast";
 
-export const KYCDashboard = ({ userEmail }) => {
+const KYCDashboard = ({ userEmail }) => {
   const { toast } = useToast();
   const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
   const [updateKYCData, { isLoading: isSubmitting }] =
@@ -33,7 +33,40 @@ export const KYCDashboard = ({ userEmail }) => {
 
   const [localKycData, setLocalKycData] = useState({
     status: "none",
-    documents: {},
+    documents: {
+      aadhar: {
+        uploaded: false,
+        status: "not_uploaded",
+        url: null,
+        name: null,
+        size: null,
+        uploadedAt: null,
+      },
+      pan: {
+        uploaded: false,
+        status: "not_uploaded",
+        url: null,
+        name: null,
+        size: null,
+        uploadedAt: null,
+      },
+      selfie: {
+        uploaded: false,
+        status: "not_uploaded",
+        url: null,
+        name: null,
+        size: null,
+        uploadedAt: null,
+      },
+      bankStatement: {
+        uploaded: false,
+        status: "not_uploaded",
+        url: null,
+        name: null,
+        size: null,
+        uploadedAt: null,
+      },
+    },
     paymentStatus: "not_paid",
     paymentAmount: 99,
     completionPercentage: 0,
@@ -45,7 +78,40 @@ export const KYCDashboard = ({ userEmail }) => {
     if (kycData) {
       setLocalKycData({
         status: kycData.status || "none",
-        documents: kycData.documents || {},
+        documents: kycData.documents || {
+          aadhar: {
+            uploaded: false,
+            status: "not_uploaded",
+            url: null,
+            name: null,
+            size: null,
+            uploadedAt: null,
+          },
+          pan: {
+            uploaded: false,
+            status: "not_uploaded",
+            url: null,
+            name: null,
+            size: null,
+            uploadedAt: null,
+          },
+          selfie: {
+            uploaded: false,
+            status: "not_uploaded",
+            url: null,
+            name: null,
+            size: null,
+            uploadedAt: null,
+          },
+          bankStatement: {
+            uploaded: false,
+            status: "not_uploaded",
+            url: null,
+            name: null,
+            size: null,
+            uploadedAt: null,
+          },
+        },
         paymentStatus: kycData.paymentStatus || "not_paid",
         paymentAmount: kycData.paymentAmount || 99,
         completionPercentage: kycData.completionPercentage || 0,
@@ -59,7 +125,7 @@ export const KYCDashboard = ({ userEmail }) => {
     try {
       const formData = new FormData();
       formData.append("documentType", documentType);
-      formData.append("file", file.file);
+      formData.append("file", file);
 
       await updateKYCData(formData).unwrap();
       refetch();
@@ -184,11 +250,14 @@ export const KYCDashboard = ({ userEmail }) => {
   const isVerified = localKycData.status === "verified";
   const canUploadDocuments =
     localKycData.paymentStatus === "paid" && (canStartKYC || canResubmit);
+  const allRequiredDocsUploaded = ["aadhar", "pan", "selfie"].every(
+    (doc) => localKycData.documents[doc]?.url
+  );
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -208,6 +277,7 @@ export const KYCDashboard = ({ userEmail }) => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">KYC Verification</h1>
           <p className="text-muted-foreground">
@@ -215,6 +285,7 @@ export const KYCDashboard = ({ userEmail }) => {
           </p>
         </div>
 
+        {/* Status Overview */}
         <Card className={`border-2 ${getStatusColor(localKycData.status)}`}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -248,6 +319,7 @@ export const KYCDashboard = ({ userEmail }) => {
               </div>
             </div>
 
+            {/* Progress Bar */}
             <div className="mt-6">
               <div className="flex justify-between text-sm mb-2">
                 <span>Completion Progress</span>
@@ -261,6 +333,7 @@ export const KYCDashboard = ({ userEmail }) => {
           </CardContent>
         </Card>
 
+        {/* Alerts */}
         {localKycData.status === "none" && (
           <Alert className="border-info/20 bg-info-light">
             <Shield className="h-4 w-4" />
@@ -303,6 +376,7 @@ export const KYCDashboard = ({ userEmail }) => {
           </Alert>
         )}
 
+        {/* Payment Section */}
         {localKycData.paymentStatus !== "paid" && (
           <Card className="border-warning/20 bg-warning-light">
             <CardContent className="p-6">
@@ -335,6 +409,7 @@ export const KYCDashboard = ({ userEmail }) => {
           </Card>
         )}
 
+        {/* Document Upload Section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -353,7 +428,6 @@ export const KYCDashboard = ({ userEmail }) => {
               required
               disabled={!canUploadDocuments}
             />
-
             <FileUploadZone
               documentType="pan"
               onFileUpload={(file) => handleFileUpload("pan", file)}
@@ -361,7 +435,6 @@ export const KYCDashboard = ({ userEmail }) => {
               required
               disabled={!canUploadDocuments}
             />
-
             <FileUploadZone
               documentType="selfie"
               onFileUpload={(file) => handleFileUpload("selfie", file)}
@@ -369,7 +442,6 @@ export const KYCDashboard = ({ userEmail }) => {
               required
               disabled={!canUploadDocuments}
             />
-
             <FileUploadZone
               documentType="bankStatement"
               onFileUpload={(file) => handleFileUpload("bankStatement", file)}
@@ -379,31 +451,40 @@ export const KYCDashboard = ({ userEmail }) => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
-          {canStartKYC && localKycData.paymentStatus === "paid" && (
-            <Button
-              onClick={handleSubmitKYC}
-              disabled={isSubmitting || localKycData.completionPercentage < 75}
-              size="lg"
-              className="px-8"
-            >
-              {isSubmitting ? "Submitting..." : "Submit for Verification"}
-            </Button>
-          )}
+        {/* Action Buttons */}
+        {(canStartKYC || canResubmit) && (
+          <div className="flex gap-4 justify-center">
+            {allRequiredDocsUploaded &&
+            localKycData.paymentStatus === "paid" ? (
+              <Button
+                onClick={handleSubmitKYC}
+                disabled={isSubmitting}
+                size="lg"
+                className="px-8"
+              >
+                {isSubmitting
+                  ? canResubmit
+                    ? "Resubmitting..."
+                    : "Submitting..."
+                  : canResubmit
+                  ? "Resubmit Documents"
+                  : "Apply"}
+              </Button>
+            ) : (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Please upload the following required documents:{" "}
+                  {["aadhar", "pan", "selfie"]
+                    .filter((doc) => !localKycData.documents[doc]?.url)
+                    .join(", ")}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
 
-          {canResubmit && (
-            <Button
-              onClick={handleSubmitKYC}
-              disabled={isSubmitting}
-              variant="default"
-              size="lg"
-              className="px-8"
-            >
-              {isSubmitting ? "Resubmitting..." : "Resubmit Documents"}
-            </Button>
-          )}
-        </div>
-
+        {/* Benefits Section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -444,3 +525,5 @@ export const KYCDashboard = ({ userEmail }) => {
     </div>
   );
 };
+
+export default KYCDashboard;
