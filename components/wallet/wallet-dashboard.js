@@ -66,7 +66,7 @@ export function WalletDashboard({ userType = "user" }) {
   };
 
   const canWithdraw =
-    walletData.balance >= walletData.minWithdrawal && walletData.kycVerified;
+    walletData.balance >= walletData.minWithdrawal && walletData.kycStatus;
 
   if (walletLoading || transactionsLoading) {
     return <div className="p-6">Loading wallet data...</div>;
@@ -139,9 +139,7 @@ export function WalletDashboard({ userType = "user" }) {
                       {walletData.balance.toFixed(2)})
                     </p>
                   )}
-                  {!walletData.kycVerified && (
-                    <p>• Complete KYC verification</p>
-                  )}
+                  {!walletData.kycStatus && <p>• Complete KYC verification</p>}
                 </div>
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">

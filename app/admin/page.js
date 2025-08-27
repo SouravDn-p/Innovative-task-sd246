@@ -14,8 +14,6 @@ export default function AdminPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
 
   useEffect(() => {
-    console.log("Session status:", status);
-    console.log("role:", session?.user?.role);
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated" && session?.user?.role !== "admin") {

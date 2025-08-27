@@ -1,8 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import client from "@/lib/mongoClient";
-import { ObjectId } from "mongodb";
 
-// 📌 GET all tasks
+// 📌 GET all tasks api/tasks
 export async function GET() {
   try {
     const db = client.db("TaskEarnDB");

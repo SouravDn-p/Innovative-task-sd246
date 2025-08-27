@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import client from "@/lib/mongoClient";
-import { ObjectId } from "mongodb";
 
 // GET all tasks for a user by email
 export async function GET(req, { params }) {

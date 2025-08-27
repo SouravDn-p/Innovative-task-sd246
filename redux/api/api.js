@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+// Create the API slice for managing API requests
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
@@ -10,9 +11,9 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "Task", "Referral", "Wallet", "Product", "Order", "Blog"],
+  tagTypes: ["User", "Task", "Referral", "Wallet", "UserTasks"],
   endpoints: (builder) => ({
-    // Auth Endpoints
+    // User Authentication and Management
     registerUser: builder.mutation({
       query: (userData) => ({
         url: "auth/register",
@@ -27,7 +28,6 @@ export const api = createApi({
         body: credentials,
       }),
     }),
-    // User Management Endpoints
     getAllUsers: builder.query({
       query: () => "users",
       providesTags: ["User"],
@@ -46,24 +46,25 @@ export const api = createApi({
         { type: "User", id: email },
       ],
     }),
-    // Task Endpoints
+
+    // Task-Related Endpoints: Manage tasks, submissions, and user-specific tasks
     getTasks: builder.query({
       query: () => "tasks",
       providesTags: ["Task"],
+      transformResponse: (response) =>
+        response.map((task) => ({
+          ...task,
+          _id: task._id.$oid,
+        })),
     }),
     getTaskById: builder.query({
       query: (id) => `tasks/${id}`,
       providesTags: (result, error, id) => [{ type: "Task", id }],
-    }),
-    submitTask: builder.mutation({
-      query: ({ taskId, proof }) => ({
-        url: `tasks/${taskId}/submit`,
-        method: "POST",
-        body: proof,
+      transformResponse: (response) => ({
+        ...response,
+        _id: response._id.$oid,
       }),
-      invalidatesTags: ["Task", "Wallet"],
     }),
-    // Task Management Endpoints for Admin
     createTask: builder.mutation({
       query: (taskData) => ({
         url: "tasks",
@@ -72,43 +73,91 @@ export const api = createApi({
       }),
       invalidatesTags: ["Task"],
     }),
-    updateTask: builder.mutation({
-      query: ({ id, ...patch }) => ({
-        url: `tasks/${id}`,
+
+    // User-Specific Task Endpoints
+    startTask: builder.mutation({
+      query: ({ taskId, userName, userEmail }) => ({
+        url: `user/tasks`,
+        method: "POST",
+        body: { taskId, userName, userEmail },
+      }),
+      invalidatesTags: ["Task", "UserTasks"],
+    }),
+    getUserTasks: builder.query({
+      query: (userEmail) => `user/getUserTasks/${userEmail}`,
+      providesTags: ["UserTasks"],
+      transformResponse: (response) =>
+        response.map((task) => ({
+          ...task,
+          _id: task._id.$oid,
+        })),
+    }),
+    deleteMyTask: builder.mutation({
+      query: (taskId) => ({
+        url: `user/myTasks/${taskId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Task", "UserTasks"],
+    }),
+    getMyTasks: builder.query({
+      query: () => `user/myTasks`,
+      providesTags: ["Task", "UserTasks"],
+      transformResponse: (response) =>
+        response.map((task) => ({
+          ...task,
+          _id: task._id.$oid,
+        })),
+    }),
+    updateMyTask: builder.mutation({
+      query: ({ taskId, ...patch }) => ({
+        url: `user/myTasks/${taskId}`,
         method: "PUT",
         body: patch,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Task", id }],
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "Task", id: taskId },
+      ],
     }),
-    deleteTask: builder.mutation({
-      query: (id) => ({
-        url: `tasks/${id}`,
-        method: "DELETE",
+    getMyTaskSubmissions: builder.query({
+      query: () => `user/taskSubmissions`,
+      providesTags: ["Task"],
+      transformResponse: (response) =>
+        response.map((submission) => ({
+          ...submission,
+          _id: submission._id.$oid,
+        })),
+    }),
+    reviewMyTaskSubmission: builder.mutation({
+      query: ({ submissionId, status }) => ({
+        url: `user/taskSubmissions/${submissionId}/review`,
+        method: "PUT",
+        body: { status },
       }),
       invalidatesTags: ["Task"],
     }),
     submitTaskProof: builder.mutation({
-      query: ({ taskId, proof }) => ({
-        url: `/tasks/${taskId}/proof`,
+      query: ({ taskId, proofData }) => ({
+        url: `user/taskSubmissions/${taskId}/proof`,
         method: "POST",
-        body: { proof }, // proof = image url / text etc
+        body: { taskId, proofData },
       }),
+      invalidatesTags: ["Task"],
     }),
-    // Referral Endpoints
+
+    // Referral Endpoints: Manage user referrals and statistics
     getReferrals: builder.query({
       query: () => "referrals/my",
       providesTags: ["Referral"],
     }),
-    // Referral Management Endpoints
     getAllReferrals: builder.query({
       query: () => "referrals",
       providesTags: ["Referral"],
     }),
-
     getReferralStats: builder.query({
-      query: () => "referrals/stats", // ✅ stats API route
+      query: () => "referrals/stats",
       providesTags: ["Referral"],
     }),
+
     // Wallet Endpoints
     getWallet: builder.query({
       query: () => "wallet",
@@ -122,7 +171,6 @@ export const api = createApi({
       }),
       invalidatesTags: ["Wallet"],
     }),
-    // Withdrawal Management Endpoints
     getWithdrawals: builder.query({
       query: () => "withdrawals",
       providesTags: ["Wallet"],
@@ -139,167 +187,24 @@ export const api = createApi({
       query: (userId) => `wallet/${userId}/transactions`,
       providesTags: ["Wallet"],
     }),
-    // Product Management Endpoints for Future Expansion
-    getProducts: builder.query({
-      query: () => "products",
-      providesTags: ["Product"],
-    }),
-    getProductById: builder.query({
-      query: (id) => `products/${id}`,
-      providesTags: (result, error, id) => [{ type: "Product", id }],
-    }),
-    createProduct: builder.mutation({
-      query: (product) => ({
-        url: "products",
-        method: "POST",
-        body: product,
-      }),
-      invalidatesTags: ["Product"],
-    }),
-    updateProduct: builder.mutation({
-      query: ({ id, ...patch }) => ({
-        url: `products/${id}`,
-        method: "PUT",
-        body: patch,
-      }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
-    }),
-    deleteProduct: builder.mutation({
-      query: (id) => ({
-        url: `products/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Product"],
-    }),
-    // Order Management Endpoints
-    getOrders: builder.query({
-      query: () => "orders",
-      providesTags: ["Order"],
-    }),
-    getOrderById: builder.query({
-      query: (id) => `orders/${id}`,
-      providesTags: (result, error, id) => [{ type: "Order", id }],
-    }),
-    getOrdersByEmail: builder.query({
-      query: (email) => `orders/user/${email}`,
-      providesTags: ["Order"],
-    }),
-    placeOrder: builder.mutation({
-      query: (orderData) => ({
-        url: "orders",
-        method: "POST",
-        body: orderData,
-      }),
-      invalidatesTags: ["Order"],
-    }),
-    updateOrder: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `orders/${id}`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Order", id }],
-    }),
-    // Blog Management Endpoints for Announcements
-    getBlogs: builder.query({
-      query: () => "blogs",
-      providesTags: ["Blog"],
-    }),
-    getBlogById: builder.query({
-      query: (id) => `blogs/${id}`,
-      providesTags: (result, error, id) => [{ type: "Blog", id }],
-    }),
-    createBlog: builder.mutation({
-      query: (blog) => ({
-        url: "blogs",
-        method: "POST",
-        body: blog,
-      }),
-      invalidatesTags: ["Blog"],
-    }),
-    updateBlog: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `blogs/${id}`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Blog", id }],
-    }),
-    deleteBlog: builder.mutation({
-      query: (id) => ({
-        url: `blogs/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Blog"],
-    }),
-
-    // Task Submissions Endpoints
-    getTaskSubmissions: builder.query({
-      query: () => "task-submissions", // adjust this to your API route
-      providesTags: ["Task"],
-    }),
-    reviewTaskSubmission: builder.mutation({
-      query: ({ submissionId, status }) => ({
-        url: `task-submissions/${submissionId}/review`, // adjust API route
-        method: "PUT",
-        body: { status },
-      }),
-      invalidatesTags: ["Task"],
-    }),
   }),
 });
 
 export const {
-  // Auth hooks
   useRegisterUserMutation,
   useLoginUserMutation,
   useGetAllUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserMutation,
-
-  // Task hooks
   useGetTasksQuery,
   useGetTaskByIdQuery,
-  useSubmitTaskMutation,
   useCreateTaskMutation,
-  useUpdateTaskMutation,
-  useDeleteTaskMutation,
-  useSubmitTaskProofMutation,
-
-  // Referral hooks
-  useGetReferralsQuery,
-  useGetAllReferralsQuery,
-  useGetReferralStatsQuery,
-
-  // Wallet hooks
-  useGetWalletQuery,
-  useRequestWithdrawalMutation,
-  useGetWithdrawalsQuery,
-  useUpdateWithdrawalMutation,
-  useGetTransactionsQuery,
-
-  // Product hooks
-  useGetProductsQuery,
-  useGetProductByIdQuery,
-  useCreateProductMutation,
-  useUpdateProductMutation,
-  useDeleteProductMutation,
-
-  // Order hooks
-  useGetOrdersQuery,
-  useGetOrderByIdQuery,
-  useGetOrdersByEmailQuery,
-  usePlaceOrderMutation,
-  useUpdateOrderMutation,
-
-  // Blog hooks
-  useGetBlogsQuery,
-  useGetBlogByIdQuery,
-  useCreateBlogMutation,
-  useUpdateBlogMutation,
-  useDeleteBlogMutation,
-
-  // Task Submissions hooks
-  useGetTaskSubmissionsQuery,
-  useReviewTaskSubmissionMutation,
+  useStartTaskMutation,
+  useGetUserTasksQuery,
+  useDeleteMyTaskMutation,
+  useGetMyTasksQuery,
+  useUpdateMyTaskMutation,
+  useGetMyTaskSubmissionsQuery,
+  useReviewMyTaskSubmissionMutation,
+  useSubmitTaskProofMutation, // Added missing export
 } = api;
