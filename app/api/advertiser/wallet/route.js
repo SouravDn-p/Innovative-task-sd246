@@ -2,6 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
+import { safeNumber, formatCurrency, sanitizeInput } from "@/lib/utils";
 
 // GET advertiser wallet information and transaction history
 export async function GET(req) {
@@ -182,10 +183,10 @@ export async function GET(req) {
 
     return NextResponse.json({
       wallet: {
-        balance: user.walletBalance || 0,
-        totalEarnings: user.totalEarn || 0,
-        totalSpent: statistics.totalDebits,
-        totalCredits: statistics.totalCredits,
+        balance: safeNumber(user.walletBalance),
+        totalEarnings: safeNumber(user.totalEarn),
+        totalSpent: safeNumber(statistics.totalDebits),
+        totalCredits: safeNumber(statistics.totalCredits),
       },
       transactions: formattedTransactions,
       pagination: {
@@ -197,14 +198,14 @@ export async function GET(req) {
       },
       statistics: {
         ...statistics,
-        netBalance: statistics.totalCredits - statistics.totalDebits,
+        netBalance: safeNumber(statistics.totalCredits) - safeNumber(statistics.totalDebits),
       },
       taskStatistics,
       monthlySpending: monthlySpending.map((month) => ({
         month: `${month._id.year}-${month._id.month
           .toString()
           .padStart(2, "0")}`,
-        amount: month.totalSpent,
+        amount: safeNumber(month.totalSpent),
         transactions: month.transactionCount,
       })),
     });
@@ -237,19 +238,24 @@ export async function POST(req) {
     const body = await req.json();
     const { amount, description, reference } = body;
 
-    if (!amount || amount <= 0) {
+    const amountNumber = safeNumber(amount);
+    if (amountNumber <= 0) {
       return NextResponse.json(
         { error: "Amount must be a positive number" },
         { status: 400 }
       );
     }
 
-    if (amount > 100000) {
+    if (amountNumber > 100000) {
       return NextResponse.json(
         { error: "Amount cannot exceed ₹100,000 per transaction" },
         { status: 400 }
       );
     }
+
+    // Sanitize description
+    const sanitizedDescription = description ? sanitizeInput(description) : "Wallet top-up";
+    const sanitizedReference = reference ? sanitizeInput(reference) : `TOPUP_${Date.now()}`;
 
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
@@ -261,17 +267,17 @@ export async function POST(req) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const currentBalance = user.walletBalance || 0;
-    const newBalance = currentBalance + parseFloat(amount);
+    const currentBalance = safeNumber(user.walletBalance);
+    const newBalance = currentBalance + amountNumber;
 
     // Create transaction record
     const transaction = {
       userEmail: token.email,
       userId: user._id,
       type: "credit",
-      amount: parseFloat(amount),
-      description: description || "Wallet top-up",
-      reference: reference || `TOPUP_${Date.now()}`,
+      amount: amountNumber,
+      description: sanitizedDescription,
+      reference: sanitizedReference,
       balanceBefore: currentBalance,
       balanceAfter: newBalance,
       adminAction: false,

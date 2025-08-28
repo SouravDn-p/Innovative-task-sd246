@@ -1,6 +1,13 @@
 import { getToken } from "next-auth/jwt";
 import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
+import {
+  safeNumber,
+  formatCurrency,
+  sanitizeInput,
+  validateEmail,
+  isValidObjectId,
+} from "@/lib/utils";
 
 // 📌 GET all available tasks api/tasks
 export async function GET(req) {
@@ -180,10 +187,35 @@ export async function POST(req) {
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
 
-    // Calculate total cost for the task
-    const rateToUser = parseFloat(taskData.rateToUser);
+    // Calculate total cost for the task using safe number handling
+    const rateToUser = safeNumber(taskData.rateToUser);
+    if (rateToUser <= 0) {
+      return new Response(
+        JSON.stringify({ message: "Rate to user must be greater than 0" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const limitCount = safeNumber(taskData.limitCount);
+    if (limitCount <= 0) {
+      return new Response(
+        JSON.stringify({ message: "Limit count must be greater than 0" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const advertiserCost = rateToUser * 1.2; // 20% platform fee
-    const totalCost = advertiserCost * parseInt(taskData.limitCount);
+    const totalCost = advertiserCost * limitCount;
+
+    // Sanitize text inputs
+    taskData.title = sanitizeInput(taskData.title);
+    taskData.description = sanitizeInput(taskData.description);
 
     // Payment validation for non-admin users
     let paymentDone = false;
@@ -198,10 +230,14 @@ export async function POST(req) {
           const user = await db
             .collection("Users")
             .findOne({ email: token.email });
-          const currentBalance = user?.walletBalance || 0;
+          const currentBalance = safeNumber(user?.walletBalance);
 
           console.log(
-            `[TASK CREATION] Payment validation - Required: ${totalCost}, Available: ${currentBalance}, PayNow: ${taskData.payNow}`
+            `[TASK CREATION] Payment validation - Required: ${formatCurrency(
+              totalCost
+            )}, Available: ${formatCurrency(currentBalance)}, PayNow: ${
+              taskData.payNow
+            }`
           );
 
           // If payNow is true, require immediate payment
@@ -218,7 +254,7 @@ export async function POST(req) {
                     ratePerUser: rateToUser,
                     platformFee: "20%",
                     costPerUser: advertiserCost,
-                    totalUsers: parseInt(taskData.limitCount),
+                    totalUsers: limitCount,
                     totalCost: totalCost,
                   },
                 }),
@@ -260,7 +296,9 @@ export async function POST(req) {
 
             paymentDone = true;
             console.log(
-              `[TASK CREATION] Payment processed immediately. New balance: ${newBalance}`
+              `[TASK CREATION] Payment processed immediately. New balance: ${formatCurrency(
+                newBalance
+              )}`
             );
           } else {
             // Payment will be processed during approval
@@ -287,7 +325,7 @@ export async function POST(req) {
       rateToUser,
       advertiserCost,
       totalCost,
-      limitCount: parseInt(taskData.limitCount),
+      limitCount: limitCount,
       completedCount: 0,
       status: token.role?.toLowerCase() === "admin" ? "approved" : "pending",
       createdBy: token.role?.toLowerCase() || "advertiser",

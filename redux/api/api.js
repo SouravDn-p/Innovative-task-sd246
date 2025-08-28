@@ -1,16 +1,47 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { logout } from "../slice/authSlice";
+
+// Base query with enhanced error handling and authentication
+const baseQuery = fetchBaseQuery({
+  baseUrl: "/api",
+  prepareHeaders: (headers, { getState }) => {
+    const token = getState().auth.token;
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    // Add common headers
+    headers.set("Content-Type", "application/json");
+    return headers;
+  },
+});
+
+// Base query with retry and authentication error handling
+const baseQueryWithReauth = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions);
+  
+  // Handle authentication errors
+  if (result.error && result.error.status === 401) {
+    // Clear authentication state on 401
+    api.dispatch(logout());
+  }
+  
+  // Retry logic for network errors
+  if (result.error && result.error.status === 'FETCH_ERROR') {
+    // Wait a bit and retry once
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    result = await baseQuery(args, api, extraOptions);
+  }
+  
+  return result;
+};
 
 // Create the API slice for managing API requests
 export const api = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token;
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
+  keepUnusedDataFor: 30, // Keep data for 30 seconds
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   tagTypes: [
     "User",
     "Task",
@@ -31,6 +62,9 @@ export const api = createApi({
         method: "POST",
         body: userData,
       }),
+      transformErrorResponse: (response) => {
+        return response.data || { error: "Registration failed" };
+      },
     }),
     loginUser: builder.mutation({
       query: (credentials) => ({
@@ -38,6 +72,9 @@ export const api = createApi({
         method: "POST",
         body: credentials,
       }),
+      transformErrorResponse: (response) => {
+        return response.data || { error: "Login failed" };
+      },
     }),
     getAllUsers: builder.query({
       query: () => "users",
