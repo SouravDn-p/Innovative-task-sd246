@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import client from "@/lib/mongoClient"; 
+import client from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 
 // GET a single task by id

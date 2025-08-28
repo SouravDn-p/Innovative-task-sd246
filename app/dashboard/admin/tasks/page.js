@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -68,6 +69,7 @@ import {
   useDeleteAdminTaskMutation,
 } from "@/redux/api/api";
 import TaskDetailsModal from "@/components/admin/task-details-modal";
+import { useIsMobile } from "@/hooks/use-mobiles";
 
 export default function AdminTasksPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,6 +83,10 @@ export default function AdminTasksPage() {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null); // Track which action is loading
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const isMobile = useIsMobile();
 
   // API queries and mutations
   const {
@@ -162,26 +168,76 @@ export default function AdminTasksPage() {
 
   const handleTaskAction = async (action, taskId, data = {}) => {
     try {
+      setActionLoading(`${action}-${taskId}`);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
       switch (action) {
         case "approve":
-          await approveTask({ taskId, ...data }).unwrap();
+          console.log("[ADMIN TASK] Approving task:", {
+            taskId,
+            note: data.note || "Admin approval",
+          });
+          const approvalResult = await approveTask({
+            taskId,
+            note: data.note || "Admin approval",
+          }).unwrap();
+          console.log(
+            "[ADMIN TASK] Task approved successfully:",
+            approvalResult
+          );
+          setSuccessMessage("Task approved successfully!");
           break;
         case "pause":
           await pauseResumeTask({ taskId, action: "pause", ...data }).unwrap();
+          setSuccessMessage("Task paused successfully!");
           break;
         case "resume":
           await pauseResumeTask({ taskId, action: "resume", ...data }).unwrap();
+          setSuccessMessage("Task resumed successfully!");
           break;
         case "complete":
           await completeTask({ taskId, ...data }).unwrap();
+          setSuccessMessage("Task completed successfully!");
           break;
         case "delete":
           await deleteTask({ taskId, ...data }).unwrap();
+          setSuccessMessage("Task deleted successfully!");
           break;
       }
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+
       refetch();
     } catch (error) {
-      console.error(`Failed to ${action} task:`, error);
+      console.error(`[ADMIN TASK] Failed to ${action} task:`, {
+        action,
+        taskId,
+        error: error,
+        errorData: error?.data,
+        errorMessage: error?.message,
+        errorStatus: error?.status,
+        errorStack: error?.stack,
+      });
+
+      // More specific error messages
+      let errorMessage = "Unknown error occurred";
+      if (error?.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      console.log(`[ADMIN TASK] Displaying error message: ${errorMessage}`);
+      setErrorMessage(`Failed to ${action} task: ${errorMessage}`);
+
+      // Clear error message after 5 seconds
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -219,19 +275,19 @@ export default function AdminTasksPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-teal-600">Total Tasks</p>
-                <p className="text-2xl font-bold text-teal-900">
+                <p className="text-xs sm:text-sm text-teal-600">Total Tasks</p>
+                <p className="text-lg sm:text-2xl font-bold text-teal-900">
                   {statistics.totalTasks || 0}
                 </p>
               </div>
-              <Users className="h-8 w-8 text-teal-500" />
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-teal-500" />
             </div>
           </CardContent>
         </Card>
@@ -240,72 +296,97 @@ export default function AdminTasksPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-yellow-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-900">
+                <p className="text-xs sm:text-sm text-yellow-600">Pending</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-900">
                   {statistics.pendingTasks || 0}
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600">Running</p>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-xs sm:text-sm text-green-600">Running</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-900">
                   {statistics.runningTasks || 0}
                 </p>
               </div>
-              <Play className="h-8 w-8 text-green-500" />
+              <Play className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600">Budget Locked</p>
-                <p className="text-2xl font-bold text-blue-900">
+                <p className="text-xs sm:text-sm text-blue-600">
+                  Budget Locked
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-900">
                   ₹{(statistics.totalBudgetLocked || 0).toFixed(0)}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-blue-500" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            {successMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {errorMessage && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Filters and Search */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
             Filters & Search
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4">
             <div className="md:col-span-2">
-              <Label>Search Tasks</Label>
+              <Label className="text-xs sm:text-sm">Search Tasks</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-teal-400" />
                 <Input
-                  placeholder="Search by title, creator, description..."
+                  placeholder={
+                    isMobile
+                      ? "Search tasks..."
+                      : "Search by title, creator, description..."
+                  }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <Label>Status</Label>
+              <Label className="text-xs sm:text-sm">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -320,12 +401,12 @@ export default function AdminTasksPage() {
             </div>
 
             <div>
-              <Label>Payment Status</Label>
+              <Label className="text-xs sm:text-sm">Payment Status</Label>
               <Select
                 value={paymentStatusFilter}
                 onValueChange={setPaymentStatusFilter}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Payments" />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,9 +420,9 @@ export default function AdminTasksPage() {
             </div>
 
             <div>
-              <Label>Task Type</Label>
+              <Label className="text-xs sm:text-sm">Task Type</Label>
               <Select value={taskTypeFilter} onValueChange={setTaskTypeFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,12 +438,12 @@ export default function AdminTasksPage() {
             </div>
 
             <div>
-              <Label>Created By</Label>
+              <Label className="text-xs sm:text-sm">Created By</Label>
               <Select
                 value={createdByFilter}
                 onValueChange={setCreatedByFilter}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Creators" />
                 </SelectTrigger>
                 <SelectContent>
@@ -377,7 +458,8 @@ export default function AdminTasksPage() {
               <Button
                 variant="outline"
                 onClick={clearFilters}
-                className="w-full"
+                className="w-full text-sm"
+                size={isMobile ? "sm" : "default"}
               >
                 Clear Filters
               </Button>
@@ -388,22 +470,31 @@ export default function AdminTasksPage() {
 
       {/* Tasks Table */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Task Management</CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-sm sm:text-base md:text-lg">
+              Task Management
+            </CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Task
+              <Button
+                size={isMobile ? "sm" : "default"}
+                className="bg-teal-600 hover:bg-teal-700 flex-1 sm:flex-initial"
+              >
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isMobile ? "Create" : "Create Task"}
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "default"}
+                className="flex-1 sm:flex-initial"
+              >
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Export
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
@@ -411,200 +502,398 @@ export default function AdminTasksPage() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={
-                          selectedTasks.size === tasks.length &&
-                          tasks.length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>Task & Type</TableHead>
-                    <TableHead>Reward & Cost</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              {isMobile ? (
+                // Mobile Card View
+                <div className="space-y-3 p-3">
                   {tasks.map((task) => (
-                    <TableRow key={task._id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedTasks.has(task._id)}
-                          onCheckedChange={() => handleSelectTask(task._id)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-teal-900">
-                            {task.title}
-                          </p>
-                          <p className="text-sm text-teal-600 capitalize">
-                            {task.type} Task
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">
-                            User:{" "}
-                            <span className="font-medium">
-                              ₹{task.rateToUser}
-                            </span>
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Cost: ₹{task.advertiserCost}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {task.completedCount || 0}/{task.limitCount}
-                          </p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                            <div
-                              className="bg-teal-500 h-2 rounded-full"
-                              style={{
-                                width: `${Math.min(
-                                  ((task.completedCount || 0) /
-                                    task.limitCount) *
-                                    100,
-                                  100
-                                )}%`,
-                              }}
-                            />
+                    <Card key={task._id} className="border-teal-100">
+                      <CardContent className="p-3">
+                        <div className="space-y-3">
+                          {/* Task Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-2 min-w-0 flex-1">
+                              <Checkbox
+                                checked={selectedTasks.has(task._id)}
+                                onCheckedChange={() =>
+                                  handleSelectTask(task._id)
+                                }
+                                className="shrink-0 mt-1"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-teal-900 text-sm leading-tight break-words">
+                                  {task.title}
+                                </p>
+                                <p className="text-xs text-teal-600 capitalize mt-1">
+                                  {task.type} Task
+                                </p>
+                              </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedTask(task);
+                                    setShowTaskDetails(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {task.status === "pending" && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleTaskAction("approve", task._id)
+                                    }
+                                    disabled={
+                                      actionLoading === `approve-${task._id}`
+                                    }
+                                  >
+                                    {actionLoading === `approve-${task._id}` ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                                    ) : (
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                    )}
+                                    {actionLoading === `approve-${task._id}`
+                                      ? "Approving..."
+                                      : "Approve"}
+                                  </DropdownMenuItem>
+                                )}
+                                {task.status === "approved" && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleTaskAction("pause", task._id, {
+                                        reason: "Admin pause",
+                                      })
+                                    }
+                                  >
+                                    <Pause className="h-4 w-4 mr-2" />
+                                    Pause
+                                  </DropdownMenuItem>
+                                )}
+                                {task.status === "paused" && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleTaskAction("resume", task._id, {
+                                        reason: "Admin resume",
+                                      })
+                                    }
+                                  >
+                                    <Play className="h-4 w-4 mr-2" />
+                                    Resume
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleTaskAction("complete", task._id, {
+                                      forceComplete: true,
+                                      reason: "Admin completion",
+                                    })
+                                  }
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Complete
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() =>
+                                    handleTaskAction("delete", task._id, {
+                                      reason: "Admin deletion",
+                                      confirmDelete: true,
+                                    })
+                                  }
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+
+                          {/* Status and Payment Badges */}
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className={getStatusColor(task.status)}>
+                              {task.status}
+                            </Badge>
+                            <Badge
+                              className={getPaymentStatusColor(
+                                task.paymentStatusCalc
+                              )}
+                            >
+                              {task.paymentStatusCalc}
+                            </Badge>
+                          </div>
+
+                          {/* Reward and Progress */}
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <p className="text-gray-600">User Reward</p>
+                              <p className="font-medium">₹{task.rateToUser}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Progress</p>
+                              <p className="font-medium">
+                                {task.completedCount || 0}/{task.limitCount}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-teal-500 h-2 rounded-full"
+                                style={{
+                                  width: `${Math.min(
+                                    ((task.completedCount || 0) /
+                                      task.limitCount) *
+                                      100,
+                                    100
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Creator Info */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={task.creator?.image} />
+                              <AvatarFallback className="text-xs bg-teal-100">
+                                {task.creator?.name?.charAt(0) ||
+                                  task.createdBy?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium truncate">
+                                {task.creator?.name || "Unknown"}
+                              </p>
+                              <p className="text-xs text-gray-500 capitalize">
+                                {task.createdBy}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(task.status)}>
-                          {task.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={getPaymentStatusColor(
-                            task.paymentStatusCalc
-                          )}
-                        >
-                          {task.paymentStatusCalc}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={task.creator?.image} />
-                            <AvatarFallback className="text-xs bg-teal-100">
-                              {task.creator?.name?.charAt(0) ||
-                                task.createdBy?.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                // Desktop Table View
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            selectedTasks.size === tasks.length &&
+                            tasks.length > 0
+                          }
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>Task & Type</TableHead>
+                      <TableHead>Reward & Cost</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Created By</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tasks.map((task) => (
+                      <TableRow key={task._id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedTasks.has(task._id)}
+                            onCheckedChange={() => handleSelectTask(task._id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-teal-900">
+                              {task.title}
+                            </p>
+                            <p className="text-sm text-teal-600 capitalize">
+                              {task.type} Task
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm">
+                              User:{" "}
+                              <span className="font-medium">
+                                ₹{task.rateToUser}
+                              </span>
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Cost: ₹{task.advertiserCost}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div>
                             <p className="text-sm font-medium">
-                              {task.creator?.name || "Unknown"}
+                              {task.completedCount || 0}/{task.limitCount}
                             </p>
-                            <p className="text-xs text-gray-500 capitalize">
-                              {task.createdBy}
-                            </p>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                              <div
+                                className="bg-teal-500 h-2 rounded-full"
+                                style={{
+                                  width: `${Math.min(
+                                    ((task.completedCount || 0) /
+                                      task.limitCount) *
+                                      100,
+                                    100
+                                  )}%`,
+                                }}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedTask(task);
-                                setShowTaskDetails(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {task.status === "pending" && (
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(task.status)}>
+                            {task.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={getPaymentStatusColor(
+                              task.paymentStatusCalc
+                            )}
+                          >
+                            {task.paymentStatusCalc}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={task.creator?.image} />
+                              <AvatarFallback className="text-xs bg-teal-100">
+                                {task.creator?.name?.charAt(0) ||
+                                  task.createdBy?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {task.creator?.name || "Unknown"}
+                              </p>
+                              <p className="text-xs text-gray-500 capitalize">
+                                {task.createdBy}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedTask(task);
+                                  setShowTaskDetails(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {task.status === "pending" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleTaskAction("approve", task._id)
+                                  }
+                                  disabled={
+                                    actionLoading === `approve-${task._id}`
+                                  }
+                                >
+                                  {actionLoading === `approve-${task._id}` ? (
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                  )}
+                                  {actionLoading === `approve-${task._id}`
+                                    ? "Approving..."
+                                    : "Approve"}
+                                </DropdownMenuItem>
+                              )}
+                              {task.status === "approved" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleTaskAction("pause", task._id, {
+                                      reason: "Admin pause",
+                                    })
+                                  }
+                                >
+                                  <Pause className="h-4 w-4 mr-2" />
+                                  Pause
+                                </DropdownMenuItem>
+                              )}
+                              {task.status === "paused" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleTaskAction("resume", task._id, {
+                                      reason: "Admin resume",
+                                    })
+                                  }
+                                >
+                                  <Play className="h-4 w-4 mr-2" />
+                                  Resume
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleTaskAction("approve", task._id)
+                                  handleTaskAction("complete", task._id, {
+                                    forceComplete: true,
+                                    reason: "Admin completion",
+                                  })
                                 }
                               >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Approve
+                                Complete
                               </DropdownMenuItem>
-                            )}
-                            {task.status === "approved" && (
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
+                                className="text-red-600"
                                 onClick={() =>
-                                  handleTaskAction("pause", task._id, {
-                                    reason: "Admin pause",
+                                  handleTaskAction("delete", task._id, {
+                                    reason: "Admin deletion",
+                                    confirmDelete: true,
                                   })
                                 }
                               >
-                                <Pause className="h-4 w-4 mr-2" />
-                                Pause
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Delete
                               </DropdownMenuItem>
-                            )}
-                            {task.status === "paused" && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleTaskAction("resume", task._id, {
-                                    reason: "Admin resume",
-                                  })
-                                }
-                              >
-                                <Play className="h-4 w-4 mr-2" />
-                                Resume
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleTaskAction("complete", task._id, {
-                                  forceComplete: true,
-                                  reason: "Admin completion",
-                                })
-                              }
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Complete
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() =>
-                                handleTaskAction("delete", task._id, {
-                                  reason: "Admin deletion",
-                                  confirmDelete: true,
-                                })
-                              }
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-teal-600">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-3 sm:px-4 pb-4 gap-3">
+                  <p className="text-xs sm:text-sm text-teal-600 text-center sm:text-left">
                     Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
                     {Math.min(
                       currentPage * pagination.limit,
@@ -612,24 +901,24 @@ export default function AdminTasksPage() {
                     )}{" "}
                     of {pagination.totalCount} tasks
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size={isMobile ? "sm" : "default"}
                       onClick={() =>
                         setCurrentPage((prev) => Math.max(1, prev - 1))
                       }
                       disabled={!pagination.hasPrev}
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                      {!isMobile && "Previous"}
                     </Button>
-                    <span className="text-sm text-teal-700">
+                    <span className="text-xs sm:text-sm text-teal-700 px-2">
                       Page {currentPage} of {pagination.totalPages}
                     </span>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size={isMobile ? "sm" : "default"}
                       onClick={() =>
                         setCurrentPage((prev) =>
                           Math.min(pagination.totalPages, prev + 1)
@@ -637,8 +926,8 @@ export default function AdminTasksPage() {
                       }
                       disabled={!pagination.hasNext}
                     >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
+                      {!isMobile && "Next"}
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </div>

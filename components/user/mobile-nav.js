@@ -10,6 +10,7 @@ import {
   User,
   TrendingUp,
   CheckCircle,
+  Shield,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -48,9 +49,9 @@ export function MobileNav({ activeTab, onTabChange }) {
     admin: [
       { title: "Dashboard", icon: Home, href: "/dashboard/admin" },
       { title: "Tasks", icon: CheckCircle, href: "/dashboard/admin/tasks" },
+      { title: "KYC", icon: Shield, href: "/dashboard/admin/kyc-management" },
       { title: "Payouts", icon: DollarSign, href: "/dashboard/admin/payouts" },
       { title: "Users", icon: User, href: "/dashboard/admin/users" },
-      { title: "Home", icon: HomeIcon, href: "/" },
     ],
   };
 

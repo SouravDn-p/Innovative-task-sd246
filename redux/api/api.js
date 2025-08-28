@@ -20,6 +20,8 @@ export const api = createApi({
     "KYC",
     "AdminUsers",
     "AdminTasks",
+    "AdminKYC",
+    "TaskSubmissions",
   ],
   endpoints: (builder) => ({
     // User Authentication and Management
@@ -115,13 +117,14 @@ export const api = createApi({
 
     // Task-Related Endpoints: Manage tasks, submissions, and user-specific tasks
     getTasks: builder.query({
-      query: () => "tasks",
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `tasks?${searchParams.toString()}`;
+      },
       providesTags: ["Task"],
-      transformResponse: (response) =>
-        response.map((task) => ({
-          ...task,
-          _id: task._id.$oid,
-        })),
     }),
     getTaskById: builder.query({
       query: (id) => `tasks/${id}`,
@@ -141,6 +144,26 @@ export const api = createApi({
     }),
 
     // User-Specific Task Endpoints
+    getUserTasksGrouped: builder.query({
+      query: () => "user/tasks",
+      providesTags: ["UserTasks", "Task"],
+    }),
+    joinTask: builder.mutation({
+      query: ({ taskId }) => ({
+        url: "user/tasks",
+        method: "POST",
+        body: { taskId },
+      }),
+      invalidatesTags: ["Task", "UserTasks"],
+    }),
+    submitTaskProof: builder.mutation({
+      query: ({ taskId, proofData, note }) => ({
+        url: `tasks/${taskId}/submit`,
+        method: "POST",
+        body: { proofData, note },
+      }),
+      invalidatesTags: ["Task", "UserTasks"],
+    }),
     startTask: builder.mutation({
       query: ({ taskId, userName, userEmail }) => ({
         url: `user/tasks`,
@@ -256,6 +279,26 @@ export const api = createApi({
     getTransactions: builder.query({
       query: (userId) => `wallet/${userId}/transactions`,
       providesTags: ["Wallet"],
+    }),
+
+    // Advertiser Wallet Endpoints
+    getAdvertiserWallet: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `advertiser/wallet?${searchParams.toString()}`;
+      },
+      providesTags: ["Wallet"],
+    }),
+    addAdvertiserFunds: builder.mutation({
+      query: ({ amount, description, reference }) => ({
+        url: "advertiser/wallet",
+        method: "POST",
+        body: { amount, description, reference },
+      }),
+      invalidatesTags: ["Wallet"],
     }),
 
     // Admin User Management Endpoints
@@ -411,6 +454,7 @@ export const api = createApi({
         { type: "AdminTasks", id: taskId },
         { type: "Task", id: taskId },
         "AdminTasks",
+        "Task", // Invalidate all task cache to ensure user tasks page refreshes
       ],
     }),
     pauseResumeTask: builder.mutation({
@@ -463,6 +507,74 @@ export const api = createApi({
         { type: "AdminTasks", id: taskId },
       ],
     }),
+
+    // Task Submission Endpoints
+    getAdminTaskSubmissions: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/task-submissions?${searchParams.toString()}`;
+      },
+      providesTags: ["TaskSubmissions"],
+    }),
+    getAdminTaskSubmissionDetails: builder.query({
+      query: (submissionId) => `admin/task-submissions/${submissionId}`,
+      providesTags: (result, error, submissionId) => [
+        { type: "TaskSubmissions", id: submissionId },
+      ],
+    }),
+    reviewTaskSubmission: builder.mutation({
+      query: ({ submissionId, action, feedback }) => ({
+        url: `admin/task-submissions/${submissionId}`,
+        method: "POST",
+        body: { action, feedback },
+      }),
+      invalidatesTags: ["TaskSubmissions", "UserTasks", "Wallet"],
+    }),
+
+    // Admin KYC Management Endpoints
+    getAdminKYCApplications: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/kyc?${searchParams.toString()}`;
+      },
+      providesTags: ["AdminKYC"],
+    }),
+    getAdminKYCApplicationDetails: builder.query({
+      query: (applicationId) => `admin/kyc/${applicationId}`,
+      providesTags: (result, error, applicationId) => [
+        { type: "AdminKYC", id: applicationId },
+      ],
+    }),
+    approveKYCApplication: builder.mutation({
+      query: ({ applicationId, action, rejectionReason, notes }) => ({
+        url: `admin/kyc/${applicationId}`,
+        method: "POST",
+        body: { action, rejectionReason, notes },
+      }),
+      invalidatesTags: (result, error, { applicationId }) => [
+        { type: "AdminKYC", id: applicationId },
+        "AdminKYC",
+        "AdminUsers",
+        "KYC",
+      ],
+    }),
+    updateKYCApplication: builder.mutation({
+      query: ({ applicationId, assignTo, notes, priority }) => ({
+        url: `admin/kyc/${applicationId}`,
+        method: "PUT",
+        body: { assignTo, notes, priority },
+      }),
+      invalidatesTags: (result, error, { applicationId }) => [
+        { type: "AdminKYC", id: applicationId },
+        "AdminKYC",
+      ],
+    }),
   }),
 });
 
@@ -488,6 +600,9 @@ export const {
   useGetTasksQuery,
   useGetTaskByIdQuery,
   useCreateTaskMutation,
+  useGetUserTasksGroupedQuery,
+  useJoinTaskMutation,
+  useSubmitTaskProofMutation,
   useStartTaskMutation,
   useGetUserTasksQuery,
   useDeleteMyTaskMutation,
@@ -496,7 +611,6 @@ export const {
   useUpdateMyTaskMutation,
   useGetMyTaskSubmissionsQuery,
   useReviewMyTaskSubmissionMutation,
-  useSubmitTaskProofMutation, // Added missing export
 
   useGetReferralsQuery,
   useGetAllReferralsQuery,
@@ -506,6 +620,10 @@ export const {
   useGetWithdrawalsQuery,
   useUpdateWithdrawalMutation,
   useGetTransactionsQuery,
+
+  // Advertiser Wallet exports
+  useGetAdvertiserWalletQuery,
+  useAddAdvertiserFundsMutation,
 
   // Admin User Management exports
   useGetAdminUsersQuery,
@@ -532,4 +650,15 @@ export const {
   useCompleteTaskMutation,
   useReviewTaskSubmissionsMutation,
   useGetTaskSubmissionsQuery,
+
+  // Task Submission Management exports
+  useGetAdminTaskSubmissionsQuery,
+  useGetAdminTaskSubmissionDetailsQuery,
+  useReviewTaskSubmissionMutation,
+
+  // Admin KYC Management exports
+  useGetAdminKYCApplicationsQuery,
+  useGetAdminKYCApplicationDetailsQuery,
+  useApproveKYCApplicationMutation,
+  useUpdateKYCApplicationMutation,
 } = api;

@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,36 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  Wallet,
+  CreditCard,
+  DollarSign,
+  Calculator,
+  Info,
+  ExternalLink,
+  FileText,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -51,6 +78,64 @@ export default function CreateTaskPage() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [userWallet, setUserWallet] = useState({ balance: 0, loading: true });
+  const [paymentMethod, setPaymentMethod] = useState("wallet");
+  const [showPaymentPreview, setShowPaymentPreview] = useState(false);
+  const [paymentBreakdown, setPaymentBreakdown] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  // Load user wallet balance
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch("/api/advertiser/wallet");
+          if (response.ok) {
+            const data = await response.json();
+            setUserWallet({ balance: data.wallet.balance, loading: false });
+          } else {
+            setUserWallet({ balance: 0, loading: false });
+          }
+        } catch (error) {
+          console.error("Failed to fetch wallet balance:", error);
+          setUserWallet({ balance: 0, loading: false });
+        }
+      }
+    };
+    fetchWalletBalance();
+  }, [session]);
+
+  // Calculate payment breakdown
+  const calculatePaymentBreakdown = () => {
+    const rateToUser = parseFloat(formData.rateToUser) || 0;
+    const limitCount = parseInt(formData.limitCount) || 0;
+    const advertiserCost = rateToUser * 1.2; // 20% platform fee
+    const totalCost = advertiserCost * limitCount;
+    const platformFee = totalCost - rateToUser * limitCount;
+
+    return {
+      rateToUser,
+      limitCount,
+      advertiserCost,
+      totalCost,
+      platformFee,
+      platformFeePercentage: 20,
+      hasInsufficientFunds: totalCost > userWallet.balance,
+    };
+  };
+
+  // Update payment breakdown when form data changes
+  useEffect(() => {
+    if (formData.rateToUser && formData.limitCount) {
+      const breakdown = calculatePaymentBreakdown();
+      setPaymentBreakdown(breakdown);
+    }
+  }, [
+    formData.rateToUser,
+    formData.limitCount,
+    userWallet.balance,
+    paymentMethod,
+  ]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -86,6 +171,13 @@ export default function CreateTaskPage() {
       return;
     }
 
+    // Check payment requirements
+    const breakdown = calculatePaymentBreakdown();
+
+    // For insufficient funds, allow task creation but defer payment
+    const deferPayment =
+      paymentMethod === "wallet" && breakdown.hasInsufficientFunds;
+
     setIsSubmitting(true);
     setErrors({});
     setSubmitStatus(null);
@@ -93,20 +185,10 @@ export default function CreateTaskPage() {
     try {
       const taskData = {
         ...formData,
-        rateToUser: parseFloat(formData.rateToUser),
-        advertiserCost: parseFloat(formData.rateToUser) * 1.2,
-        limitCount: parseInt(formData.limitCount),
-        completedCount: 0,
-        status:
-          session?.user?.role?.toLowerCase() === "admin"
-            ? "approved"
-            : "pending",
-        createdBy: session?.user?.role?.toLowerCase() || "advertiser",
-        gmail: session?.user?.email || "unknown@gmail.com",
-        name: session?.user?.name || "Unknown",
-        createdAt: new Date().toISOString(), // 2025-08-26T15:57:00.000+06:00
-        updatedAt: new Date().toISOString(), // 2025-08-26T15:57:00.000+06:00
-        paymentDone: false,
+        paymentMethod,
+        payNow: !deferPayment, // Only pay now if funds are sufficient
+        requirePayment: true,
+        totalCost: breakdown.totalCost,
       };
 
       const res = await fetch("/api/tasks", {
@@ -115,12 +197,22 @@ export default function CreateTaskPage() {
         body: JSON.stringify(taskData),
       });
 
+      const responseData = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create task");
+        throw new Error(responseData.message || "Failed to create task");
       }
 
       setSubmitStatus("success");
+
+      // Only update wallet balance if payment was processed immediately
+      if (!deferPayment) {
+        setUserWallet((prev) => ({
+          ...prev,
+          balance: prev.balance - breakdown.totalCost,
+        }));
+      }
+
       setFormData({
         title: "",
         type: "custom",
@@ -134,7 +226,17 @@ export default function CreateTaskPage() {
           .slice(0, 16),
         requireKyc: true,
       });
-      setTimeout(() => router.push("/dashboard/tasks"), 2000);
+
+      // Show different success messages based on payment status
+      if (deferPayment) {
+        setSuccessMessage(
+          "Task created successfully! Payment will be processed when admin approves the task."
+        );
+      } else {
+        setSuccessMessage("Task created and paid successfully!");
+      }
+
+      setTimeout(() => router.push("/dashboard/advertiser"), 3000);
     } catch (err) {
       setSubmitStatus("error");
       setErrors({ submit: err.message });
@@ -395,7 +497,213 @@ export default function CreateTaskPage() {
             </Label>
           </div>
 
-          {submitStatus === "success" && (
+          {/* Payment Section */}
+          {paymentBreakdown && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4 border-t border-teal-200 pt-6"
+            >
+              <h3 className="text-lg font-semibold text-teal-800 flex items-center">
+                <Calculator className="h-5 w-5 mr-2" />
+                Payment Details
+              </h3>
+
+              {/* Wallet Balance */}
+              <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-teal-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Wallet className="h-5 w-5 text-teal-600 mr-2" />
+                      <span className="text-teal-800 font-medium">
+                        Wallet Balance
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      {userWallet.loading ? (
+                        <div className="h-4 w-16 bg-teal-200 animate-pulse rounded" />
+                      ) : (
+                        <span className="text-lg font-bold text-teal-700">
+                          ₹
+                          {userWallet.balance.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Breakdown */}
+              <Card className="border-teal-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-teal-800 flex items-center">
+                    <DollarSign className="h-5 w-5 mr-2" />
+                    Cost Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Reward per user:</span>
+                    <span className="font-medium">
+                      ₹{paymentBreakdown.rateToUser.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Number of users:</span>
+                    <span className="font-medium">
+                      {paymentBreakdown.limitCount}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Subtotal:</span>
+                    <span className="font-medium">
+                      ₹
+                      {(
+                        paymentBreakdown.rateToUser *
+                        paymentBreakdown.limitCount
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 flex items-center">
+                      Platform fee ({paymentBreakdown.platformFeePercentage}%)
+                      <Info className="h-3 w-3 ml-1 text-slate-400" />
+                    </span>
+                    <span className="font-medium">
+                      ₹{paymentBreakdown.platformFee.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span className="text-teal-800">Total Cost:</span>
+                      <span className="text-teal-700">
+                        ₹{paymentBreakdown.totalCost.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Balance Status */}
+                  <div className="mt-3 p-3 rounded-lg border">
+                    {paymentBreakdown.hasInsufficientFunds ? (
+                      <div className="flex items-center text-orange-600">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        <div>
+                          <p className="font-medium">
+                            Insufficient Balance - Payment Deferred
+                          </p>
+                          <p className="text-sm">
+                            Task will be created, but payment (₹
+                            {(
+                              paymentBreakdown.totalCost - userWallet.balance
+                            ).toFixed(2)}{" "}
+                            more needed) will be processed when admin approves.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-green-600">
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <div>
+                          <p className="font-medium">Sufficient Balance</p>
+                          <p className="text-sm">
+                            Remaining after payment: ₹
+                            {(
+                              userWallet.balance - paymentBreakdown.totalCost
+                            ).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Method Selection */}
+              <Card className="border-teal-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-teal-800">
+                    Payment Method
+                  </CardTitle>
+                  <CardDescription>
+                    Choose how you want to pay for this task
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        paymentMethod === "wallet"
+                          ? "border-teal-500 bg-teal-50"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                      onClick={() => setPaymentMethod("wallet")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Wallet className="h-5 w-5 text-teal-600 mr-3" />
+                          <div>
+                            <p className="font-medium text-slate-800">
+                              Wallet Payment
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              Pay from your wallet balance
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            paymentMethod === "wallet" ? "default" : "secondary"
+                          }
+                        >
+                          {paymentMethod === "wallet"
+                            ? "Selected"
+                            : "Available"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`p-3 border rounded-lg cursor-pointer transition-all opacity-50 ${
+                        paymentMethod === "external"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200"
+                      }`}
+                      onClick={() => setPaymentMethod("external")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <CreditCard className="h-5 w-5 text-blue-600 mr-3" />
+                          <div>
+                            <p className="font-medium text-slate-800">
+                              External Payment
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              Pay with card or UPI (Coming Soon)
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">Coming Soon</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {successMessage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center text-green-600 p-3 bg-green-50 rounded-lg border border-green-200"
+            >
+              <CheckCircle className="h-5 w-5 mr-2" />
+              {successMessage}
+            </motion.div>
+          )}
+          {submitStatus === "success" && !successMessage && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -426,6 +734,18 @@ export default function CreateTaskPage() {
                 <div className="h-5 w-5 animate-spin rounded-full border-4 border-white border-t-transparent mr-2" />
                 Creating...
               </span>
+            ) : paymentBreakdown ? (
+              paymentBreakdown.hasInsufficientFunds ? (
+                <span className="flex items-center justify-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Create Task (Pay on Approval)
+                </span>
+              ) : (
+                <span className="flex items-center justify-center">
+                  <Wallet className="h-5 w-5 mr-2" />
+                  Create Task & Pay ₹{paymentBreakdown.totalCost.toFixed(2)}
+                </span>
+              )
             ) : (
               "Create Task"
             )}

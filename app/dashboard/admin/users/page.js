@@ -270,95 +270,123 @@ export default function AdminUsersPage() {
 
   return (
     <motion.div
-      className="p-4 md:p-6 space-y-6"
+      className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
       {/* Header with Statistics */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-teal-900">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-900 truncate">
               User Management
             </h1>
-            <p className="text-teal-600 mt-1">
-              Manage all platform users and their permissions
+            <p className="text-sm sm:text-base text-teal-600 mt-1">
+              {isMobile
+                ? "Manage users"
+                : "Manage all platform users and their permissions"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
-              className="border-teal-200 text-teal-700 hover:bg-teal-50"
+              size={isMobile ? "sm" : "default"}
+              className="border-teal-200 text-teal-700 hover:bg-teal-50 flex-1 sm:flex-initial"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              {isMobile ? "Export" : "Export CSV"}
             </Button>
             <Button
               onClick={() => refetch()}
               variant="outline"
-              className="border-teal-200 text-teal-700 hover:bg-teal-50"
+              size={isMobile ? "sm" : "default"}
+              className="border-teal-200 text-teal-700 hover:bg-teal-50 flex-1 sm:flex-initial"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              {isMobile ? "Refresh" : "Refresh"}
             </Button>
           </div>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border-teal-200">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-teal-600">Total Users</p>
-                  <p className="text-2xl font-bold text-teal-900">
-                    {summary.totalUsers?.toLocaleString() || 0}
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-teal-600 truncate">
+                    Total Users
+                  </p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-teal-900 truncate">
+                    {isMobile
+                      ? (summary.totalUsers || 0) > 999
+                        ? `${Math.floor((summary.totalUsers || 0) / 1000)}k`
+                        : summary.totalUsers?.toLocaleString() || 0
+                      : summary.totalUsers?.toLocaleString() || 0}
                   </p>
                 </div>
-                <Users className="h-8 w-8 text-teal-500" />
+                <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-teal-500 shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-green-200">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600">Active Users</p>
-                  <p className="text-2xl font-bold text-green-900">
-                    {summary.activeUsers?.toLocaleString() || 0}
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-green-600 truncate">
+                    Active Users
+                  </p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-900 truncate">
+                    {isMobile
+                      ? (summary.activeUsers || 0) > 999
+                        ? `${Math.floor((summary.activeUsers || 0) / 1000)}k`
+                        : summary.activeUsers?.toLocaleString() || 0
+                      : summary.activeUsers?.toLocaleString() || 0}
                   </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-green-500 shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-red-200">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-600">Suspended</p>
-                  <p className="text-2xl font-bold text-red-900">
-                    {summary.suspendedUsers?.toLocaleString() || 0}
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-red-600 truncate">
+                    Suspended
+                  </p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-900 truncate">
+                    {isMobile
+                      ? (summary.suspendedUsers || 0) > 999
+                        ? `${Math.floor((summary.suspendedUsers || 0) / 1000)}k`
+                        : summary.suspendedUsers?.toLocaleString() || 0
+                      : summary.suspendedUsers?.toLocaleString() || 0}
                   </p>
                 </div>
-                <Ban className="h-8 w-8 text-red-500" />
+                <Ban className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-red-500 shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-yellow-200">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-yellow-600">KYC Pending</p>
-                  <p className="text-2xl font-bold text-yellow-900">
-                    {summary.pendingKyc?.toLocaleString() || 0}
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-yellow-600 truncate">
+                    KYC Pending
+                  </p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-900 truncate">
+                    {isMobile
+                      ? (summary.pendingKyc || 0) > 999
+                        ? `${Math.floor((summary.pendingKyc || 0) / 1000)}k`
+                        : summary.pendingKyc?.toLocaleString() || 0
+                      : summary.pendingKyc?.toLocaleString() || 0}
                   </p>
                 </div>
-                <Shield className="h-8 w-8 text-yellow-500" />
+                <Shield className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-yellow-500 shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -367,22 +395,27 @@ export default function AdminUsersPage() {
 
       {/* Filters and Search */}
       <Card className="border-teal-200">
-        <CardContent className="p-4 md:p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-400 h-4 w-4" />
-                <Input
-                  placeholder="Search users by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-teal-200 focus:border-teal-500"
-                />
-              </div>
+        <CardContent className="p-3 sm:p-4 md:p-6">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-400 h-4 w-4" />
+              <Input
+                placeholder={
+                  isMobile
+                    ? "Search users..."
+                    : "Search users by name, email, or phone..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-teal-200 focus:border-teal-500 text-sm sm:text-base"
+              />
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-32 border-teal-200">
+                <SelectTrigger className="border-teal-200 text-sm">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -394,7 +427,7 @@ export default function AdminUsersPage() {
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-32 border-teal-200">
+                <SelectTrigger className="border-teal-200 text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -405,7 +438,7 @@ export default function AdminUsersPage() {
               </Select>
 
               <Select value={kycFilter} onValueChange={setKycFilter}>
-                <SelectTrigger className="w-full sm:w-32 border-teal-200">
+                <SelectTrigger className="border-teal-200 text-sm">
                   <SelectValue placeholder="KYC" />
                 </SelectTrigger>
                 <SelectContent>
@@ -425,24 +458,24 @@ export default function AdminUsersPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg"
+              className="mt-3 sm:mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <p className="text-sm text-teal-700">
+              <div className="space-y-3">
+                <p className="text-xs sm:text-sm text-teal-700">
                   {selectedUsers.size} user{selectedUsers.size > 1 ? "s" : ""}{" "}
                   selected
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => {
                       // Bulk suspend logic
                     }}
-                    className="border-red-200 text-red-700 hover:bg-red-50"
+                    className="border-red-200 text-red-700 hover:bg-red-50 flex-1 sm:flex-initial text-xs sm:text-sm"
                   >
                     <Ban className="h-3 w-3 mr-1" />
-                    Suspend Selected
+                    {isMobile ? "Suspend" : "Suspend Selected"}
                   </Button>
                   <Button
                     size="sm"
@@ -450,18 +483,18 @@ export default function AdminUsersPage() {
                     onClick={() => {
                       // Bulk reactivate logic
                     }}
-                    className="border-green-200 text-green-700 hover:bg-green-50"
+                    className="border-green-200 text-green-700 hover:bg-green-50 flex-1 sm:flex-initial text-xs sm:text-sm"
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    Reactivate Selected
+                    {isMobile ? "Reactivate" : "Reactivate Selected"}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setSelectedUsers(new Set())}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50 flex-1 sm:flex-initial text-xs sm:text-sm"
                   >
-                    Clear Selection
+                    Clear{isMobile ? "" : " Selection"}
                   </Button>
                 </div>
               </div>
@@ -472,206 +505,350 @@ export default function AdminUsersPage() {
 
       {/* Users Table */}
       <Card className="border-teal-200">
-        <CardHeader>
-          <CardTitle className="text-teal-900">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-sm sm:text-base md:text-lg text-teal-900">
             Users ({pagination.totalUsers || 0})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-teal-200">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={
-                        selectedUsers.size === users.length && users.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>KYC</TableHead>
-                  <TableHead>Wallet</TableHead>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow
-                    key={user._id}
-                    className="border-teal-100 hover:bg-teal-50"
-                  >
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedUsers.has(user._id)}
-                        onCheckedChange={() => handleSelectUser(user._id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={user.image} alt={user.name} />
-                          <AvatarFallback className="bg-teal-100 text-teal-700">
-                            {user.name?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-teal-900">
-                            {user.name}
-                          </p>
-                          <p className="text-sm text-teal-600">{user.email}</p>
-                          <Badge
-                            className={getRoleBadgeColor(user.role)}
-                            size="sm"
-                          >
-                            {user.role}
-                          </Badge>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {user.phone && (
-                          <div className="flex items-center gap-1 text-sm text-teal-600">
-                            <Phone className="h-3 w-3" />
-                            {user.phone}
+          {isMobile ? (
+            // Mobile Card View
+            <div className="space-y-3 p-3">
+              {users.map((user) => (
+                <Card key={user._id} className="border-teal-100">
+                  <CardContent className="p-3">
+                    <div className="space-y-3">
+                      {/* User Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <Checkbox
+                            checked={selectedUsers.has(user._id)}
+                            onCheckedChange={() => handleSelectUser(user._id)}
+                            className="shrink-0"
+                          />
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage src={user.image} alt={user.name} />
+                            <AvatarFallback className="bg-teal-100 text-teal-700 text-xs">
+                              {user.name?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-teal-900 text-sm truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-teal-600 truncate">
+                              {user.email}
+                            </p>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1 text-sm text-teal-600">
-                          <Calendar className="h-3 w-3" />
-                          {user.joinDate}
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleViewDetails(user)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            {user.isSuspended ? (
+                              <DropdownMenuItem
+                                onClick={() => handleReactivateUser(user)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Reactivate
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleSuspendUser(user)}
+                              >
+                                <Ban className="h-4 w-4 mr-2" />
+                                Suspend
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleWalletAdjust(user)}
+                            >
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              Adjust Wallet
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleSendNotification(user)}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Notification
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      {/* User Details Grid */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1">
+                            <Badge
+                              className={getRoleBadgeColor(user.role)}
+                              size="sm"
+                            >
+                              {user.role}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Badge
+                              className={getStatusBadgeColor(user)}
+                              size="sm"
+                            >
+                              {user.isSuspended ? "Suspended" : "Active"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1">
+                            <Badge
+                              className={getKycBadgeColor(user.kycStatus)}
+                              size="sm"
+                            >
+                              {user.kycStatus || "none"}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1 text-teal-600">
+                            <Wallet className="h-3 w-3" />
+                            <span className="font-medium">
+                              ₹{(user.walletBalance || 0).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusBadgeColor(user)}>
-                        {user.isSuspended ? "Suspended" : "Active"}
-                      </Badge>
-                      {user.suspendedReason && (
-                        <p className="text-xs text-red-600 mt-1">
-                          {user.suspendedReason}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getKycBadgeColor(user.kycStatus)}>
-                        {user.kycStatus || "none"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium text-teal-900">
-                          ₹{(user.walletBalance || 0).toFixed(2)}
-                        </p>
-                        <p className="text-xs text-teal-600">
-                          Total: ₹{(user.totalEarn || 0).toFixed(2)}
-                        </p>
+
+                      {/* Activity Summary */}
+                      <div className="flex items-center justify-between text-xs text-teal-600 pt-1 border-t border-teal-100">
+                        <div className="flex items-center gap-2">
+                          <span>{user.tasksCompleted || 0} tasks</span>
+                          <span>•</span>
+                          <span>{user.totalReferrals || 0} referrals</span>
+                        </div>
+                        <span>Last: {user.lastActive || "N/A"}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          {user.tasksCompleted || 0} tasks
-                        </p>
-                        <p className="text-sm">
-                          {user.totalReferrals || 0} referrals
-                        </p>
-                        <p className="text-xs text-teal-600">
-                          Last: {user.lastActive || "N/A"}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleViewDetails(user)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          {user.isSuspended ? (
-                            <DropdownMenuItem
-                              onClick={() => handleReactivateUser(user)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Reactivate
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              onClick={() => handleSuspendUser(user)}
-                            >
-                              <Ban className="h-4 w-4 mr-2" />
-                              Suspend
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleWalletAdjust(user)}
-                          >
-                            <DollarSign className="h-4 w-4 mr-2" />
-                            Adjust Wallet
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleSendNotification(user)}
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Notification
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            // Desktop Table View
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-teal-200">
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          selectedUsers.size === users.length &&
+                          users.length > 0
+                        }
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>KYC</TableHead>
+                    <TableHead>Wallet</TableHead>
+                    <TableHead>Activity</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow
+                      key={user._id}
+                      className="border-teal-100 hover:bg-teal-50"
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedUsers.has(user._id)}
+                          onCheckedChange={() => handleSelectUser(user._id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={user.image} alt={user.name} />
+                            <AvatarFallback className="bg-teal-100 text-teal-700">
+                              {user.name?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-teal-900">
+                              {user.name}
+                            </p>
+                            <p className="text-sm text-teal-600">
+                              {user.email}
+                            </p>
+                            <Badge
+                              className={getRoleBadgeColor(user.role)}
+                              size="sm"
+                            >
+                              {user.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {user.phone && (
+                            <div className="flex items-center gap-1 text-sm text-teal-600">
+                              <Phone className="h-3 w-3" />
+                              {user.phone}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-sm text-teal-600">
+                            <Calendar className="h-3 w-3" />
+                            {user.joinDate}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadgeColor(user)}>
+                          {user.isSuspended ? "Suspended" : "Active"}
+                        </Badge>
+                        {user.suspendedReason && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {user.suspendedReason}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getKycBadgeColor(user.kycStatus)}>
+                          {user.kycStatus || "none"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium text-teal-900">
+                            ₹{(user.walletBalance || 0).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-teal-600">
+                            Total: ₹{(user.totalEarn || 0).toFixed(2)}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="text-sm">
+                            {user.tasksCompleted || 0} tasks
+                          </p>
+                          <p className="text-sm">
+                            {user.totalReferrals || 0} referrals
+                          </p>
+                          <p className="text-xs text-teal-600">
+                            Last: {user.lastActive || "N/A"}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleViewDetails(user)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            {user.isSuspended ? (
+                              <DropdownMenuItem
+                                onClick={() => handleReactivateUser(user)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Reactivate
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleSuspendUser(user)}
+                              >
+                                <Ban className="h-4 w-4 mr-2" />
+                                Suspend
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleWalletAdjust(user)}
+                            >
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              Adjust Wallet
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleSendNotification(user)}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Notification
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-teal-200">
-              <p className="text-sm text-teal-600">
-                Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                {Math.min(currentPage * pageSize, pagination.totalUsers)} of{" "}
-                {pagination.totalUsers} users
+            <div className="flex flex-col sm:flex-row items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-t border-teal-200 gap-3 sm:gap-0">
+              <p className="text-xs sm:text-sm text-teal-600 order-2 sm:order-1">
+                {isMobile
+                  ? `${(currentPage - 1) * pageSize + 1}-${Math.min(
+                      currentPage * pageSize,
+                      pagination.totalUsers
+                    )} of ${pagination.totalUsers}`
+                  : `Showing ${(currentPage - 1) * pageSize + 1} to ${Math.min(
+                      currentPage * pageSize,
+                      pagination.totalUsers
+                    )} of ${pagination.totalUsers} users`}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 order-1 sm:order-2">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size={isMobile ? "sm" : "default"}
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={!pagination.hasPrev}
-                  className="border-teal-200"
+                  className="border-teal-200 text-xs sm:text-sm"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-0 sm:mr-1" />
+                  {isMobile ? "" : "Previous"}
                 </Button>
-                <span className="text-sm text-teal-700">
-                  Page {currentPage} of {pagination.totalPages}
+                <span className="text-xs sm:text-sm text-teal-700 px-2">
+                  {isMobile
+                    ? `${currentPage}/${pagination.totalPages}`
+                    : `Page ${currentPage} of ${pagination.totalPages}`}
                 </span>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size={isMobile ? "sm" : "default"}
                   onClick={() =>
                     setCurrentPage((prev) =>
                       Math.min(pagination.totalPages, prev + 1)
                     )
                   }
                   disabled={!pagination.hasNext}
-                  className="border-teal-200"
+                  className="border-teal-200 text-xs sm:text-sm"
                 >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
+                  {isMobile ? "" : "Next"}
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-0 sm:ml-1" />
                 </Button>
               </div>
             </div>

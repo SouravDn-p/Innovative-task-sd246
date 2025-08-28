@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 
-export async function GET(req, context) {
+export async function GET(req, { params }) {
   try {
-    const { params } = await context;
+    const { id: taskId } = await params;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token) {
@@ -18,8 +18,6 @@ export async function GET(req, context) {
         { status: 403 }
       );
     }
-
-    const taskId = params.id;
 
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
@@ -222,9 +220,9 @@ export async function GET(req, context) {
   }
 }
 
-export async function PUT(req, context) {
+export async function PUT(req, { params }) {
   try {
-    const { params } = await context;
+    const { id: taskId } = await params;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token) {
@@ -238,7 +236,6 @@ export async function PUT(req, context) {
       );
     }
 
-    const taskId = params.id;
     const body = await req.json();
 
     const client = await clientPromise;
@@ -336,9 +333,9 @@ export async function PUT(req, context) {
   }
 }
 
-export async function DELETE(req, context) {
+export async function DELETE(req, { params }) {
   try {
-    const { params } = await context;
+    const { id: taskId } = await params;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token) {
@@ -352,8 +349,8 @@ export async function DELETE(req, context) {
       );
     }
 
-    const taskId = params.id;
     const body = await req.json();
+
     const { reason, confirmDelete } = body;
 
     if (!confirmDelete) {
