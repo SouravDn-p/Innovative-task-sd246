@@ -480,6 +480,12 @@ export const api = createApi({
         method: "POST",
         body: { action, rejectionReason, notes },
       }),
+      transformErrorResponse: (response) => {
+        // Provide better error messages for KYC approval
+        return (
+          response.data || { message: "Failed to process KYC application" }
+        );
+      },
       invalidatesTags: ["KYC", "User", "AdminDashboard"],
     }),
     updateKYCApplication: builder.mutation({
@@ -488,6 +494,10 @@ export const api = createApi({
         method: "PUT",
         body: { assignTo, notes, priority },
       }),
+      transformErrorResponse: (response) => {
+        // Provide better error messages for KYC updates
+        return response.data || { message: "Failed to update KYC application" };
+      },
       invalidatesTags: (result, error, { applicationId }) => [
         { type: "KYC", id: applicationId },
         "KYC",

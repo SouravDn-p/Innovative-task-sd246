@@ -1,6 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongoClient";
+import client from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 
 // GET individual KYC application details
@@ -10,10 +10,13 @@ export async function GET(req, { params }) {
 
     // Check admin authentication
     if (!token || !token.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized access. Please log in as admin." },
+        { status: 401 }
+      );
     }
 
-    const client = await clientPromise;
+    // Use the client directly, not as a promise
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
     const kycApplicationsCollection = db.collection("kyc-applications");
@@ -22,7 +25,10 @@ export async function GET(req, { params }) {
     const adminUser = await usersCollection.findOne({ email: token.email });
     if (!adminUser || adminUser.role !== "admin") {
       return NextResponse.json(
-        { error: "Admin access required" },
+        {
+          error:
+            "Admin access required. You don't have permission to perform this action.",
+        },
         { status: 403 }
       );
     }
@@ -36,7 +42,10 @@ export async function GET(req, { params }) {
 
     if (!kycApplication) {
       return NextResponse.json(
-        { error: "KYC application not found" },
+        {
+          error:
+            "KYC application not found. The application may have been deleted.",
+        },
         { status: 404 }
       );
     }
@@ -48,7 +57,10 @@ export async function GET(req, { params }) {
     );
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User account not found." },
+        { status: 404 }
+      );
     }
 
     // Transform application data for KYC review
@@ -93,7 +105,10 @@ export async function GET(req, { params }) {
   } catch (error) {
     console.error("KYC application fetch error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error:
+          "An unexpected error occurred while fetching the KYC application. Please try again.",
+      },
       { status: 500 }
     );
   }
@@ -101,17 +116,20 @@ export async function GET(req, { params }) {
 
 // POST - Approve or reject KYC application
 export async function POST(req, { params }) {
-  const session = await clientPromise.then((client) => client.startSession());
+  let session;
 
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     // Check admin authentication
     if (!token || !token.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized access. Please log in as admin." },
+        { status: 401 }
+      );
     }
 
-    const client = await clientPromise;
+    // Use the client directly, not as a promise
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
     const kycApplicationsCollection = db.collection("kyc-applications");
@@ -120,7 +138,10 @@ export async function POST(req, { params }) {
     const adminUser = await usersCollection.findOne({ email: token.email });
     if (!adminUser || adminUser.role !== "admin") {
       return NextResponse.json(
-        { error: "Admin access required" },
+        {
+          error:
+            "Admin access required. You don't have permission to perform this action.",
+        },
         { status: 403 }
       );
     }
@@ -130,18 +151,25 @@ export async function POST(req, { params }) {
 
     // Validate action
     if (!action || !["approve", "reject"].includes(action)) {
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid action. Please specify 'approve' or 'reject'." },
+        { status: 400 }
+      );
     }
 
     // If rejecting, require rejection reason
     if (action === "reject" && !rejectionReason) {
       return NextResponse.json(
-        { error: "Rejection reason is required" },
+        {
+          error:
+            "Rejection reason is required when rejecting a KYC application.",
+        },
         { status: 400 }
       );
     }
 
     // Start transaction for atomic operations
+    session = client.startSession();
     session.startTransaction();
 
     // Get KYC application to update
@@ -153,7 +181,10 @@ export async function POST(req, { params }) {
     if (!kycApplication) {
       await session.abortTransaction();
       return NextResponse.json(
-        { error: "KYC application not found" },
+        {
+          error:
+            "KYC application not found. The application may have been deleted.",
+        },
         { status: 404 }
       );
     }
@@ -166,7 +197,10 @@ export async function POST(req, { params }) {
 
     if (!user) {
       await session.abortTransaction();
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User account not found." },
+        { status: 404 }
+      );
     }
 
     // Check if KYC is in a state that can be reviewed
@@ -177,7 +211,8 @@ export async function POST(req, { params }) {
       await session.abortTransaction();
       return NextResponse.json(
         {
-          error: "KYC application has already been reviewed",
+          error:
+            "KYC application has already been reviewed and cannot be modified.",
         },
         { status: 400 }
       );
@@ -242,7 +277,7 @@ export async function POST(req, { params }) {
     if (applicationUpdateResult.modifiedCount === 0) {
       await session.abortTransaction();
       return NextResponse.json(
-        { error: "Failed to update KYC application" },
+        { error: "Failed to update KYC application. Please try again." },
         { status: 500 }
       );
     }
@@ -260,7 +295,7 @@ export async function POST(req, { params }) {
     if (userUpdateResult.modifiedCount === 0) {
       await session.abortTransaction();
       return NextResponse.json(
-        { error: "Failed to update user KYC status" },
+        { error: "Failed to update user KYC status. Please try again." },
         { status: 500 }
       );
     }
@@ -295,14 +330,31 @@ export async function POST(req, { params }) {
       reviewedAt: new Date().toISOString(),
     });
   } catch (error) {
-    await session.abortTransaction();
+    // Make sure to abort transaction if it's still active
+    if (session) {
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        // Ignore abort errors
+      }
+    }
+
     console.error("KYC review error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error:
+          "An unexpected error occurred while processing the KYC application. Please try again.",
+      },
       { status: 500 }
     );
   } finally {
-    await session.endSession();
+    if (session) {
+      try {
+        await session.endSession();
+      } catch (sessionError) {
+        // Ignore session end errors
+      }
+    }
   }
 }
 
@@ -313,10 +365,13 @@ export async function PUT(req, { params }) {
 
     // Check admin authentication
     if (!token || !token.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized access. Please log in as admin." },
+        { status: 401 }
+      );
     }
 
-    const client = await clientPromise;
+    // Use the client directly, not as a promise
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
     const kycApplicationsCollection = db.collection("kyc-applications");
@@ -325,7 +380,10 @@ export async function PUT(req, { params }) {
     const adminUser = await usersCollection.findOne({ email: token.email });
     if (!adminUser || adminUser.role !== "admin") {
       return NextResponse.json(
-        { error: "Admin access required" },
+        {
+          error:
+            "Admin access required. You don't have permission to perform this action.",
+        },
         { status: 403 }
       );
     }
@@ -358,7 +416,7 @@ export async function PUT(req, { params }) {
 
     if (updateResult.modifiedCount === 0) {
       return NextResponse.json(
-        { error: "Failed to update KYC application" },
+        { error: "Failed to update KYC application. Please try again." },
         { status: 500 }
       );
     }
@@ -398,7 +456,10 @@ export async function PUT(req, { params }) {
   } catch (error) {
     console.error("KYC update error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error:
+          "An unexpected error occurred while updating the KYC application. Please try again.",
+      },
       { status: 500 }
     );
   }

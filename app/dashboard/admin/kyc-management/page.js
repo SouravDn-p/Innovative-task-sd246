@@ -227,10 +227,14 @@ export default function AdminKYCManagementPage() {
       refetch();
     } catch (error) {
       console.error("Failed to approve KYC:", error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to approve KYC application. Please try again.";
+
       toast({
         title: "Approval Failed",
-        description:
-          error?.data?.message || "Failed to approve KYC application.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -251,7 +255,7 @@ export default function AdminKYCManagementPage() {
 
       toast({
         title: "KYC Rejected",
-        description: "KYC application has been rejected.",
+        description: "KYC application has been rejected successfully.",
       });
 
       setShowApplicationDetails(false);
@@ -260,10 +264,14 @@ export default function AdminKYCManagementPage() {
       refetch();
     } catch (error) {
       console.error("Failed to reject KYC:", error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to reject KYC application. Please try again.";
+
       toast({
         title: "Rejection Failed",
-        description:
-          error?.data?.message || "Failed to reject KYC application.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -290,10 +298,14 @@ export default function AdminKYCManagementPage() {
       });
     } catch (error) {
       console.error("Failed to approve KYC:", error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to approve KYC application. Please try again.";
+
       toast({
         title: "Approval Failed",
-        description:
-          error?.data?.message || "Failed to approve KYC application.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -318,14 +330,18 @@ export default function AdminKYCManagementPage() {
       refetch();
       toast({
         title: "KYC Rejected",
-        description: "KYC application has been rejected.",
+        description: "KYC application has been rejected successfully.",
       });
     } catch (error) {
       console.error("Failed to reject KYC:", error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to reject KYC application. Please try again.";
+
       toast({
         title: "Rejection Failed",
-        description:
-          error?.data?.message || "Failed to reject KYC application.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

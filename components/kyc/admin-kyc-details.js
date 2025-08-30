@@ -57,7 +57,6 @@ export function AdminKYCDetails({
     if (onApprove) {
       onApprove(application._id, reviewNotes);
       setReviewNotes("");
-      onClose();
     }
   };
 
@@ -75,8 +74,6 @@ export function AdminKYCDetails({
       onReject(application._id, rejectionReason, reviewNotes);
       setRejectionReason("");
       setReviewNotes("");
-      setShowRejectDialog(false);
-      onClose();
     }
   };
 
