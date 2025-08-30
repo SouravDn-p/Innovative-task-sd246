@@ -1,0 +1,445 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  CheckCircle,
+  X,
+  Eye,
+  Clock,
+  AlertTriangle,
+  FileText,
+  User,
+  Calendar,
+  CreditCard,
+  Download,
+  Image as ImageIcon,
+  File as FileIcon,
+  UserCheck,
+  Phone,
+  Mail,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+export function AdminKYCDetails({
+  application,
+  isOpen,
+  onClose,
+  onApprove,
+  onReject,
+}) {
+  const { toast } = useToast();
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const handleApprove = () => {
+    if (onApprove) {
+      onApprove(application._id, reviewNotes);
+      setReviewNotes("");
+      onClose();
+    }
+  };
+
+  const handleReject = () => {
+    if (!rejectionReason.trim()) {
+      toast({
+        title: "Rejection reason required",
+        description: "Please provide a reason for rejecting this application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onReject) {
+      onReject(application._id, rejectionReason, reviewNotes);
+      setRejectionReason("");
+      setReviewNotes("");
+      setShowRejectDialog(false);
+      onClose();
+    }
+  };
+
+  const handlePreviewDocument = (docType, doc) => {
+    if (doc.url) {
+      setPreviewDocument({ type: docType, ...doc });
+      setPreviewOpen(true);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "verified":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "under_review":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+    }
+  };
+
+  const getDocumentIcon = (docType) => {
+    if (docType === "bankStatement") {
+      return <FileIcon className="h-5 w-5" />;
+    }
+    return <ImageIcon className="h-5 w-5" />;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (!application) return null;
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <UserCheck className="h-5 w-5" />
+              KYC Application Details
+            </DialogTitle>
+            <DialogDescription>
+              Application ID: {application._id}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* User Information */}
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  User Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Name
+                    </Label>
+                    <p className="font-medium">{application.userName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Email
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium">{application.email}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Phone
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium">{application.phone}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Status
+                    </Label>
+                    <Badge className={getStatusColor(application.kycStatus)}>
+                      {application.kycStatus.replace("_", " ")}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      Submitted At
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium">
+                        {formatDate(application.submittedAt)}
+                      </p>
+                    </div>
+                  </div>
+                  {application.reviewedAt && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Reviewed At
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {formatDate(application.reviewedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Documents */}
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Documents
+                </CardTitle>
+                <CardDescription>
+                  All documents submitted by the user
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(application.documents || {}).map(
+                    ([docType, doc]) => (
+                      <div
+                        key={docType}
+                        className="border rounded-lg p-4 flex flex-col gap-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getDocumentIcon(docType)}
+                            <h4 className="font-medium capitalize">
+                              {docType.replace(/([A-Z])/g, " $1")}
+                            </h4>
+                          </div>
+                          {doc.uploaded || doc.url ? (
+                            <Badge className="bg-green-100 text-green-800">
+                              Uploaded
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Not Uploaded</Badge>
+                          )}
+                        </div>
+
+                        {doc.uploaded || doc.url ? (
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handlePreviewDocument(docType, doc)
+                              }
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(doc.url, "_blank")}
+                            >
+                              <Download className="h-3 w-3 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No document uploaded
+                          </p>
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Status */}
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Payment Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={
+                      application.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }
+                  >
+                    {application.paymentStatus.replace("_", " ")}
+                  </Badge>
+                  <span className="text-sm">KYC Fee: ₹99</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Review Notes */}
+            <Card>
+              <CardHeader className="p-4">
+                <CardTitle className="text-base">Review Notes</CardTitle>
+                <CardDescription>
+                  Add notes for your review or for the user
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <Textarea
+                  placeholder="Add any notes about this KYC application..."
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  rows={3}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="w-full sm:w-auto"
+              >
+                Close
+              </Button>
+
+              {application.kycStatus === "pending" && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700 w-full sm:w-auto"
+                    onClick={() => setShowRejectDialog(true)}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                    onClick={handleApprove}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>
+              {previewDocument?.type?.replace(/([A-Z])/g, " $1")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center h-[70vh] bg-gray-50 rounded-lg">
+            {previewDocument?.url ? (
+              previewDocument.url.endsWith(".pdf") ? (
+                <iframe
+                  src={previewDocument.url}
+                  className="w-full h-full rounded-lg"
+                  title="Document Preview"
+                />
+              ) : (
+                <img
+                  src={previewDocument.url}
+                  alt="Document Preview"
+                  className="max-h-full max-w-full object-contain"
+                />
+              )
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-2" />
+                <p>No preview available</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="max-w-md mx-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">
+              Reject KYC Application
+            </DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this KYC application.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejectionReason">Rejection Reason *</Label>
+              <Textarea
+                id="rejectionReason"
+                placeholder="Enter the reason for rejection..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="rejectNotes">Review Notes (Optional)</Label>
+              <Textarea
+                id="rejectNotes"
+                placeholder="Add any additional notes..."
+                value={reviewNotes}
+                onChange={(e) => setReviewNotes(e.target.value)}
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectDialog(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              className="w-full sm:w-auto"
+            >
+              Reject Application
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -47,6 +48,7 @@ import {
   MoreHorizontal,
   Eye,
   CheckCircle,
+  X,
   XCircle,
   Clock,
   Download,
@@ -57,6 +59,7 @@ import {
   Shield,
   FileText,
   Image as ImageIcon,
+  File as FileIcon,
   AlertTriangle,
   RefreshCw,
   ChevronLeft,
@@ -64,6 +67,7 @@ import {
   ExternalLink,
   User,
   CreditCard,
+  UserCheck,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobiles";
 import {
@@ -72,8 +76,12 @@ import {
   useApproveKYCApplicationMutation,
   useUpdateKYCApplicationMutation,
 } from "@/redux/api/api";
+import { AdminKYCDetails } from "@/components/kyc/admin-kyc-details";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminKYCManagementPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   // State management
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -92,6 +100,8 @@ export default function AdminKYCManagementPage() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [previewDocument, setPreviewDocument] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // API queries and mutations
@@ -199,7 +209,68 @@ export default function AdminKYCManagementPage() {
     setShowApplicationDetails(true);
   };
 
-  const handleApproveApplication = async () => {
+  const handleApproveApplication = async (applicationId, notes) => {
+    try {
+      await approveKYC({
+        applicationId,
+        action: "approve",
+        notes,
+      }).unwrap();
+
+      toast({
+        title: "KYC Approved",
+        description: "KYC application has been approved successfully.",
+      });
+
+      setShowApplicationDetails(false);
+      setReviewNotes("");
+      refetch();
+    } catch (error) {
+      console.error("Failed to approve KYC:", error);
+      toast({
+        title: "Approval Failed",
+        description:
+          error?.data?.message || "Failed to approve KYC application.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectApplication = async (
+    applicationId,
+    rejectionReason,
+    notes
+  ) => {
+    try {
+      await approveKYC({
+        applicationId,
+        action: "reject",
+        rejectionReason,
+        notes,
+      }).unwrap();
+
+      toast({
+        title: "KYC Rejected",
+        description: "KYC application has been rejected.",
+      });
+
+      setShowApplicationDetails(false);
+      setRejectionReason("");
+      setReviewNotes("");
+      refetch();
+    } catch (error) {
+      console.error("Failed to reject KYC:", error);
+      toast({
+        title: "Rejection Failed",
+        description:
+          error?.data?.message || "Failed to reject KYC application.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Original approval function for the existing modal
+  const handleApproveApplicationOriginal = async () => {
     if (!selectedApplication) return;
 
     try {
@@ -213,12 +284,23 @@ export default function AdminKYCManagementPage() {
       setShowApplicationDetails(false);
       setReviewNotes("");
       refetch();
+      toast({
+        title: "KYC Approved",
+        description: "KYC application has been approved successfully.",
+      });
     } catch (error) {
       console.error("Failed to approve KYC:", error);
+      toast({
+        title: "Approval Failed",
+        description:
+          error?.data?.message || "Failed to approve KYC application.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleRejectApplication = async () => {
+  // Original rejection function for the existing modal
+  const handleRejectApplicationOriginal = async () => {
     if (!selectedApplication || !rejectionReason) return;
 
     try {
@@ -234,8 +316,18 @@ export default function AdminKYCManagementPage() {
       setRejectionReason("");
       setReviewNotes("");
       refetch();
+      toast({
+        title: "KYC Rejected",
+        description: "KYC application has been rejected.",
+      });
     } catch (error) {
       console.error("Failed to reject KYC:", error);
+      toast({
+        title: "Rejection Failed",
+        description:
+          error?.data?.message || "Failed to reject KYC application.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -258,7 +350,7 @@ export default function AdminKYCManagementPage() {
             <h2 className="text-xl font-bold text-red-900 mb-2">
               Error Loading KYC Applications
             </h2>
-            <p className="text-red-600 mb-4">
+            <p className="text-sm sm:text-base text-red-600 mb-4">
               {error?.data?.message || "Failed to load KYC applications"}
             </p>
             <Button
@@ -539,8 +631,8 @@ export default function AdminKYCManagementPage() {
                                   {application.userName.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-900 truncate">
+                              <div className="min-w-0 flex-1 break-words">
+                                <p className="text-sm font-medium text-slate-900">
                                   {application.userName}
                                 </p>
                                 <p className="text-xs text-slate-500 truncate">
@@ -572,6 +664,7 @@ export default function AdminKYCManagementPage() {
                             <Button
                               size="sm"
                               onClick={() => handleViewDetails(application)}
+                              className="flex-1"
                             >
                               View Details
                             </Button>
@@ -580,7 +673,7 @@ export default function AdminKYCManagementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-green-600"
+                                  className="text-green-600 flex-1"
                                   onClick={() => {
                                     setSelectedApplication(application);
                                     setShowApprovalModal(true);
@@ -591,7 +684,7 @@ export default function AdminKYCManagementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-red-600"
+                                  className="text-red-600 flex-1"
                                   onClick={() => {
                                     setSelectedApplication(application);
                                     setShowRejectModal(true);
@@ -683,6 +776,18 @@ export default function AdminKYCManagementPage() {
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/admin/kyc-management/${application._id}`
+                                )
+                              }
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              View Page
                             </Button>
                             {application.kycStatus === "pending" && (
                               <>
@@ -777,14 +882,19 @@ export default function AdminKYCManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Approval Modal */}
+      {/* Approval Modal - Mobile Responsive */}
       <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
-        <DialogContent>
+        <DialogContent className="max-w-md sm:max-w-lg lg:max-w-xl mx-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Approve KYC Application</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Approve KYC Application
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to approve the KYC application for{" "}
-              {selectedApplication?.userName}?
+              <span className="font-semibold">
+                {selectedApplication?.userName}
+              </span>
+              ?
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -795,20 +905,22 @@ export default function AdminKYCManagementPage() {
                 placeholder="Add any notes about this approval..."
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
+                className="mt-1"
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end mt-4">
             <Button
               variant="outline"
               onClick={() => setShowApprovalModal(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleApproveApplication}
+              onClick={handleApproveApplicationOriginal}
               disabled={approving}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
             >
               {approving ? "Approving..." : "Approve KYC"}
             </Button>
@@ -816,14 +928,19 @@ export default function AdminKYCManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Rejection Modal */}
+      {/* Rejection Modal - Mobile Responsive */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-        <DialogContent>
+        <DialogContent className="max-w-md sm:max-w-lg lg:max-w-xl mx-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Reject KYC Application</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              Reject KYC Application
+            </DialogTitle>
             <DialogDescription>
               Please provide a reason for rejecting the KYC application for{" "}
-              {selectedApplication?.userName}.
+              <span className="font-semibold">
+                {selectedApplication?.userName}
+              </span>
+              .
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -833,7 +950,7 @@ export default function AdminKYCManagementPage() {
                 value={rejectionReason}
                 onValueChange={setRejectionReason}
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select rejection reason" />
                 </SelectTrigger>
                 <SelectContent>
@@ -865,20 +982,321 @@ export default function AdminKYCManagementPage() {
                 placeholder="Provide additional details about the rejection..."
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
+                className="mt-1"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectModal(false)}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectModal(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
             <Button
-              onClick={handleRejectApplication}
+              onClick={handleRejectApplicationOriginal}
               disabled={approving || !rejectionReason}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
             >
               {approving ? "Rejecting..." : "Reject KYC"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* KYC Details Modal - Mobile Responsive */}
+      <Dialog
+        open={showApplicationDetails}
+        onOpenChange={setShowApplicationDetails}
+      >
+        <DialogContent className="max-w-4xl sm:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <UserCheck className="h-5 w-5" />
+              KYC Application Details
+            </DialogTitle>
+            <DialogDescription>
+              Application ID: {selectedApplication?._id}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedApplication && (
+            <div className="space-y-6">
+              {/* User Information */}
+              <Card>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    User Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Name
+                      </Label>
+                      <p className="font-medium">
+                        {selectedApplication.userName}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Email
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {selectedApplication.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Phone
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {selectedApplication.phone}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Status
+                      </Label>
+                      <Badge
+                        className={getStatusBadgeColor(
+                          selectedApplication.kycStatus
+                        )}
+                      >
+                        {selectedApplication.kycStatus.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">
+                        Submitted At
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {formatDate(selectedApplication.submittedAt)}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedApplication.reviewedAt && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">
+                          Reviewed At
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <p className="font-medium">
+                            {formatDate(selectedApplication.reviewedAt)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Documents */}
+              <Card>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(selectedApplication.documents || {}).map(
+                      ([docType, doc]) => (
+                        <div
+                          key={docType}
+                          className="border rounded-lg p-4 flex flex-col gap-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {docType === "bankStatement" ? (
+                                <FileIcon className="h-5 w-5" />
+                              ) : (
+                                <ImageIcon className="h-5 w-5" />
+                              )}
+                              <h4 className="font-medium capitalize">
+                                {docType.replace(/([A-Z])/g, " $1")}
+                              </h4>
+                            </div>
+                            {doc.uploaded || doc.url ? (
+                              <Badge className="bg-green-100 text-green-800">
+                                Uploaded
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">Not Uploaded</Badge>
+                            )}
+                          </div>
+
+                          {doc.uploaded || doc.url ? (
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (doc.url) {
+                                    if (doc.url.endsWith(".pdf")) {
+                                      window.open(doc.url, "_blank");
+                                    } else {
+                                      setPreviewDocument({
+                                        type: docType,
+                                        ...doc,
+                                      });
+                                      setPreviewOpen(true);
+                                    }
+                                  }
+                                }}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                {doc.url.endsWith(".pdf") ? "View" : "Preview"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(doc.url, "_blank")}
+                              >
+                                <Download className="h-3 w-3 mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              No document uploaded
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Status */}
+              <Card>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Payment Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={
+                        selectedApplication.paymentStatus === "paid"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }
+                    >
+                      {selectedApplication.paymentStatus.replace("_", " ")}
+                    </Badge>
+                    <span className="text-sm">KYC Fee: ₹99</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Review Notes */}
+              <Card>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base">Review Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <Textarea
+                    placeholder="Add any notes about this KYC application..."
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    rows={3}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowApplicationDetails(false)}
+                  className="w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+
+                {selectedApplication.kycStatus === "pending" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700 w-full sm:w-auto"
+                      onClick={() => {
+                        setShowApplicationDetails(false);
+                        setSelectedApplication(selectedApplication);
+                        setShowRejectModal(true);
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Reject
+                    </Button>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                      onClick={() => {
+                        handleApproveApplication(
+                          selectedApplication._id,
+                          reviewNotes
+                        );
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approve
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl sm:max-w-5xl lg:max-w-6xl max-h-[90vh] p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>
+              {previewDocument?.type?.replace(/([A-Z])/g, " $1")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center h-[70vh] bg-gray-50 rounded-lg">
+            {previewDocument?.url ? (
+              previewDocument.url.endsWith(".pdf") ? (
+                <iframe
+                  src={previewDocument.url}
+                  className="w-full h-full rounded-lg"
+                  title="Document Preview"
+                />
+              ) : (
+                <img
+                  src={previewDocument.url}
+                  alt="Document Preview"
+                  className="max-h-full max-w-full object-contain"
+                />
+              )
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-2" />
+                <p>No preview available</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
