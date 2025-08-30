@@ -246,7 +246,7 @@ export default function AdvertiserWalletPage() {
   }
 
   if (status !== "authenticated") {
-    router.push("/auth/signin");
+    router.push("/login");
     return null;
   }
 

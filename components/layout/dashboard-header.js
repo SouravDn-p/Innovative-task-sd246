@@ -220,7 +220,7 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
               )}
             </div>
           ) : (
-            <Link href="/signIn">
+            <Link href="/login">
               <Button className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl">
                 Sign In
               </Button>

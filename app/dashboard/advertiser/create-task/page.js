@@ -255,7 +255,7 @@ export default function CreateTaskPage() {
   }
 
   if (status !== "authenticated") {
-    router.push("/auth/signin");
+    router.push("/login");
     return null;
   }
 
