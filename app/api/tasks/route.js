@@ -22,7 +22,7 @@ export async function GET(req) {
     // Build filter for available tasks only
     const filter = {
       status: "approved", // Only approved tasks
-      endAt: { $gte: new Date() }, // Tasks that haven't ended
+      // endAt: { $gte: new Date() }, // Tasks that haven't ended
     };
 
     // Add search filter

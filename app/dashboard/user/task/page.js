@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Card,
@@ -22,7 +22,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -55,8 +54,10 @@ import {
   useGetUserTasksGroupedQuery,
   useJoinTaskMutation,
   useSubmitTaskProofMutation,
+  useGetKYCDataQuery,
 } from "@/redux/api/api";
 import { useSession } from "next-auth/react";
+import Swal from "sweetalert2";
 import Image from "next/image";
 
 function TasksPage() {
@@ -70,29 +71,41 @@ function TasksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("available");
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [showTaskJoinModal, setShowTaskJoinModal] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const fileInputRef = useRef(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
 
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userEmail = session?.user?.email;
+
+  // Fetch KYC data
+  const {
+    data: kycData,
+    isLoading: kycLoading,
+    error: kycError,
+  } = useGetKYCDataQuery(undefined, {
+    skip: !userEmail,
+  });
 
   // API queries
   const {
     data: availableTasks = [],
     isLoading: loadingAvailable,
     refetch: refetchAvailable,
-  } = useGetTasksQuery();
+  } = useGetTasksQuery(undefined, {
+    skip: !userEmail || kycData?.status !== "verified",
+  });
 
   const {
     data: userTasks,
     isLoading: loadingUserTasks,
     refetch: refetchUserTasks,
   } = useGetUserTasksGroupedQuery(undefined, {
-    skip: !userEmail,
+    skip: !userEmail || kycData?.status !== "verified",
   });
 
   // Mutations
@@ -100,8 +113,63 @@ function TasksPage() {
   const [submitProof, { isLoading: submittingProof }] =
     useSubmitTaskProofMutation();
 
+  // Check KYC status and redirect if not verified
+  useEffect(() => {
+    if (status === "authenticated" && kycData && kycData.status !== "verified") {
+      Swal.fire({
+        icon: "warning",
+        title: "KYC Verification Required",
+        text: "You need to complete KYC verification to access tasks.",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Go to KYC Verification",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirect to KYC verification with return URL
+          const redirectUrl = returnUrl || "/dashboard/tasks";
+          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+        }
+      });
+    }
+  }, [status, kycData, router, returnUrl]);
+
   // Handle joining a task
   const handleJoinTask = async (taskId) => {
+    if (!session?.user?.email) {
+      Swal.fire({
+        icon: "error",
+        title: "Not logged in",
+        text: "Please log in to join a task.",
+        confirmButtonText: "Go to Login",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push("/login");
+        }
+      });
+      return;
+    }
+
+    if (kycData?.status !== "verified") {
+      Swal.fire({
+        icon: "warning",
+        title: "KYC Verification Required",
+        text: "You need to complete KYC verification to join tasks.",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Go to KYC Verification",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const redirectUrl = `/dashboard/tasks?taskId=${taskId}`;
+          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+        }
+      });
+      return;
+    }
+
     try {
       await joinTask({
         taskId,
@@ -110,15 +178,42 @@ function TasksPage() {
       }).unwrap();
       refetchAvailable();
       refetchUserTasks();
-      setShowTaskDetails(false);
       setShowTaskJoinModal(false);
+      Swal.fire({
+        icon: "success",
+        title: "Task Joined!",
+        text: "You have successfully joined the task.",
+      });
     } catch (error) {
       console.error("Failed to join task:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.data?.message || "Failed to join task",
+      });
     }
   };
 
   // Handle task details view
   const handleViewTaskDetails = (task) => {
+    if (kycData?.status !== "verified") {
+      Swal.fire({
+        icon: "warning",
+        title: "KYC Verification Required",
+        text: "You need to complete KYC verification to view task details.",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Go to KYC Verification",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const redirectUrl = `/dashboard/tasks?taskId=${task.id || task._id}`;
+          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+        }
+      });
+      return;
+    }
     setSelectedTask(task);
     setShowTaskJoinModal(true);
   };
@@ -160,9 +255,27 @@ function TasksPage() {
   // Handle proof submission
   const handleSubmitProof = async (e) => {
     e.preventDefault();
+    if (kycData?.status !== "verified") {
+      Swal.fire({
+        icon: "warning",
+        title: "KYC Verification Required",
+        text: "You need to complete KYC verification to submit task proof.",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Go to KYC Verification",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent("/dashboard/tasks")}`);
+        }
+      });
+      return;
+    }
+
     try {
       await submitProof({
-        taskId: selectedTask.taskId || selectedTask.id,
+        taskId: selectedTask.taskId || selectedTask.id || selectedTask._id,
         proofData,
         note: submissionNote,
       }).unwrap();
@@ -175,8 +288,18 @@ function TasksPage() {
       setPreviewUrls([]);
       setShowSubmissionModal(false);
       refetchUserTasks();
+      Swal.fire({
+        icon: "success",
+        title: "Proof Submitted!",
+        text: "Your proof has been submitted for review.",
+      });
     } catch (error) {
       console.error("Failed to submit proof:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.data?.message || "Failed to submit proof",
+      });
     }
   };
 
@@ -254,6 +377,19 @@ function TasksPage() {
   const activeTasksData = userTasks?.active || [];
   const pendingTasksData = userTasks?.pending || [];
   const completedTasksData = userTasks?.completed || [];
+
+  if (status === "loading" || kycLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50">
@@ -387,7 +523,7 @@ function TasksPage() {
                           </Badge>
                         </div>
                         <Button
-                          onClick={() => handleJoinTask(task.id || task._id)}
+                          onClick={() => handleViewTaskDetails(task)}
                           className="w-full bg-teal-600 hover:bg-teal-700 text-white"
                           disabled={joiningTask || task.remaining === 0}
                         >

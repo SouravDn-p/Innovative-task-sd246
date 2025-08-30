@@ -82,7 +82,7 @@ export function TaskCard({ title, reward, description, difficulty, taskId }) {
       }).then((result) => {
         if (result.isConfirmed) {
           // Redirect to KYC verification page (adjust URL as needed)
-          window.location.href = "/kyc-verification"; // Replace with actual KYC page URL
+          window.location.href = "dashboard/user/kyc-verification"; // Replace with actual KYC page URL
         }
       });
       return;
