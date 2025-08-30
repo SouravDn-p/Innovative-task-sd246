@@ -18,20 +18,20 @@ const baseQuery = fetchBaseQuery({
 // Base query with retry and authentication error handling
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
-  
+
   // Handle authentication errors
   if (result.error && result.error.status === 401) {
     // Clear authentication state on 401
     api.dispatch(logout());
   }
-  
+
   // Retry logic for network errors
-  if (result.error && result.error.status === 'FETCH_ERROR') {
+  if (result.error && result.error.status === "FETCH_ERROR") {
     // Wait a bit and retry once
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     result = await baseQuery(args, api, extraOptions);
   }
-  
+
   return result;
 };
 
@@ -49,13 +49,13 @@ export const api = createApi({
     "Wallet",
     "UserTasks",
     "KYC",
-    "AdminUsers",
-    "AdminTasks",
-    "AdminKYC",
+    "AdminDashboard",
     "TaskSubmissions",
   ],
   endpoints: (builder) => ({
-    // User Authentication and Management
+    // ==========================================
+    // AUTHENTICATION & USER MANAGEMENT
+    // ==========================================
     registerUser: builder.mutation({
       query: (userData) => ({
         url: "auth/register",
@@ -76,10 +76,6 @@ export const api = createApi({
         return response.data || { error: "Login failed" };
       },
     }),
-    getAllUsers: builder.query({
-      query: () => "users",
-      providesTags: ["User"],
-    }),
     getUserByEmail: builder.query({
       query: (email) => `users/${email}`,
       providesTags: (result, error, email) => [{ type: "User", id: email }],
@@ -92,8 +88,10 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { email }) => [
         { type: "User", id: email },
+        "AdminDashboard",
       ],
     }),
+
     // Profile-specific endpoints
     getUserProfile: builder.query({
       query: () => "user/profile",
@@ -105,26 +103,40 @@ export const api = createApi({
         method: "PUT",
         body: profileData,
       }),
-      invalidatesTags: ["User"],
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
 
-    // Inside endpoints: (builder) => ({
-    setReferralId: builder.mutation({
-      query: () => ({
-        url: "user/setReferralId",
-        method: "POST",
-      }),
-      invalidatesTags: ["User"],
-    }),
+    // ==========================================
+    // REFERRAL SYSTEM (ACTIVE)
+    // ==========================================
     addReferral: builder.mutation({
       query: ({ referrerId, newUser }) => ({
         url: `/user/addReferral/${referrerId}`,
         method: "POST",
         body: { referrerId, newUser },
       }),
-      invalidatesTags: ["User", "Referral", "Wallet"],
+      invalidatesTags: ["User", "Referral", "Wallet", "AdminDashboard"],
+    }),
+    getReferrals: builder.query({
+      query: () => "referrals/my",
+      providesTags: ["Referral"],
+    }),
+    getReferralStats: builder.query({
+      query: () => "referrals/stats",
+      providesTags: ["Referral"],
+    }),
+    setReferralId: builder.mutation({
+      query: ({ userId, referralId }) => ({
+        url: `user/${userId}/set-referral`,
+        method: "POST",
+        body: { referralId },
+      }),
+      invalidatesTags: ["User", "Referral"],
     }),
 
+    // ==========================================
+    // KYC SYSTEM (ACTIVE)
+    // ==========================================
     getKYCData: builder.query({
       query: () => "user/kyc-verification",
       providesTags: ["KYC"],
@@ -135,7 +147,7 @@ export const api = createApi({
         method: "POST",
         body: kycData,
       }),
-      invalidatesTags: ["KYC"],
+      invalidatesTags: ["KYC", "AdminDashboard"],
     }),
     uploadFile: builder.mutation({
       query: ({ file, documentType }) => {
@@ -144,7 +156,7 @@ export const api = createApi({
         formData.append("documentType", documentType);
 
         return {
-          url: "user/kyc-verification", // 👈 Prefer this over `upload`
+          url: "user/kyc-verification",
           method: "POST",
           body: formData,
         };
@@ -152,7 +164,9 @@ export const api = createApi({
       invalidatesTags: ["KYC"],
     }),
 
-    // Task-Related Endpoints: Manage tasks, submissions, and user-specific tasks
+    // ==========================================
+    // TASK SYSTEM (USER SIDE)
+    // ==========================================
     getTasks: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -163,51 +177,18 @@ export const api = createApi({
       },
       providesTags: ["Task"],
     }),
-    getTaskById: builder.query({
-      query: (id) => `tasks/${id}`,
-      providesTags: (result, error, id) => [{ type: "Task", id }],
-      transformResponse: (response) => ({
-        ...response,
-        _id: response._id.$oid,
-      }),
-    }),
-    createTask: builder.mutation({
-      query: (taskData) => ({
-        url: "tasks",
-        method: "POST",
-        body: taskData,
-      }),
-      invalidatesTags: ["Task"],
-    }),
-
-    // User-Specific Task Endpoints
-    getUserTasksGrouped: builder.query({
-      query: () => "user/tasks",
-      providesTags: ["UserTasks", "Task"],
-    }),
-    joinTask: builder.mutation({
-      query: ({ taskId }) => ({
-        url: "user/tasks",
-        method: "POST",
-        body: { taskId },
-      }),
-      invalidatesTags: ["Task", "UserTasks"],
-    }),
     submitTaskProof: builder.mutation({
       query: ({ taskId, proofData, note }) => ({
         url: `tasks/${taskId}/submit`,
         method: "POST",
         body: { proofData, note },
       }),
-      invalidatesTags: ["Task", "UserTasks"],
-    }),
-    startTask: builder.mutation({
-      query: ({ taskId, userName, userEmail }) => ({
-        url: `user/tasks`,
-        method: "POST",
-        body: { taskId, userName, userEmail },
-      }),
-      invalidatesTags: ["Task", "UserTasks"],
+      invalidatesTags: [
+        "Task",
+        "UserTasks",
+        "TaskSubmissions",
+        "AdminDashboard",
+      ],
     }),
     getUserTasks: builder.query({
       query: (userEmail) => `user/getUserTasks/${userEmail}`,
@@ -222,123 +203,54 @@ export const api = createApi({
         recentTasks: response.recentTasks || [],
       }),
     }),
-    deleteMyTask: builder.mutation({
-      query: (taskId) => ({
-        url: `user/myTasks/${taskId}`,
-        method: "DELETE",
+    getUserTasksGrouped: builder.query({
+      query: () => "user/tasks/grouped",
+      providesTags: ["UserTasks"],
+    }),
+    joinTask: builder.mutation({
+      query: ({ taskId, userEmail, userName }) => ({
+        url: `tasks/${taskId}/join`,
+        method: "POST",
+        body: { userEmail, userName },
+      }),
+      invalidatesTags: ["Task", "UserTasks", "AdminDashboard"],
+    }),
+    startTask: builder.mutation({
+      query: ({ taskId, userEmail }) => ({
+        url: `tasks/${taskId}/start`,
+        method: "POST",
+        body: { userEmail },
       }),
       invalidatesTags: ["Task", "UserTasks"],
     }),
-    getMyTasks: builder.query({
-      query: () => `user/myTasks`,
-      providesTags: ["Task", "UserTasks"],
-      transformResponse: (response) =>
-        response.map((task) => ({
-          ...task,
-          _id: task._id.$oid,
-        })),
-    }),
-    updateMyTask: builder.mutation({
-      query: ({ taskId, ...patch }) => ({
-        url: `user/myTasks/${taskId}`,
-        method: "PUT",
-        body: patch,
-      }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "Task", id: taskId },
-      ],
-    }),
     getMyTaskSubmissions: builder.query({
-      query: () => `user/taskSubmissions`,
-      providesTags: ["Task"],
-      transformResponse: (response) =>
-        response.map((submission) => ({
-          ...submission,
-          _id: submission._id.$oid,
-        })),
+      query: () => "user/my-task-submissions",
+      providesTags: ["TaskSubmissions"],
     }),
     reviewMyTaskSubmission: builder.mutation({
-      query: ({ submissionId, status }) => ({
-        url: `user/taskSubmissions/${submissionId}/review`,
-        method: "PUT",
-        body: { status },
-      }),
-      invalidatesTags: ["Task"],
-    }),
-    submitTaskProof: builder.mutation({
-      query: ({ taskId, proofData }) => ({
-        url: `user/taskSubmissions/${taskId}/proof`,
+      query: ({ submissionId, action, feedback }) => ({
+        url: `user/task-submissions/${submissionId}/review`,
         method: "POST",
-        body: { taskId, proofData },
+        body: { action, feedback },
       }),
-      invalidatesTags: ["Task"],
+      invalidatesTags: ["TaskSubmissions", "UserTasks"],
     }),
 
-    // Referral Endpoints: Manage user referrals and statistics
-    getReferrals: builder.query({
-      query: () => "referrals/my",
-      providesTags: ["Referral"],
-    }),
-    getAllReferrals: builder.query({
-      query: () => "referrals",
-      providesTags: ["Referral"],
-    }),
-    getReferralStats: builder.query({
-      query: () => "referrals/stats",
-      providesTags: ["Referral"],
-    }),
-
-    // Wallet Endpoints
+    // ==========================================
+    // WALLET SYSTEM (ACTIVE)
+    // ==========================================
     getWallet: builder.query({
       query: () => "wallet",
       providesTags: ["Wallet"],
-    }),
-    requestWithdrawal: builder.mutation({
-      query: (withdrawalData) => ({
-        url: "withdrawals/request",
-        method: "POST",
-        body: withdrawalData,
-      }),
-      invalidatesTags: ["Wallet"],
-    }),
-    getWithdrawals: builder.query({
-      query: () => "withdrawals",
-      providesTags: ["Wallet"],
-    }),
-    updateWithdrawal: builder.mutation({
-      query: ({ id, status }) => ({
-        url: `withdrawals/${id}`,
-        method: "PUT",
-        body: { status },
-      }),
-      invalidatesTags: ["Wallet"],
     }),
     getTransactions: builder.query({
       query: (userId) => `wallet/${userId}/transactions`,
       providesTags: ["Wallet"],
     }),
 
-    // Advertiser Wallet Endpoints
-    getAdvertiserWallet: builder.query({
-      query: (params = {}) => {
-        const searchParams = new URLSearchParams();
-        Object.keys(params).forEach((key) => {
-          if (params[key]) searchParams.append(key, params[key]);
-        });
-        return `advertiser/wallet?${searchParams.toString()}`;
-      },
-      providesTags: ["Wallet"],
-    }),
-    addAdvertiserFunds: builder.mutation({
-      query: ({ amount, description, reference }) => ({
-        url: "advertiser/wallet",
-        method: "POST",
-        body: { amount, description, reference },
-      }),
-      invalidatesTags: ["Wallet"],
-    }),
-
-    // Admin User Management Endpoints
+    // ==========================================
+    // ADMIN USER MANAGEMENT (ACTIVE)
+    // ==========================================
     getAdminUsers: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -347,12 +259,12 @@ export const api = createApi({
         });
         return `admin/users?${searchParams.toString()}`;
       },
-      providesTags: ["AdminUsers"],
+      providesTags: ["User"], // Use unified User tag
     }),
     getAdminUserDetails: builder.query({
       query: (userId) => `admin/users/${userId}`,
       providesTags: (result, error, userId) => [
-        { type: "AdminUsers", id: userId },
+        { type: "User", id: userId }, // Use unified User tag
       ],
     }),
     suspendUser: builder.mutation({
@@ -361,7 +273,7 @@ export const api = createApi({
         method: "POST",
         body: { reason, duration, customReason },
       }),
-      invalidatesTags: ["AdminUsers", "User"],
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
     reactivateUser: builder.mutation({
       query: ({ userId, feeCollected, feeAmount, paymentReference, note }) => ({
@@ -369,7 +281,7 @@ export const api = createApi({
         method: "POST",
         body: { feeCollected, feeAmount, paymentReference, note },
       }),
-      invalidatesTags: ["AdminUsers", "User"],
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
     adjustUserWallet: builder.mutation({
       query: ({ userId, type, amount, note, reference }) => ({
@@ -377,7 +289,7 @@ export const api = createApi({
         method: "POST",
         body: { type, amount, note, reference },
       }),
-      invalidatesTags: ["AdminUsers", "User", "Wallet"],
+      invalidatesTags: ["User", "Wallet", "AdminDashboard"],
     }),
     resetUserPassword: builder.mutation({
       query: ({ userId, newPassword, sendNotification }) => ({
@@ -385,7 +297,7 @@ export const api = createApi({
         method: "POST",
         body: { newPassword, sendNotification },
       }),
-      invalidatesTags: ["AdminUsers"],
+      invalidatesTags: ["User"],
     }),
     deleteUser: builder.mutation({
       query: ({ userId, reason, confirmDelete }) => ({
@@ -393,7 +305,7 @@ export const api = createApi({
         method: "DELETE",
         body: { reason, confirmDelete },
       }),
-      invalidatesTags: ["AdminUsers", "User"],
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
     bulkSuspendUsers: builder.mutation({
       query: ({ userIds, reason, duration, customReason }) => ({
@@ -401,7 +313,7 @@ export const api = createApi({
         method: "POST",
         body: { userIds, reason, duration, customReason },
       }),
-      invalidatesTags: ["AdminUsers", "User"],
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
     bulkReactivateUsers: builder.mutation({
       query: ({ userIds, feeCollected, feeAmount }) => ({
@@ -409,16 +321,7 @@ export const api = createApi({
         method: "POST",
         body: { userIds, feeCollected, feeAmount },
       }),
-      invalidatesTags: ["AdminUsers", "User"],
-    }),
-    exportUsers: builder.query({
-      query: (filters = {}) => {
-        const searchParams = new URLSearchParams();
-        Object.keys(filters).forEach((key) => {
-          if (filters[key]) searchParams.append(key, filters[key]);
-        });
-        return `admin/users/export?${searchParams.toString()}`;
-      },
+      invalidatesTags: ["User", "AdminDashboard"],
     }),
     sendUserNotification: builder.mutation({
       query: ({ userId, channel, message, subject }) => ({
@@ -427,15 +330,10 @@ export const api = createApi({
         body: { channel, message, subject },
       }),
     }),
-    bulkNotifyUsers: builder.mutation({
-      query: ({ userIds, channel, message, subject }) => ({
-        url: "admin/users/notify-bulk",
-        method: "POST",
-        body: { userIds, channel, message, subject },
-      }),
-    }),
 
-    // Admin Task Management Endpoints
+    // ==========================================
+    // ADMIN TASK MANAGEMENT (ACTIVE)
+    // ==========================================
     getAdminTasks: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -444,55 +342,25 @@ export const api = createApi({
         });
         return `admin/tasks?${searchParams.toString()}`;
       },
-      providesTags: ["AdminTasks"],
+      providesTags: ["Task"], // Use unified Task tag
     }),
     getAdminTaskDetails: builder.query({
       query: (taskId) => `admin/tasks/${taskId}`,
-      providesTags: (result, error, taskId) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-      ],
-    }),
-    createAdminTask: builder.mutation({
-      query: (taskData) => ({
-        url: "admin/tasks",
-        method: "POST",
-        body: taskData,
-      }),
-      invalidatesTags: ["AdminTasks", "Task"],
-    }),
-    updateAdminTask: builder.mutation({
-      query: ({ taskId, ...data }) => ({
-        url: `admin/tasks/${taskId}`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-        "AdminTasks",
-      ],
-    }),
-    deleteAdminTask: builder.mutation({
-      query: ({ taskId, reason, confirmDelete }) => ({
-        url: `admin/tasks/${taskId}`,
-        method: "DELETE",
-        body: { reason, confirmDelete },
-      }),
-      invalidatesTags: ["AdminTasks", "Task"],
+      providesTags: (result, error, taskId) => [{ type: "Task", id: taskId }],
     }),
     approveTask: builder.mutation({
-      query: ({ taskId, note }) => ({
-        url: `admin/tasks/${taskId}/approve`,
-        method: "POST",
-        body: { note },
-      }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-        "AdminTasks",
-        "Task", // Invalidate all task cache to ensure user tasks page refreshes
-      ],
+      query: ({ taskId, note }) => {
+        console.log("[REDUX API] Approving task:", { taskId, note });
+        return {
+          url: `admin/tasks/${taskId}/approve`,
+          method: "POST",
+          body: { note },
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        };
+      },
+      invalidatesTags: ["Task", "AdminDashboard"],
     }),
     pauseResumeTask: builder.mutation({
       query: ({ taskId, action, reason, duration }) => ({
@@ -500,11 +368,7 @@ export const api = createApi({
         method: "POST",
         body: { action, reason, duration },
       }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-        "AdminTasks",
-      ],
+      invalidatesTags: ["Task", "AdminDashboard"],
     }),
     completeTask: builder.mutation({
       query: ({ taskId, forceComplete, reason, refundRemaining }) => ({
@@ -512,40 +376,20 @@ export const api = createApi({
         method: "POST",
         body: { forceComplete, reason, refundRemaining },
       }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-        "AdminTasks",
-        "Wallet",
-      ],
+      invalidatesTags: ["Task", "Wallet", "AdminDashboard"],
     }),
-    reviewTaskSubmissions: builder.mutation({
-      query: ({ taskId, submissionIds, action, feedback, bulkReason }) => ({
-        url: `admin/tasks/${taskId}/submissions`,
-        method: "POST",
-        body: { submissionIds, action, feedback, bulkReason },
+    deleteAdminTask: builder.mutation({
+      query: ({ taskId, reason, confirmDelete }) => ({
+        url: `admin/tasks/${taskId}`,
+        method: "DELETE",
+        body: { reason, confirmDelete },
       }),
-      invalidatesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-        { type: "Task", id: taskId },
-        "AdminTasks",
-        "Wallet",
-      ],
-    }),
-    getTaskSubmissions: builder.query({
-      query: ({ taskId, status, page = 1, limit = 20 }) => {
-        const searchParams = new URLSearchParams();
-        if (status) searchParams.append("status", status);
-        searchParams.append("page", page.toString());
-        searchParams.append("limit", limit.toString());
-        return `admin/tasks/${taskId}/submissions?${searchParams.toString()}`;
-      },
-      providesTags: (result, error, { taskId }) => [
-        { type: "AdminTasks", id: taskId },
-      ],
+      invalidatesTags: ["Task", "AdminDashboard"],
     }),
 
-    // Task Submission Endpoints
+    // ==========================================
+    // ADMIN TASK SUBMISSIONS (ACTIVE)
+    // ==========================================
     getAdminTaskSubmissions: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -568,10 +412,34 @@ export const api = createApi({
         method: "POST",
         body: { action, feedback },
       }),
-      invalidatesTags: ["TaskSubmissions", "UserTasks", "Wallet"],
+      invalidatesTags: [
+        "TaskSubmissions",
+        "UserTasks",
+        "Wallet",
+        "AdminDashboard",
+      ],
+    }),
+    getTaskSubmissions: builder.query({
+      query: (taskId) => `tasks/${taskId}/submissions`,
+      providesTags: ["TaskSubmissions"],
+    }),
+    reviewTaskSubmissions: builder.mutation({
+      query: ({ submissionIds, action, feedback }) => ({
+        url: "admin/task-submissions/bulk-review",
+        method: "POST",
+        body: { submissionIds, action, feedback },
+      }),
+      invalidatesTags: [
+        "TaskSubmissions",
+        "UserTasks",
+        "Wallet",
+        "AdminDashboard",
+      ],
     }),
 
-    // Admin KYC Management Endpoints
+    // ==========================================
+    // ADMIN KYC MANAGEMENT (ACTIVE)
+    // ==========================================
     getAdminKYCApplications: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -580,12 +448,12 @@ export const api = createApi({
         });
         return `admin/kyc?${searchParams.toString()}`;
       },
-      providesTags: ["AdminKYC"],
+      providesTags: ["KYC"], // Use unified KYC tag
     }),
     getAdminKYCApplicationDetails: builder.query({
       query: (applicationId) => `admin/kyc/${applicationId}`,
       providesTags: (result, error, applicationId) => [
-        { type: "AdminKYC", id: applicationId },
+        { type: "KYC", id: applicationId }, // Use unified KYC tag
       ],
     }),
     approveKYCApplication: builder.mutation({
@@ -594,12 +462,7 @@ export const api = createApi({
         method: "POST",
         body: { action, rejectionReason, notes },
       }),
-      invalidatesTags: (result, error, { applicationId }) => [
-        { type: "AdminKYC", id: applicationId },
-        "AdminKYC",
-        "AdminUsers",
-        "KYC",
-      ],
+      invalidatesTags: ["KYC", "User", "AdminDashboard"],
     }),
     updateKYCApplication: builder.mutation({
       query: ({ applicationId, assignTo, notes, priority }) => ({
@@ -608,61 +471,58 @@ export const api = createApi({
         body: { assignTo, notes, priority },
       }),
       invalidatesTags: (result, error, { applicationId }) => [
-        { type: "AdminKYC", id: applicationId },
-        "AdminKYC",
+        { type: "KYC", id: applicationId },
+        "KYC",
       ],
+    }),
+
+    // ==========================================
+    // ADMIN DASHBOARD STATISTICS (ACTIVE)
+    // ==========================================
+    getAdminDashboardStats: builder.query({
+      query: () => "admin/dashboard",
+      providesTags: ["AdminDashboard"],
+      // Refetch every 30 seconds for real-time updates
+      pollingInterval: 30000,
     }),
   }),
 });
 
 export const {
+  // Authentication & User Management
   useRegisterUserMutation,
   useLoginUserMutation,
-  useGetAllUsersQuery,
   useGetUserByEmailQuery,
   useUpdateUserMutation,
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,
 
-  useSetReferralIdMutation,
+  // Referral System
   useAddReferralMutation,
+  useGetReferralsQuery,
+  useGetReferralStatsQuery,
+  useSetReferralIdMutation,
 
-  // Add to exports (for KYC):
-  useUploadFileMutation,
-
-  // Add to exports:
+  // KYC System
   useGetKYCDataQuery,
   useUpdateKYCDataMutation,
+  useUploadFileMutation,
 
+  // Task System (User)
   useGetTasksQuery,
-  useGetTaskByIdQuery,
-  useCreateTaskMutation,
+  useSubmitTaskProofMutation,
+  useGetUserTasksQuery,
   useGetUserTasksGroupedQuery,
   useJoinTaskMutation,
-  useSubmitTaskProofMutation,
   useStartTaskMutation,
-  useGetUserTasksQuery,
-  useDeleteMyTaskMutation,
-
-  useGetMyTasksQuery,
-  useUpdateMyTaskMutation,
   useGetMyTaskSubmissionsQuery,
   useReviewMyTaskSubmissionMutation,
 
-  useGetReferralsQuery,
-  useGetAllReferralsQuery,
-  useGetReferralStatsQuery,
+  // Wallet System
   useGetWalletQuery,
-  useRequestWithdrawalMutation,
-  useGetWithdrawalsQuery,
-  useUpdateWithdrawalMutation,
   useGetTransactionsQuery,
 
-  // Advertiser Wallet exports
-  useGetAdvertiserWalletQuery,
-  useAddAdvertiserFundsMutation,
-
-  // Admin User Management exports
+  // Admin User Management
   useGetAdminUsersQuery,
   useGetAdminUserDetailsQuery,
   useSuspendUserMutation,
@@ -672,30 +532,29 @@ export const {
   useDeleteUserMutation,
   useBulkSuspendUsersMutation,
   useBulkReactivateUsersMutation,
-  useExportUsersQuery,
   useSendUserNotificationMutation,
-  useBulkNotifyUsersMutation,
 
-  // Admin Task Management exports
+  // Admin Task Management
   useGetAdminTasksQuery,
   useGetAdminTaskDetailsQuery,
-  useCreateAdminTaskMutation,
-  useUpdateAdminTaskMutation,
-  useDeleteAdminTaskMutation,
   useApproveTaskMutation,
   usePauseResumeTaskMutation,
   useCompleteTaskMutation,
-  useReviewTaskSubmissionsMutation,
-  useGetTaskSubmissionsQuery,
+  useDeleteAdminTaskMutation,
 
-  // Task Submission Management exports
+  // Admin Task Submissions
   useGetAdminTaskSubmissionsQuery,
   useGetAdminTaskSubmissionDetailsQuery,
   useReviewTaskSubmissionMutation,
+  useGetTaskSubmissionsQuery,
+  useReviewTaskSubmissionsMutation,
 
-  // Admin KYC Management exports
+  // Admin KYC Management
   useGetAdminKYCApplicationsQuery,
   useGetAdminKYCApplicationDetailsQuery,
   useApproveKYCApplicationMutation,
   useUpdateKYCApplicationMutation,
+
+  // Admin Dashboard
+  useGetAdminDashboardStatsQuery,
 } = api;

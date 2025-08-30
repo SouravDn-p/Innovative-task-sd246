@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -60,7 +60,7 @@ import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 import Image from "next/image";
 
-function TasksPage() {
+function TasksPageContent() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [proofData, setProofData] = useState({
     images: [],
@@ -115,7 +115,11 @@ function TasksPage() {
 
   // Check KYC status and redirect if not verified
   useEffect(() => {
-    if (status === "authenticated" && kycData && kycData.status !== "verified") {
+    if (
+      status === "authenticated" &&
+      kycData &&
+      kycData.status !== "verified"
+    ) {
       Swal.fire({
         icon: "warning",
         title: "KYC Verification Required",
@@ -129,7 +133,11 @@ function TasksPage() {
         if (result.isConfirmed) {
           // Redirect to KYC verification with return URL
           const redirectUrl = returnUrl || "/dashboard/tasks";
-          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+          router.push(
+            `/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(
+              redirectUrl
+            )}`
+          );
         }
       });
     }
@@ -164,7 +172,11 @@ function TasksPage() {
       }).then((result) => {
         if (result.isConfirmed) {
           const redirectUrl = `/dashboard/tasks?taskId=${taskId}`;
-          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+          router.push(
+            `/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(
+              redirectUrl
+            )}`
+          );
         }
       });
       return;
@@ -209,7 +221,11 @@ function TasksPage() {
       }).then((result) => {
         if (result.isConfirmed) {
           const redirectUrl = `/dashboard/tasks?taskId=${task.id || task._id}`;
-          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(redirectUrl)}`);
+          router.push(
+            `/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(
+              redirectUrl
+            )}`
+          );
         }
       });
       return;
@@ -267,7 +283,11 @@ function TasksPage() {
         cancelButtonText: "Cancel",
       }).then((result) => {
         if (result.isConfirmed) {
-          router.push(`/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent("/dashboard/tasks")}`);
+          router.push(
+            `/dashboard/user/kyc-verification?returnUrl=${encodeURIComponent(
+              "/dashboard/tasks"
+            )}`
+          );
         }
       });
       return;
@@ -1049,6 +1069,14 @@ function TasksPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function TasksPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TasksPageContent />
+    </Suspense>
   );
 }
 

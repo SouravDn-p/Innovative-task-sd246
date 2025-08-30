@@ -120,7 +120,8 @@ function LoginPage() {
       Swal.fire({
         toast: true,
         icon: "error",
-        title: err?.data?.error || err?.message || "Login failed. Please try again.",
+        title:
+          err?.data?.error || err?.message || "Login failed. Please try again.",
         position: "top-end",
         timer: 3500,
         showConfirmButton: false,
@@ -161,9 +162,9 @@ function LoginPage() {
             </h1>
             <p className="text-sm text-teal-100">{session?.user?.email}</p>
           </div>
-          <Link href="/">
+          <Link href="/dashboard">
             <Button className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-medium">
-              Go to Home
+              Go to Dashboard
             </Button>
           </Link>
         </Card>
@@ -190,10 +191,15 @@ function LoginPage() {
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-teal-300 to-emerald-200">
           Innovative Task Earn
         </h2>
-        <p className="mt-2 text-sm text-teal-100/80">Welcome back — continue earning today</p>
+        <p className="mt-2 text-sm text-teal-100/80">
+          Welcome back — continue earning today
+        </p>
         <p className="mt-2 text-sm text-teal-100/70">
-          New here?{' '}
-          <Link href="/register" className="font-medium text-teal-200 underline underline-offset-2">
+          New here?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-teal-200 underline underline-offset-2"
+          >
             Create account
           </Link>
         </p>
@@ -203,14 +209,18 @@ function LoginPage() {
         <Card className="bg-white/6 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
           <div className="p-6 sm:p-8">
             <CardHeader className="text-center p-0 mb-4">
-              <CardTitle className="text-2xl sm:text-3xl font-semibold text-white">Sign in</CardTitle>
-              <CardDescription className="text-sm text-teal-100/80">Pick a quick sign-in method or use your email</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-white">
+                Sign in
+              </CardTitle>
+              <CardDescription className="text-sm text-teal-100/80">
+                Pick a quick sign-in method or use your email
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="p-0 mt-4">
               <div className="grid gap-3">
                 <Button
-                  onClick={() => handleSocialSignIn('google')}
+                  onClick={() => handleSocialSignIn("google")}
                   className="w-full flex items-center justify-center gap-3 bg-white/10 border border-white/12 text-white hover:bg-white/12 py-3 rounded-xl transition transform hover:-translate-y-0.5"
                   disabled={isLoading}
                 >
@@ -220,12 +230,16 @@ function LoginPage() {
 
                 <div className="relative my-2">
                   <Separator className="bg-white/12" />
-                  <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-transparent text-xs text-teal-100 px-2">or sign in with email</span>
+                  <span className="absolute left-1/2 -top-3 -translate-x-1/2 bg-transparent text-xs text-teal-100 px-2">
+                    or sign in with email
+                  </span>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="email" className="text-teal-100 text-sm">Email</Label>
+                    <Label htmlFor="email" className="text-teal-100 text-sm">
+                      Email
+                    </Label>
                     <div className="relative mt-2">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-200/70 h-5 w-5" />
                       <Input
@@ -236,29 +250,37 @@ function LoginPage() {
                         onChange={handleChange}
                         disabled={isLoading}
                         className={`pl-11 pr-4 bg-white/8 border border-white/8 text-white placeholder:text-teal-100/60 rounded-lg h-11 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-shadow ${
-                          errors.email ? 'ring-red-400' : ''
+                          errors.email ? "ring-red-400" : ""
                         }`}
                         placeholder="you@example.com"
                       />
                     </div>
-                    {errors.email && <p className="text-xs text-red-300 mt-1">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="text-xs text-red-300 mt-1">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <Label htmlFor="password" className="text-teal-100 text-sm flex items-center gap-2">
-                      Password <ShieldCheck className="h-4 w-4 text-teal-200/70" />
+                    <Label
+                      htmlFor="password"
+                      className="text-teal-100 text-sm flex items-center gap-2"
+                    >
+                      Password{" "}
+                      <ShieldCheck className="h-4 w-4 text-teal-200/70" />
                     </Label>
                     <div className="relative mt-2">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-200/70 h-5 w-5" />
                       <Input
                         id="password"
                         name="password"
-                        type={showPassword ? 'text' : 'password'}
+                        type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={handleChange}
                         disabled={isLoading}
                         className={`pl-11 pr-12 bg-white/8 border border-white/8 text-white placeholder:text-teal-100/60 rounded-lg h-11 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-shadow ${
-                          errors.password ? 'ring-red-400' : ''
+                          errors.password ? "ring-red-400" : ""
                         }`}
                         placeholder="Your secure password"
                       />
@@ -266,20 +288,38 @@ function LoginPage() {
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-100/70"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
                       >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
                       </button>
                     </div>
-                    {errors.password && <p className="text-xs text-red-300 mt-1">{errors.password}</p>}
+                    {errors.password && (
+                      <p className="text-xs text-red-300 mt-1">
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" className="h-4 w-4 rounded border-white/10 bg-white/6 accent-teal-400" />
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-white/10 bg-white/6 accent-teal-400"
+                      />
                       <span className="text-teal-100">Remember me</span>
                     </label>
-                    <Link href="/forgot-password" className="text-teal-200 underline underline-offset-2">Forgot?</Link>
+                    <Link
+                      href="/forgot-password"
+                      className="text-teal-200 underline underline-offset-2"
+                    >
+                      Forgot?
+                    </Link>
                   </div>
 
                   <Button
@@ -293,15 +333,21 @@ function LoginPage() {
                         <span>Signing in...</span>
                       </div>
                     ) : (
-                      'Sign In'
+                      "Sign In"
                     )}
                   </Button>
                 </form>
 
                 <div className="mt-4 grid grid-cols-3 gap-2">
-                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Secure</div>
-                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Fast</div>
-                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">Role-based</div>
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">
+                    Secure
+                  </div>
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">
+                    Fast
+                  </div>
+                  <div className="col-span-1 bg-white/6 rounded-lg p-3 text-center text-sm text-teal-100">
+                    Role-based
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -309,9 +355,15 @@ function LoginPage() {
 
           <CardFooter className="mt-2 p-6 pt-0 bg-gradient-to-t from-transparent to-white/2">
             <p className="text-xs text-teal-100/80 text-center">
-              By signing in you agree to our{' '}
-              <Link href="/terms" className="underline text-teal-200">Terms</Link> and{' '}
-              <Link href="/privacy" className="underline text-teal-200">Privacy</Link>.
+              By signing in you agree to our{" "}
+              <Link href="/terms" className="underline text-teal-200">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="underline text-teal-200">
+                Privacy
+              </Link>
+              .
             </p>
           </CardFooter>
         </Card>

@@ -3,7 +3,7 @@
 import React from "react";
 import { useUploadFileMutation } from "@/redux/api/api";
 
-export const FileUploadZone = () => {
+export const FileUpload = () => {
   const [uploadFile, { isLoading, data, error }] = useUploadFileMutation();
 
   const handleFileChange = (documentType) => async (e) => {
