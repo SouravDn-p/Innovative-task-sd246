@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
+import { ObjectId } from "mongodb";
 
 export async function GET(req) {
   try {
@@ -15,6 +16,7 @@ export async function GET(req) {
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
+    const kycApplicationsCollection = db.collection("kyc-applications");
 
     const adminUser = await usersCollection.findOne({ email: token.email });
     if (!adminUser || adminUser.role !== "admin") {
@@ -30,49 +32,43 @@ export async function GET(req) {
     const limit = parseInt(searchParams.get("limit")) || 20;
     const status = searchParams.get("status") || "";
     const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "kycSubmittedAt";
+    const sortBy = searchParams.get("sortBy") || "submittedAt";
     const sortOrder = searchParams.get("sortOrder") || "desc";
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    // Build filter query
+    // Build filter query for kyc-applications collection
     const filter = {};
 
     // Filter by KYC status
     if (status && status !== "all") {
-      if (status === "none") {
-        filter.$or = [
-          { kycStatus: { $exists: false } },
-          { kycStatus: "none" },
-          { kycStatus: null },
-        ];
-      } else {
-        filter.kycStatus = status;
-      }
-    } else {
-      // Only show users who have submitted KYC (exclude none/null)
-      filter.kycStatus = { $exists: true, $ne: "none", $ne: null };
+      filter.status =
+        status === "verified"
+          ? "verified"
+          : status === "rejected"
+          ? "rejected"
+          : "pending";
     }
 
     // Search functionality
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { userName: { $regex: search, $options: "i" } },
+        { userEmail: { $regex: search, $options: "i" } },
         { phone: { $regex: search, $options: "i" } },
       ];
     }
 
     // Date range filter
     if (dateFrom || dateTo) {
-      filter.kycSubmittedAt = {};
+      filter.submittedAt = {};
       if (dateFrom) {
-        filter.kycSubmittedAt.$gte = new Date(dateFrom);
+        filter.submittedAt.$gte = new Date(dateFrom);
       }
       if (dateTo) {
         const endDate = new Date(dateTo);
         endDate.setHours(23, 59, 59, 999);
-        filter.kycSubmittedAt.$lte = endDate;
+        filter.submittedAt.$lte = endDate;
       }
     }
 
@@ -84,71 +80,87 @@ export async function GET(req) {
     sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
 
     // Get KYC applications with pagination
-    const kycApplications = await usersCollection
+    const kycApplications = await kycApplicationsCollection
       .find(filter)
-      .project({
-        password: 0, // Exclude password field
-      })
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .toArray();
 
     // Get total count for pagination
-    const totalApplications = await usersCollection.countDocuments(filter);
+    const totalApplications = await kycApplicationsCollection.countDocuments(
+      filter
+    );
+
+    // Get user data for each application
+    const userEmails = kycApplications.map((app) => app.userEmail);
+    const userData = await usersCollection
+      .find({ email: { $in: userEmails } }, { projection: { password: 0 } })
+      .toArray();
+
+    // Create a map for quick user lookup
+    const userMap = userData.reduce((map, user) => {
+      map[user.email] = user;
+      return map;
+    }, {});
 
     // Transform the data for frontend consumption
-    const transformedApplications = kycApplications.map((user) => ({
-      _id: user._id.toString(),
-      userId: user._id.toString(),
-      userName: user.name || "N/A",
-      email: user.email,
-      phone: user.phone || "N/A",
-      kycStatus: user.kycStatus || "none",
-      submittedAt: user.kycSubmittedAt || null,
-      reviewedAt: user.kycReviewedAt || null,
-      rejectionReason: user.kycRejectionReason || null,
-      paymentStatus: user.kycPaymentStatus || "not_paid",
-      completionPercentage: user.kycCompletionPercentage || 0,
-      documents: user.kycDocuments || {
-        aadhar: { uploaded: false, status: "not_uploaded" },
-        pan: { uploaded: false, status: "not_uploaded" },
-        selfie: { uploaded: false, status: "not_uploaded" },
-        bankStatement: { uploaded: false, status: "not_uploaded" },
-      },
-      personalInfo: {
-        fullName: user.name || "N/A",
-        email: user.email,
-        phone: user.phone || "N/A",
-        joinDate: user.createdAt
-          ? new Date(user.createdAt).toISOString().split("T")[0]
-          : null,
-      },
-      // Calculate priority based on submission date and payment status
-      priority: calculatePriority(user),
-      // Track review assignment (can be extended later)
-      assignedTo: user.kycAssignedTo || null,
-    }));
+    const transformedApplications = kycApplications.map((application) => {
+      const user = userMap[application.userEmail] || {};
 
-    // Calculate summary statistics
+      return {
+        _id: application._id.toString(),
+        applicationId: application._id.toString(),
+        userId: application.userId?.toString() || user._id?.toString(),
+        userName: application.userName || user.name || "N/A",
+        email: application.userEmail,
+        phone: application.phone || user.phone || "N/A",
+        kycStatus: user.kycStatus || application.status || "pending",
+        submittedAt: application.submittedAt || null,
+        reviewedAt: application.reviewedAt || user.kycReviewedAt || null,
+        rejectionReason:
+          application.rejectionReason || user.kycRejectionReason || null,
+        paymentStatus: application.paymentStatus || "not_paid",
+        completionPercentage: application.completionPercentage || 0,
+        documents: application.documents || {
+          aadhar: { uploaded: false, status: "not_uploaded" },
+          pan: { uploaded: false, status: "not_uploaded" },
+          selfie: { uploaded: false, status: "not_uploaded" },
+          bankStatement: { uploaded: false, status: "not_uploaded" },
+        },
+        personalInfo: {
+          fullName: application.userName || user.name || "N/A",
+          email: application.userEmail,
+          phone: application.phone || user.phone || "N/A",
+          joinDate: user.createdAt
+            ? new Date(user.createdAt).toISOString().split("T")[0]
+            : null,
+        },
+        // Calculate priority based on submission date and payment status
+        priority: calculatePriority(application),
+        // Track review assignment
+        assignedTo: application.assignedTo || user.kycAssignedTo || null,
+        reviewHistory: application.reviewHistory || user.kycReviewHistory || [],
+      };
+    });
+
+    // Calculate summary statistics from kyc-applications collection
     const statistics = {
       totalApplications,
-      pendingApplications: await usersCollection.countDocuments({
-        kycStatus: "pending",
+      pendingApplications: await kycApplicationsCollection.countDocuments({
+        status: "pending",
       }),
-      approvedApplications: await usersCollection.countDocuments({
-        kycStatus: "verified",
+      approvedApplications: await kycApplicationsCollection.countDocuments({
+        status: "verified",
       }),
-      rejectedApplications: await usersCollection.countDocuments({
-        kycStatus: "rejected",
+      rejectedApplications: await kycApplicationsCollection.countDocuments({
+        status: "rejected",
       }),
-      paidApplications: await usersCollection.countDocuments({
-        kycPaymentStatus: "paid",
-        kycStatus: { $exists: true, $ne: "none" },
+      paidApplications: await kycApplicationsCollection.countDocuments({
+        paymentStatus: "paid",
       }),
-      unpaidApplications: await usersCollection.countDocuments({
-        kycPaymentStatus: { $ne: "paid" },
-        kycStatus: { $exists: true, $ne: "none" },
+      unpaidApplications: await kycApplicationsCollection.countDocuments({
+        paymentStatus: { $ne: "paid" },
       }),
     };
 
@@ -177,13 +189,13 @@ export async function GET(req) {
 }
 
 // Helper function to calculate priority
-function calculatePriority(user) {
-  if (!user.kycSubmittedAt) return "low";
+function calculatePriority(application) {
+  if (!application.submittedAt) return "low";
 
-  const submissionDate = new Date(user.kycSubmittedAt);
+  const submissionDate = new Date(application.submittedAt);
   const daysSinceSubmission =
     (Date.now() - submissionDate) / (1000 * 60 * 60 * 24);
-  const isPaid = user.kycPaymentStatus === "paid";
+  const isPaid = application.paymentStatus === "paid";
 
   // High priority: Paid users or submissions older than 7 days
   if (isPaid || daysSinceSubmission > 7) return "high";

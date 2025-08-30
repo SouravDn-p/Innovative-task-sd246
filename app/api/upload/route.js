@@ -1,5 +1,5 @@
-export const runtime = "nodejs";
-
+// Modified /api/upload (added authentication and per-user folder)
+import { getToken } from "next-auth/jwt";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -10,6 +10,13 @@ cloudinary.config({
 
 export async function POST(req) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.email) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file");
     const documentType = formData.get("documentType");
@@ -54,7 +61,7 @@ export async function POST(req) {
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          folder: `kyc/${documentType}`,
+          folder: `kyc/${token.email}/${documentType}`,
           resource_type: "auto",
         },
         (error, result) => {
@@ -70,7 +77,7 @@ export async function POST(req) {
         url: uploadResult.secure_url,
         name: file.name,
         size: file.size,
-        uploadedAt: new Date(),
+        uploadedAt: new Date().toISOString(),
       }),
       { status: 200 }
     );

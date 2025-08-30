@@ -1,6 +1,6 @@
+// Modified FileUploadZone (no major changes needed, as it uses onFileUpload prop)
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useUploadFileMutation } from "@/redux/api/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 
 const FileUploadZone = ({
   documentType,
+  onFileUpload,
   existingFile,
   required = false,
   disabled = false,
 }) => {
-  const [uploadFile, { isLoading, error }] = useUploadFileMutation();
   const { toast } = useToast();
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -30,7 +30,6 @@ const FileUploadZone = ({
       setUploadProgress(0);
 
       try {
-        // Simulate upload progress
         const progressInterval = setInterval(() => {
           setUploadProgress((prev) => {
             if (prev >= 90) {
@@ -41,7 +40,11 @@ const FileUploadZone = ({
           });
         }, 150);
 
-        const response = await uploadFile({ file, documentType }).unwrap();
+        // Use the onFileUpload prop (which now handles separate upload and update)
+        if (onFileUpload) {
+          await onFileUpload(file);
+        }
+
         clearInterval(progressInterval);
         setUploadProgress(100);
 
@@ -61,7 +64,7 @@ const FileUploadZone = ({
         });
       }
     },
-    [documentType, uploadFile, toast]
+    [documentType, toast, onFileUpload]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -72,12 +75,18 @@ const FileUploadZone = ({
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    disabled: disabled || isLoading,
+    disabled: disabled,
   });
 
   const viewFile = () => {
     if (existingFile?.url) {
       window.open(existingFile.url, "_blank");
+    } else {
+      toast({
+        title: "File not accessible",
+        description: "The uploaded file URL is not available for viewing.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -97,7 +106,7 @@ const FileUploadZone = ({
         </div>
       </div>
 
-      {!existingFile?.url && (
+      {!(existingFile?.url || existingFile?.uploaded) && (
         <Card
           className={cn(
             "border-2 border-dashed transition-all duration-200",
@@ -114,7 +123,7 @@ const FileUploadZone = ({
                 <div className="p-4 bg-primary/10 rounded-full">
                   <Upload className="h-8 w-8 text-primary" />
                 </div>
-                {isLoading ? (
+                {uploadProgress > 0 ? ( // Changed from isLoading to uploadProgress
                   <div className="w-full space-y-2">
                     <p className="text-sm font-medium">Uploading...</p>
                     <Progress value={uploadProgress} className="w-full" />
@@ -142,7 +151,7 @@ const FileUploadZone = ({
         </Card>
       )}
 
-      {existingFile?.url && (
+      {(existingFile?.url || existingFile?.uploaded) && (
         <Card className="border-2">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -151,27 +160,22 @@ const FileUploadZone = ({
                   <File className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{existingFile.name}</p>
+                  <p className="font-medium text-sm">
+                    {existingFile?.name || `${documentType} document`}
+                  </p>
                   <p className="text-xs text-muted-foreground">Uploaded</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={viewFile}>
-                  <Eye className="h-4 w-4" />
-                </Button>
+                {existingFile?.url && (
+                  <Button variant="outline" size="sm" onClick={viewFile}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error?.data?.message || "Upload failed"}
-          </AlertDescription>
-        </Alert>
       )}
     </div>
   );

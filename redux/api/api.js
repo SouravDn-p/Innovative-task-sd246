@@ -4,13 +4,14 @@ import { logout } from "../slice/authSlice";
 // Base query with enhanced error handling and authentication
 const baseQuery = fetchBaseQuery({
   baseUrl: "/api",
-  prepareHeaders: (headers, { getState }) => {
+  prepareHeaders: (headers, { getState, extra, endpoint, type, forced }) => {
     const token = getState().auth.token;
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
-    // Add common headers
-    headers.set("Content-Type", "application/json");
+
+    // Don't set Content-Type here - let individual endpoints or the browser set it
+    // This allows FormData to work properly by letting the browser set the boundary
     return headers;
   },
 });
@@ -146,6 +147,17 @@ export const api = createApi({
         url: "user/kyc-verification",
         method: "POST",
         body: kycData,
+        // Handle FormData properly by not setting Content-Type
+        prepareHeaders: (headers, { getState }) => {
+          // For FormData, let the browser set the Content-Type with proper boundary
+          if (kycData instanceof FormData) {
+            headers.delete("Content-Type");
+          } else {
+            // For JSON data, explicitly set Content-Type
+            headers.set("Content-Type", "application/json");
+          }
+          return headers;
+        },
       }),
       invalidatesTags: ["KYC", "AdminDashboard"],
     }),
@@ -159,6 +171,12 @@ export const api = createApi({
           url: "user/kyc-verification",
           method: "POST",
           body: formData,
+          // Don't set Content-Type - let browser set multipart/form-data
+          prepareHeaders: (headers) => {
+            // Remove Content-Type to let browser set it automatically
+            headers.delete("Content-Type");
+            return headers;
+          },
         };
       },
       invalidatesTags: ["KYC"],
@@ -485,6 +503,24 @@ export const api = createApi({
       // Refetch every 30 seconds for real-time updates
       pollingInterval: 30000,
     }),
+
+    uploadDocument: builder.mutation({
+      query: ({ file, documentType }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("documentType", documentType);
+        return {
+          url: "/upload", // Points to /api/upload
+          method: "POST",
+          body: formData,
+          prepareHeaders: (headers) => {
+            headers.delete("Content-Type");
+            return headers;
+          },
+        };
+      },
+      invalidatesTags: ["KYC"],
+    }),
   }),
 });
 
@@ -557,4 +593,6 @@ export const {
 
   // Admin Dashboard
   useGetAdminDashboardStatsQuery,
+
+  useUploadDocumentMutation,
 } = api;

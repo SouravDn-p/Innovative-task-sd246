@@ -1,3 +1,4 @@
+// Modified KYCDashboard component
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -22,7 +23,11 @@ import {
   Banknote,
 } from "lucide-react";
 import FileUploadZone from "./FileUploadZone";
-import { useGetKYCDataQuery, useUpdateKYCDataMutation } from "@/redux/api/api";
+import {
+  useGetKYCDataQuery,
+  useUpdateKYCDataMutation,
+  useUploadDocumentMutation,
+} from "@/redux/api/api"; // Added useUploadDocumentMutation
 import { useToast } from "@/hooks/use-toast";
 
 const KYCDashboard = ({ userEmail }) => {
@@ -30,6 +35,7 @@ const KYCDashboard = ({ userEmail }) => {
   const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
   const [updateKYCData, { isLoading: isSubmitting }] =
     useUpdateKYCDataMutation();
+  const [uploadDocument] = useUploadDocumentMutation(); // New mutation for separate upload
 
   const [localKycData, setLocalKycData] = useState({
     status: "none",
@@ -123,61 +129,92 @@ const KYCDashboard = ({ userEmail }) => {
 
   const handleFileUpload = async (documentType, file) => {
     try {
-      const formData = new FormData();
-      formData.append("documentType", documentType);
-      formData.append("file", file);
+      // First, upload the file to /api/upload
+      const uploadResult = await uploadDocument({
+        file,
+        documentType,
+      }).unwrap();
 
-      await updateKYCData(formData).unwrap();
+      // Then, update KYC data with the returned URL and metadata (as JSON)
+      const updateData = {
+        documentType,
+        url: uploadResult.url,
+        name: uploadResult.name,
+        size: uploadResult.size,
+        uploadedAt: uploadResult.uploadedAt,
+      };
+
+      const result = await updateKYCData(updateData).unwrap();
+
+      // Update local state with the new data
+      if (result.kycApplication) {
+        setLocalKycData((prev) => ({
+          ...prev,
+          documents: result.kycApplication.documents,
+          completionPercentage: result.kycApplication.completionPercentage,
+          paymentStatus: result.kycApplication.paymentStatus,
+        }));
+      }
+
       refetch();
       toast({
         title: "Document uploaded",
         description: `${documentType} has been uploaded successfully.`,
       });
     } catch (err) {
+      console.error("Upload error:", err);
       toast({
         title: "Upload failed",
-        description: err.message || "Please try again.",
+        description: err.data?.message || err.message || "Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const calculateCompletionPercentage = (documents) => {
-    const requiredDocs = ["aadhar", "pan", "selfie"];
-    const uploadedRequired = requiredDocs.filter(
-      (doc) => documents[doc]?.url
-    ).length;
-    const optionalUploaded = documents.bankStatement?.url ? 1 : 0;
-    return Math.round(
-      ((uploadedRequired + optionalUploaded) / (requiredDocs.length + 1)) * 100
-    );
-  };
-
   const handlePayment = async () => {
     try {
-      const formData = new FormData();
-      formData.append("paymentStatus", "paid");
+      const updateData = { paymentStatus: "paid" }; // Send as JSON
+      const result = await updateKYCData(updateData).unwrap();
 
-      await updateKYCData(formData).unwrap();
+      // Update local state with the new data
+      if (result.kycApplication) {
+        setLocalKycData((prev) => ({
+          ...prev,
+          paymentStatus: result.kycApplication.paymentStatus,
+        }));
+      }
+
       refetch();
       toast({
         title: "Payment successful",
         description:
-          "KYC verification fee has been paid. You can now upload your documents.",
+          "KYC verification fee has been paid. You can now submit your application.",
       });
     } catch (error) {
+      let errorMessage = "Please try again or contact support.";
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.status) {
+        errorMessage = `HTTP ${error.status}: ${
+          error.statusText || "Request failed"
+        }`;
+      }
       toast({
         title: "Payment failed",
-        description: "Please try again or contact support.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
   const handleSubmitKYC = async () => {
-    const requiredDocs = ["aadhar", "pan", "selfie"];
-    const missingDocs = requiredDocs.filter(
-      (doc) => !localKycData.documents[doc]?.url
+    const allDocs = ["aadhar", "pan", "selfie", "bankStatement"];
+    const missingDocs = allDocs.filter(
+      (doc) =>
+        !localKycData.documents[doc]?.uploaded &&
+        !localKycData.documents[doc]?.url
     );
 
     if (missingDocs.length > 0) {
@@ -199,7 +236,17 @@ const KYCDashboard = ({ userEmail }) => {
     }
 
     try {
-      await updateKYCData({ documents: localKycData.documents }).unwrap();
+      const updateData = { submitForReview: "true" }; // Send as JSON
+      const result = await updateKYCData(updateData).unwrap();
+
+      // Update local state with the new data
+      if (result.kycApplication) {
+        setLocalKycData((prev) => ({
+          ...prev,
+          status: result.kycApplication.status,
+        }));
+      }
+
       refetch();
       toast({
         title: "KYC submitted successfully",
@@ -209,7 +256,8 @@ const KYCDashboard = ({ userEmail }) => {
     } catch (error) {
       toast({
         title: "Submission failed",
-        description: "Please try again or contact support.",
+        description:
+          error?.data?.message || "Please try again or contact support.",
         variant: "destructive",
       });
     }
@@ -248,11 +296,26 @@ const KYCDashboard = ({ userEmail }) => {
   const isUnderReview =
     localKycData.status === "pending" || localKycData.status === "under_review";
   const isVerified = localKycData.status === "verified";
-  const canUploadDocuments =
-    localKycData.paymentStatus === "paid" && (canStartKYC || canResubmit);
-  const allRequiredDocsUploaded = ["aadhar", "pan", "selfie"].every(
-    (doc) => localKycData.documents[doc]?.url
+
+  // Check if all documents (including bankStatement) are uploaded for 100% progress
+  const allDocsUploaded = ["aadhar", "pan", "selfie", "bankStatement"].every(
+    (doc) =>
+      localKycData.documents[doc]?.uploaded || localKycData.documents[doc]?.url
   );
+
+  const canUploadDocuments =
+    (canStartKYC || canResubmit) && localKycData.status !== "pending";
+
+  // Show payment only at 100% progress and not paid
+  const canPay =
+    localKycData.completionPercentage === 100 &&
+    localKycData.paymentStatus !== "paid";
+
+  // Show submit only after payment and at 100% progress
+  const canSubmitApplication =
+    localKycData.paymentStatus === "paid" &&
+    localKycData.completionPercentage === 100 &&
+    (canStartKYC || canResubmit);
 
   if (isLoading) {
     return (
@@ -376,8 +439,64 @@ const KYCDashboard = ({ userEmail }) => {
           </Alert>
         )}
 
-        {/* Payment Section */}
-        {localKycData.paymentStatus !== "paid" && (
+        {/* Document Upload Section */}
+        {(canStartKYC || canResubmit) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Document Upload
+              </CardTitle>
+              <CardDescription>
+                Upload all required documents for identity verification
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <FileUploadZone
+                documentType="aadhar"
+                onFileUpload={(file) => handleFileUpload("aadhar", file)}
+                existingFile={localKycData.documents.aadhar}
+                required
+                disabled={!canUploadDocuments}
+              />
+              <FileUploadZone
+                documentType="pan"
+                onFileUpload={(file) => handleFileUpload("pan", file)}
+                existingFile={localKycData.documents.pan}
+                required
+                disabled={!canUploadDocuments}
+              />
+              <FileUploadZone
+                documentType="selfie"
+                onFileUpload={(file) => handleFileUpload("selfie", file)}
+                existingFile={localKycData.documents.selfie}
+                required
+                disabled={!canUploadDocuments}
+              />
+              <FileUploadZone
+                documentType="bankStatement"
+                onFileUpload={(file) => handleFileUpload("bankStatement", file)}
+                existingFile={localKycData.documents.bankStatement}
+                required // Made required for 100% progress
+                disabled={!canUploadDocuments}
+              />
+
+              {/* Show message if all documents are uploaded */}
+              {allDocsUploaded && (
+                <Alert className="border-success/20 bg-success-light">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>All documents uploaded!</strong> Now you can proceed
+                    with payment.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Section - shown only at 100% progress */}
+        {canPay && (
           <Card className="border-warning/20 bg-warning-light">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -390,8 +509,8 @@ const KYCDashboard = ({ userEmail }) => {
                       KYC Verification Fee
                     </h3>
                     <p className="text-sm text-warning-foreground/80">
-                      One-time payment of ₹{localKycData.paymentAmount} to start
-                      verification
+                      One-time payment of ₹{localKycData.paymentAmount} to
+                      complete verification
                     </p>
                   </div>
                 </div>
@@ -409,78 +528,23 @@ const KYCDashboard = ({ userEmail }) => {
           </Card>
         )}
 
-        {/* Document Upload Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Document Upload
-            </CardTitle>
-            <CardDescription>
-              Upload the required documents for identity verification
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <FileUploadZone
-              documentType="aadhar"
-              onFileUpload={(file) => handleFileUpload("aadhar", file)}
-              existingFile={localKycData.documents.aadhar}
-              required
-              disabled={!canUploadDocuments}
-            />
-            <FileUploadZone
-              documentType="pan"
-              onFileUpload={(file) => handleFileUpload("pan", file)}
-              existingFile={localKycData.documents.pan}
-              required
-              disabled={!canUploadDocuments}
-            />
-            <FileUploadZone
-              documentType="selfie"
-              onFileUpload={(file) => handleFileUpload("selfie", file)}
-              existingFile={localKycData.documents.selfie}
-              required
-              disabled={!canUploadDocuments}
-            />
-            <FileUploadZone
-              documentType="bankStatement"
-              onFileUpload={(file) => handleFileUpload("bankStatement", file)}
-              existingFile={localKycData.documents.bankStatement}
-              disabled={!canUploadDocuments}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        {(canStartKYC || canResubmit) && (
+        {/* Action Buttons - shown after payment */}
+        {canSubmitApplication && (
           <div className="flex gap-4 justify-center">
-            {allRequiredDocsUploaded &&
-            localKycData.paymentStatus === "paid" ? (
-              <Button
-                onClick={handleSubmitKYC}
-                disabled={isSubmitting}
-                size="lg"
-                className="px-8"
-              >
-                {isSubmitting
-                  ? canResubmit
-                    ? "Resubmitting..."
-                    : "Submitting..."
-                  : canResubmit
-                  ? "Resubmit Documents"
-                  : "Apply"}
-              </Button>
-            ) : (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Please upload the following required documents:{" "}
-                  {["aadhar", "pan", "selfie"]
-                    .filter((doc) => !localKycData.documents[doc]?.url)
-                    .join(", ")}
-                </AlertDescription>
-              </Alert>
-            )}
+            <Button
+              onClick={handleSubmitKYC}
+              disabled={isSubmitting}
+              size="lg"
+              className="px-8"
+            >
+              {isSubmitting
+                ? canResubmit
+                  ? "Resubmitting..."
+                  : "Submitting..."
+                : canResubmit
+                ? "Resubmit Documents"
+                : "Submit Application"}
+            </Button>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
+import { ObjectId } from "mongodb";
 
 // GET individual KYC application details
 export async function GET(req, { params }) {
@@ -15,6 +16,7 @@ export async function GET(req, { params }) {
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
+    const kycApplicationsCollection = db.collection("kyc-applications");
 
     // Verify admin role
     const adminUser = await usersCollection.findOne({ email: token.email });
@@ -25,57 +27,68 @@ export async function GET(req, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
-    // Get user by ID
+    // Get KYC application by ID from kyc-applications collection
+    const kycApplication = await kycApplicationsCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!kycApplication) {
+      return NextResponse.json(
+        { error: "KYC application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get corresponding user data
     const user = await usersCollection.findOne(
-      {
-        _id: new db.ObjectId(id),
-      },
-      {
-        projection: { password: 0 }, // Exclude password
-      }
+      { email: kycApplication.userEmail },
+      { projection: { password: 0 } }
     );
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Transform user data for KYC review
-    const kycApplication = {
-      _id: user._id.toString(),
-      userId: user._id.toString(),
-      userName: user.name || "N/A",
-      email: user.email,
-      phone: user.phone || "N/A",
-      kycStatus: user.kycStatus || "none",
-      submittedAt: user.kycSubmittedAt || null,
-      reviewedAt: user.kycReviewedAt || null,
-      rejectionReason: user.kycRejectionReason || null,
-      paymentStatus: user.kycPaymentStatus || "not_paid",
-      completionPercentage: user.kycCompletionPercentage || 0,
-      documents: user.kycDocuments || {
+    // Transform application data for KYC review
+    const applicationDetails = {
+      _id: kycApplication._id.toString(),
+      applicationId: kycApplication._id.toString(),
+      userId: kycApplication.userId?.toString() || user._id.toString(),
+      userName: kycApplication.userName || user.name || "N/A",
+      email: kycApplication.userEmail,
+      phone: kycApplication.phone || user.phone || "N/A",
+      kycStatus: user.kycStatus || kycApplication.status || "pending",
+      submittedAt: kycApplication.submittedAt || null,
+      reviewedAt: kycApplication.reviewedAt || user.kycReviewedAt || null,
+      rejectionReason:
+        kycApplication.rejectionReason || user.kycRejectionReason || null,
+      paymentStatus: kycApplication.paymentStatus || "not_paid",
+      completionPercentage: kycApplication.completionPercentage || 0,
+      documents: kycApplication.documents || {
         aadhar: { uploaded: false, status: "not_uploaded" },
         pan: { uploaded: false, status: "not_uploaded" },
         selfie: { uploaded: false, status: "not_uploaded" },
         bankStatement: { uploaded: false, status: "not_uploaded" },
       },
       personalInfo: {
-        fullName: user.name || "N/A",
-        email: user.email,
-        phone: user.phone || "N/A",
+        fullName: kycApplication.userName || user.name || "N/A",
+        email: kycApplication.userEmail,
+        phone: kycApplication.phone || user.phone || "N/A",
         joinDate: user.createdAt
           ? new Date(user.createdAt).toISOString().split("T")[0]
           : null,
         role: user.role || "user",
         isVerified: user.isVerified || false,
       },
-      assignedTo: user.kycAssignedTo || null,
-      reviewHistory: user.kycReviewHistory || [],
+      assignedTo: kycApplication.assignedTo || user.kycAssignedTo || null,
+      reviewHistory:
+        kycApplication.reviewHistory || user.kycReviewHistory || [],
     };
 
     return NextResponse.json({
-      application: kycApplication,
+      application: applicationDetails,
     });
   } catch (error) {
     console.error("KYC application fetch error:", error);
@@ -88,6 +101,8 @@ export async function GET(req, { params }) {
 
 // POST - Approve or reject KYC application
 export async function POST(req, { params }) {
+  const session = await clientPromise.then((client) => client.startSession());
+
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
@@ -99,6 +114,7 @@ export async function POST(req, { params }) {
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
+    const kycApplicationsCollection = db.collection("kyc-applications");
 
     // Verify admin role
     const adminUser = await usersCollection.findOne({ email: token.email });
@@ -109,11 +125,11 @@ export async function POST(req, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { action, rejectionReason, notes } = await req.json();
 
     // Validate action
-    if (!["approve", "reject"].includes(action)) {
+    if (!action || !["approve", "reject"].includes(action)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
@@ -125,26 +141,40 @@ export async function POST(req, { params }) {
       );
     }
 
-    // Get user to update
-    const user = await usersCollection.findOne({
-      _id: new db.ObjectId(id),
-    });
+    // Start transaction for atomic operations
+    session.startTransaction();
+
+    // Get KYC application to update
+    const kycApplication = await kycApplicationsCollection.findOne(
+      { _id: new ObjectId(id) },
+      { session }
+    );
+
+    if (!kycApplication) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: "KYC application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get corresponding user
+    const user = await usersCollection.findOne(
+      { email: kycApplication.userEmail },
+      { session }
+    );
 
     if (!user) {
+      await session.abortTransaction();
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if KYC is in a state that can be reviewed
-    if (!user.kycStatus || user.kycStatus === "none") {
-      return NextResponse.json(
-        {
-          error: "No KYC application found for this user",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (user.kycStatus === "verified" || user.kycStatus === "rejected") {
+    if (
+      kycApplication.status === "verified" ||
+      kycApplication.status === "rejected"
+    ) {
+      await session.abortTransaction();
       return NextResponse.json(
         {
           error: "KYC application has already been reviewed",
@@ -153,8 +183,16 @@ export async function POST(req, { params }) {
       );
     }
 
-    // Prepare update fields
-    const updateFields = {
+    // Prepare update fields for application
+    const applicationUpdateFields = {
+      reviewedAt: new Date(),
+      reviewedBy: adminUser.email,
+      reviewerName: adminUser.name || adminUser.email,
+      updatedAt: new Date(),
+    };
+
+    // Prepare update fields for user
+    const userUpdateFields = {
       kycReviewedAt: new Date(),
       kycReviewedBy: adminUser.email,
       kycReviewerName: adminUser.name || adminUser.email,
@@ -171,52 +209,84 @@ export async function POST(req, { params }) {
     };
 
     if (action === "approve") {
-      updateFields.kycStatus = "verified";
-      updateFields.isVerified = true;
-      // Clear any previous rejection reason
-      updateFields.kycRejectionReason = null;
+      // Update application status
+      applicationUpdateFields.status = "verified";
+      applicationUpdateFields.rejectionReason = null; // Clear any previous rejection reason
+
+      // Update user status and reference
+      userUpdateFields.kycStatus = "verified";
+      userUpdateFields.isVerified = true;
+      userUpdateFields.kycReferenceId = kycApplication._id;
+      userUpdateFields.kycRejectionReason = null; // Clear any previous rejection reason
     } else if (action === "reject") {
-      updateFields.kycStatus = "rejected";
-      updateFields.kycRejectionReason = rejectionReason;
-      updateFields.isVerified = false;
+      // Update application status
+      applicationUpdateFields.status = "rejected";
+      applicationUpdateFields.rejectionReason = rejectionReason;
+
+      // Update user status
+      userUpdateFields.kycStatus = "rejected";
+      userUpdateFields.kycRejectionReason = rejectionReason;
+      userUpdateFields.isVerified = false;
     }
 
-    // Add to review history
-    updateFields.$push = {
-      kycReviewHistory: reviewEntry,
-    };
-
-    // Update user in database
-    const updateResult = await usersCollection.updateOne(
-      { _id: new db.ObjectId(id) },
+    // Update KYC application
+    const applicationUpdateResult = await kycApplicationsCollection.updateOne(
+      { _id: new ObjectId(id) },
       {
-        $set: updateFields,
-        $push: updateFields.$push,
-      }
+        $set: applicationUpdateFields,
+        $push: { reviewHistory: reviewEntry },
+      },
+      { session }
     );
 
-    if (updateResult.modifiedCount === 0) {
+    if (applicationUpdateResult.modifiedCount === 0) {
+      await session.abortTransaction();
       return NextResponse.json(
-        { error: "Failed to update KYC status" },
+        { error: "Failed to update KYC application" },
+        { status: 500 }
+      );
+    }
+
+    // Update user record
+    const userUpdateResult = await usersCollection.updateOne(
+      { email: kycApplication.userEmail },
+      {
+        $set: userUpdateFields,
+        $push: { kycReviewHistory: reviewEntry },
+      },
+      { session }
+    );
+
+    if (userUpdateResult.modifiedCount === 0) {
+      await session.abortTransaction();
+      return NextResponse.json(
+        { error: "Failed to update user KYC status" },
         { status: 500 }
       );
     }
 
     // Log the admin action for audit purposes
-    await db.collection("AdminLogs").insertOne({
-      adminEmail: adminUser.email,
-      adminName: adminUser.name || adminUser.email,
-      action: `KYC_${action.toUpperCase()}`,
-      targetUserId: id,
-      targetUserEmail: user.email,
-      details: {
-        previousStatus: user.kycStatus,
-        newStatus: action === "approve" ? "verified" : "rejected",
-        rejectionReason: rejectionReason || null,
-        notes: notes || "",
+    await db.collection("AdminLogs").insertOne(
+      {
+        adminEmail: adminUser.email,
+        adminName: adminUser.name || adminUser.email,
+        action: `KYC_${action.toUpperCase()}`,
+        targetUserId: user._id.toString(),
+        targetUserEmail: user.email,
+        targetApplicationId: id,
+        details: {
+          previousStatus: kycApplication.status,
+          newStatus: action === "approve" ? "verified" : "rejected",
+          rejectionReason: rejectionReason || null,
+          notes: notes || "",
+        },
+        timestamp: new Date(),
       },
-      timestamp: new Date(),
-    });
+      { session }
+    );
+
+    // Commit transaction
+    await session.commitTransaction();
 
     return NextResponse.json({
       message: `KYC application ${action}ed successfully`,
@@ -225,11 +295,14 @@ export async function POST(req, { params }) {
       reviewedAt: new Date().toISOString(),
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("KYC review error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -246,6 +319,7 @@ export async function PUT(req, { params }) {
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
     const usersCollection = db.collection("Users");
+    const kycApplicationsCollection = db.collection("kyc-applications");
 
     // Verify admin role
     const adminUser = await usersCollection.findOne({ email: token.email });
@@ -256,29 +330,29 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { assignTo, notes, priority } = await req.json();
 
-    const updateFields = {};
+    const updateFields = {
+      updatedAt: new Date(),
+      lastModifiedBy: adminUser.email,
+    };
 
     if (assignTo !== undefined) {
-      updateFields.kycAssignedTo = assignTo;
+      updateFields.assignedTo = assignTo;
     }
 
     if (notes) {
-      updateFields.kycAdminNotes = notes;
+      updateFields.adminNotes = notes;
     }
 
     if (priority) {
-      updateFields.kycPriority = priority;
+      updateFields.priority = priority;
     }
 
-    // Update last modified timestamp
-    updateFields.kycLastModified = new Date();
-    updateFields.kycLastModifiedBy = adminUser.email;
-
-    const updateResult = await usersCollection.updateOne(
-      { _id: new db.ObjectId(id) },
+    // Update KYC application
+    const updateResult = await kycApplicationsCollection.updateOne(
+      { _id: new ObjectId(id) },
       { $set: updateFields }
     );
 
@@ -287,6 +361,34 @@ export async function PUT(req, { params }) {
         { error: "Failed to update KYC application" },
         { status: 500 }
       );
+    }
+
+    // Also update user record for backward compatibility
+    const userUpdateFields = {};
+    if (assignTo !== undefined) {
+      userUpdateFields.kycAssignedTo = assignTo;
+    }
+    if (notes) {
+      userUpdateFields.kycAdminNotes = notes;
+    }
+    if (priority) {
+      userUpdateFields.kycPriority = priority;
+    }
+
+    if (Object.keys(userUpdateFields).length > 0) {
+      userUpdateFields.kycLastModified = new Date();
+      userUpdateFields.kycLastModifiedBy = adminUser.email;
+
+      // Get application to find user email
+      const kycApplication = await kycApplicationsCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      if (kycApplication) {
+        await usersCollection.updateOne(
+          { email: kycApplication.userEmail },
+          { $set: userUpdateFields }
+        );
+      }
     }
 
     return NextResponse.json({

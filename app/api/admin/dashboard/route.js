@@ -88,18 +88,33 @@ export async function GET(req) {
         ])
         .toArray(),
 
-      // KYC applications count
-      db
-        .collection("Users")
-        .aggregate([
-          {
-            $group: {
-              _id: "$kycStatus",
-              count: { $sum: 1 },
+      // KYC applications statistics - get from both collections for accuracy
+      Promise.all([
+        // Count from Users collection (for verifiedKyc, pendingKyc, rejectedKyc)
+        db
+          .collection("Users")
+          .aggregate([
+            {
+              $group: {
+                _id: "$kycStatus",
+                count: { $sum: 1 },
+              },
             },
-          },
-        ])
-        .toArray(),
+          ])
+          .toArray(),
+        // Count from kyc-applications collection for application-specific stats
+        db
+          .collection("kyc-applications")
+          .aggregate([
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+              },
+            },
+          ])
+          .toArray(),
+      ]),
 
       // Recent activity for today
       Promise.all([
@@ -147,13 +162,30 @@ export async function GET(req) {
       { pending: 0, approved: 0, rejected: 0 }
     );
 
-    // Process KYC data
-    const kycStats = kycApplicationsResult.reduce(
+    // Process KYC data from both collections
+    const [userKycStats, applicationKycStats] = kycApplicationsResult;
+
+    // Process user KYC statistics (authoritative for final status)
+    const kycStats = userKycStats.reduce(
       (acc, item) => {
-        acc[item._id || "unverified"] = item.count;
+        const status = item._id || "unverified";
+        acc[status] = item.count;
         return acc;
       },
-      { verified: 0, pending: 0, rejected: 0, unverified: 0 }
+      { verified: 0, pending: 0, rejected: 0, unverified: 0, none: 0 }
+    );
+
+    // Combine pending and none into unverified for cleaner stats
+    const totalUnverified = (kycStats.none || 0) + (kycStats.unverified || 0);
+
+    // Process application KYC statistics for additional insights
+    const appKycStats = applicationKycStats.reduce(
+      (acc, item) => {
+        const status = item._id || "unknown";
+        acc[status] = item.count;
+        return acc;
+      },
+      { verified: 0, pending: 0, rejected: 0 }
     );
 
     // Calculate changes (simplified - using random percentages for now)
@@ -173,9 +205,13 @@ export async function GET(req) {
         pendingSubmissions: submissionsStats.pending,
         approvedSubmissions: submissionsStats.approved,
         rejectedSubmissions: submissionsStats.rejected,
-        verifiedKyc: kycStats.verified,
-        pendingKyc: kycStats.pending,
-        rejectedKyc: kycStats.rejected,
+        verifiedKyc: kycStats.verified || 0,
+        pendingKyc: kycStats.pending || 0,
+        rejectedKyc: kycStats.rejected || 0,
+        totalKycApplications:
+          (appKycStats.verified || 0) +
+          (appKycStats.pending || 0) +
+          (appKycStats.rejected || 0),
       },
       recentActivity: [
         {
