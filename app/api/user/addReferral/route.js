@@ -62,31 +62,81 @@ export async function POST(req) {
       );
     }
 
-    // Prepare referral entry (initial state - not yet verified)
+    // Determine KYC status dynamically
+    let kycStatus = "Not Verified";
+    let earnedAmount = "₹0";
+    let referralDate = new Date().toISOString();
+
+    // Check if user is already KYC verified
+    if (currentUser && currentUser.kycStatus === "verified") {
+      kycStatus = "Verified";
+      earnedAmount = "₹49"; // Reward for already verified users
+      // Set referralDate to when they were verified
+      referralDate = currentUser.kycReviewedAt || new Date().toISOString();
+    }
+
+    // Prepare referral entry with dynamic KYC status
     const referralEntry = {
       name: newUser.name || currentUser?.name || "Unknown",
       email: newUser.email || currentUser?.email || "no-email",
       joinDate: new Date().toISOString(),
-      referralDate: new Date().toISOString(),
+      referralDate: referralDate,
       status: currentUser?.isSuspended ? "Suspended" : "Active",
-      kycStatus: "Not Verified", // Default to Not Verified until KYC is completed
-      earned: "₹0",
+      kycStatus: kycStatus,
+      earned: earnedAmount,
+      referredUserId: currentUser?._id?.toString() || null, // Store the referred user's ID for later updates
     };
 
-    // Update referrer wallet and referrals
-    await users.updateOne(
-      { _id: referrer._id },
-      {
-        $push: {
-          Recent_Referrals: {
-            $each: [referralEntry],
-            $slice: -10, // Keep only latest 10 referrals
+    // If user is already verified, process referral reward immediately
+    if (currentUser && currentUser.kycStatus === "verified") {
+      // Award Rs.49 to referrer immediately
+      const referralReward = 49;
+
+      // Update referrer's wallet and referral records
+      await users.updateOne(
+        { _id: referrer._id },
+        {
+          $push: {
+            Recent_Referrals: {
+              $each: [referralEntry],
+              $slice: -10, // Keep only latest 10 referrals
+            },
           },
-        },
-        $inc: { totalReferralsCount: 1 }, // Increment total referrals count
-        $set: { updatedAt: new Date().toISOString() },
-      }
-    );
+          $inc: {
+            walletBalance: referralReward,
+            totalReferralsCount: 1,
+            dailyReferralsCount: 1,
+          }, // Increment all counts for new verified referral
+          $set: { updatedAt: new Date().toISOString() },
+        }
+      );
+
+      // Add transaction to wallet history
+      await db.collection("walletTransactions").insertOne({
+        userId: referrer._id,
+        type: "credit",
+        amount: referralReward,
+        description: `Referral reward for ${
+          newUser.name || currentUser?.name || "Unknown"
+        }`,
+        timestamp: new Date(),
+      });
+    } else {
+      // Update referrer wallet and referrals (not yet verified)
+      await users.updateOne(
+        { _id: referrer._id },
+        {
+          $push: {
+            Recent_Referrals: {
+              $each: [referralEntry],
+              $slice: -10, // Keep only latest 10 referrals
+            },
+          },
+          $inc: { totalReferralsCount: 1 }, // Increment total referrals count
+          $set: { updatedAt: new Date().toISOString() },
+        }
+      );
+    }
 
     // Update the current user's record with referrerId
     const userEmail = token.email || newUser.email;

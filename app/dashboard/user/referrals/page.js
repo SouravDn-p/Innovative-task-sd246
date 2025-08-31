@@ -250,6 +250,8 @@ export default function UserReferralsPage() {
       status: referral.status || "Active",
       kycStatus: referral.kycStatus || "Not Verified",
       earned: referral.earned || "₹0",
+      verifiedDate:
+        referral.kycStatus === "Verified" ? referral.referralDate : null,
     })
   );
 
@@ -545,13 +547,13 @@ export default function UserReferralsPage() {
                     Add Referral ID
                   </CardTitle>
                   <CardDescription className="text-slate-600">
-                    Enter a referral ID to join a friend's network
+                    Enter a referral ID to join a friend&#39;s network
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <p className="text-sm text-slate-600">
-                      You haven't been referred by anyone yet. If you have a
+                      You haven&#39;t been referred by anyone yet. If you have a
                       referral ID from a friend, add it below!
                     </p>
                     <Button
@@ -599,12 +601,27 @@ export default function UserReferralsPage() {
                           <p className="font-medium text-slate-900">
                             {referral.name}
                           </p>
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Calendar className="h-3 w-3" />
-                            <span>
-                              Joined{" "}
-                              {new Date(referral.joinDate).toLocaleDateString()}
-                            </span>
+                          <div className="flex flex-col gap-1 text-sm text-slate-600">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                Joined{" "}
+                                {new Date(
+                                  referral.joinDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {referral.verifiedDate && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                <span>
+                                  Verified{" "}
+                                  {new Date(
+                                    referral.verifiedDate
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

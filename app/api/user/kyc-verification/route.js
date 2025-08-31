@@ -386,36 +386,76 @@ export async function POST(req) {
             // Award Rs.49 to referrer
             const referralReward = 49;
 
-            // Prepare referral entry for dashboard
-            const referralEntry = {
-              name: user.name || "Unknown",
-              email: user.email || "no-email",
-              joinDate: user.createdAt || new Date().toISOString(),
-              referralDate: new Date().toISOString(),
-              status: user.isSuspended ? "Suspended" : "Active",
-              kycStatus: "Verified",
-              earned: `₹${referralReward}`,
-            };
+            // Check if referral entry already exists for this user using referredUserId or email
+            const existingReferralIndex = referrer.Recent_Referrals?.findIndex(
+              (referral) =>
+                referral.referredUserId === user._id.toString() ||
+                referral.email === (user.email || "no-email")
+            );
 
-            // Update referrer's wallet and referral records
-            await usersCollection.updateOne(
-              { _id: new ObjectId(user.referrerId) },
-              {
-                $inc: {
-                  walletBalance: referralReward,
-                  totalReferralsCount: 1,
-                  dailyReferralsCount: 1,
-                },
-                $push: {
-                  Recent_Referrals: {
-                    $each: [referralEntry],
-                    $slice: -10, // Keep only latest 10 referrals
+            if (
+              existingReferralIndex !== -1 &&
+              existingReferralIndex !== undefined
+            ) {
+              // Update existing referral entry
+              const updatedReferrals = [...referrer.Recent_Referrals];
+              updatedReferrals[existingReferralIndex] = {
+                ...updatedReferrals[existingReferralIndex],
+                kycStatus: "Verified",
+                earned: `₹${referralReward}`,
+                referralDate: new Date().toISOString(), // This will be the verified date
+                status: user.isSuspended ? "Suspended" : "Active",
+              };
+
+              // Update referrer's wallet and referral records
+              await usersCollection.updateOne(
+                { _id: new ObjectId(user.referrerId) },
+                {
+                  $set: {
+                    Recent_Referrals: updatedReferrals,
+                    updatedAt: new Date().toISOString(),
+                  },
+                  $inc: {
+                    walletBalance: referralReward,
+                    totalReferralsCount: 0, // Don't increment since we're updating existing
+                    dailyReferralsCount: 1,
                   },
                 },
-                $set: { updatedAt: new Date().toISOString() },
-              },
-              { session }
-            );
+                { session }
+              );
+            } else {
+              // Create new referral entry (fallback if no existing entry found)
+              const referralEntry = {
+                name: user.name || "Unknown",
+                email: user.email || "no-email",
+                joinDate: user.createdAt || new Date().toISOString(),
+                referralDate: new Date().toISOString(),
+                status: user.isSuspended ? "Suspended" : "Active",
+                kycStatus: "Verified",
+                earned: `₹${referralReward}`,
+                referredUserId: user._id.toString(), // Store the referred user's ID
+              };
+
+              // Update referrer's wallet and referral records
+              await usersCollection.updateOne(
+                { _id: new ObjectId(user.referrerId) },
+                {
+                  $inc: {
+                    walletBalance: referralReward,
+                    totalReferralsCount: 1,
+                    dailyReferralsCount: 1,
+                  },
+                  $push: {
+                    Recent_Referrals: {
+                      $each: [referralEntry],
+                      $slice: -10, // Keep only latest 10 referrals
+                    },
+                  },
+                  $set: { updatedAt: new Date().toISOString() },
+                },
+                { session }
+              );
+            }
 
             // Add transaction to wallet history
             await db.collection("walletTransactions").insertOne(
