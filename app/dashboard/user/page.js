@@ -224,6 +224,28 @@ export default function UserDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+            <CardTitle className="text-sm font-medium text-teal-800">
+              Wallet Balance
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-teal-600" />
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-teal-900">
+              ₹{user?.walletBalance?.toFixed(2) || "0.00"}
+            </div>
+            <Button
+              className="mt-2 w-full text-xs bg-teal-600 hover:bg-teal-700"
+              size="sm"
+              onClick={() => router.push("/dashboard/user/wallet")}
+            >
+              View Wallet
+            </Button>
+          </CardContent>
+        </Card>
       </motion.div>
 
       <motion.div

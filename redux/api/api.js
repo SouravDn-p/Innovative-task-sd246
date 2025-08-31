@@ -258,7 +258,7 @@ export const api = createApi({
     // WALLET SYSTEM (ACTIVE)
     // ==========================================
     getWallet: builder.query({
-      query: () => "wallet",
+      query: () => "user/wallet",
       providesTags: ["Wallet"],
     }),
     getTransactions: builder.query({
