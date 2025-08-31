@@ -105,15 +105,26 @@ export default function UserReferralsPage() {
 
   // Use user's own ID as their referral ID for sharing with others
   const userReferralId = userData?.user?._id;
-  const referralLink = `${window.location.origin}/dashboard/user/referrals?ref=${userReferralId}`;
+  const [referralLink, setReferralLink] = useState("");
 
   useEffect(() => {
-    // Check for referral ID in URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const refParam = urlParams.get("ref");
-    if (refParam && !hasReferralId) {
-      setReferralInput(refParam);
-      setShowReferralModal(true);
+    // Set referral link only on client side
+    if (userReferralId && typeof window !== "undefined") {
+      setReferralLink(
+        `${window.location.origin}/dashboard/user/referrals?ref=${userReferralId}`
+      );
+    }
+  }, [userReferralId]);
+
+  useEffect(() => {
+    // Check for referral ID in URL params (only on client side)
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get("ref");
+      if (refParam && !hasReferralId) {
+        setReferralInput(refParam);
+        setShowReferralModal(true);
+      }
     }
   }, [hasReferralId]);
 

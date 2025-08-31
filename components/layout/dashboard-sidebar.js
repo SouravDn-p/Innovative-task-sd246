@@ -70,13 +70,13 @@ export default function DashboardSidebar({
         `bg-white border-r border-teal-200 flex flex-col ${
           isMobile ? "h-full" : ""
         } transition-all duration-300 overflow-hidden shadow-lg`,
-        isMobile ? "w-80" : collapsed ? "w-16" : "w-80",
+        isMobile ? "w-64" : collapsed ? "w-16" : "w-64",
         isMobile && "fixed left-0 top-0 z-50"
       )}
       initial={false}
       animate={collapsed && !isMobile ? "collapsed" : "expanded"}
       variants={{
-        expanded: { width: "20rem" },
+        expanded: { width: "16rem" },
         collapsed: { width: "4rem" },
       }}
     >
@@ -252,12 +252,12 @@ export default function DashboardSidebar({
                             <Link
                               href={subItem.href}
                               className={cn(
-                                "flex items-center rounded px-8 py-2 text-sm text-teal-600 hover:text-white hover:bg-teal-500 transition-colors duration-200",
+                                "flex items-center rounded px-4 py-2 text-sm text-teal-600 hover:text-white hover:bg-teal-500 transition-colors duration-200",
                                 isSubActive && "text-white bg-teal-500"
                               )}
                             >
-                              <div className="w-2 h-2 bg-teal-500 rounded-full mr-3"></div>
-                              {subItem.name}
+                              <div className="w-2 h-2 bg-teal-500 rounded-full mr-2"></div>
+                              <span className="truncate">{subItem.name}</span>
                             </Link>
                           </li>
                         );

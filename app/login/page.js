@@ -115,7 +115,7 @@ function LoginPage() {
       if (signInResult?.error) {
         throw new Error("Failed to update session");
       }
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       Swal.fire({
         toast: true,

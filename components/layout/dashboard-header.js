@@ -84,9 +84,9 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-white to-gray-50 border-b border-teal-200 px-6 py-4 flex-shrink-0 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <header className="bg-gradient-to-r from-white to-gray-50 border-b border-teal-200 px-4 py-3 sm:px-6 sm:py-4 flex-shrink-0 shadow-sm w-full">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Button
             variant="ghost"
             size="sm"
@@ -94,53 +94,54 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
             className="p-2 hover:bg-teal-50 transition-colors duration-200"
           >
             {isSidebarOpen ? (
-              <ListCollapse className="w-8 h-8 text-teal-600" />
+              <ListCollapse className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" />
             ) : (
-              <AlignLeft className="w-8 h-8 text-teal-600" />
+              <AlignLeft className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" />
             )}
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => window.location.reload()}
-            className="text-teal-600 border-teal-200 hover:bg-teal-50 bg-transparent transition-colors duration-200"
+            className="text-teal-600 border-teal-200 hover:bg-teal-50 bg-transparent transition-colors duration-200 text-xs sm:text-sm"
           >
-            <RotateCcw className="w-4 h-4 mr-2 text-teal-600" />
-            Refresh {user?.name ? `(${user.name})` : ""}
+            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-teal-600" />
+            <span className="hidden sm:inline">Refresh</span>
+            {user?.name ? ` (${user.name})` : ""}
           </Button>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleFullscreen}
-            className="transition-colors duration-200 hover:bg-teal-50"
+            className="transition-colors duration-200 hover:bg-teal-50 p-2"
           >
             {isFullscreen ? (
-              <Minimize2 className="w-8 h-8 text-teal-600" />
+              <Minimize2 className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" />
             ) : (
-              <Fullscreen className="w-8 h-8 text-teal-600" />
+              <Fullscreen className="w-6 h-6 sm:w-8 sm:h-8 text-teal-600" />
             )}
           </Button>
 
           {status === "loading" ? (
-            <div className="h-10 w-32 bg-gray-200 animate-pulse rounded-full"></div>
+            <div className="h-8 w-24 sm:h-10 sm:w-32 bg-gray-200 animate-pulse rounded-full"></div>
           ) : session ? (
             <div className="relative" ref={profileMenuRef}>
               <Button
                 variant="ghost"
-                className="relative h-10 w-auto px-3 rounded-full bg-teal-50 hover:bg-teal-100 transition-colors duration-200 shadow-sm"
+                className="relative h-8 w-auto px-2 sm:h-10 sm:px-3 rounded-full bg-teal-50 hover:bg-teal-100 transition-colors duration-200 shadow-sm"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                 aria-expanded={isProfileMenuOpen}
                 aria-haspopup="true"
               >
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                     <AvatarImage
                       src={user?.image || "/placeholder.svg?height=32&width=32"}
                       alt={user?.name || "User"}
                     />
-                    <AvatarFallback className="bg-teal-500 text-white">
+                    <AvatarFallback className="bg-teal-500 text-white text-xs sm:text-sm">
                       {user?.name
                         ? user.name
                             .split(" ")
@@ -151,11 +152,11 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         : "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="text-left hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900 truncate max-w-24">
+                  <div className="text-left hidden sm:block min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-20 sm:max-w-24">
                       {user?.name || "User"}
                     </p>
-                    <p className="text-xs text-teal-600 capitalize">
+                    <p className="text-xs text-teal-600 capitalize truncate">
                       {getUserRole()}
                     </p>
                   </div>
@@ -165,7 +166,7 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
               {isProfileMenuOpen && (
                 <div
                   className={cn(
-                    "absolute right-0 mt-2 w-56 rounded-xl border border-teal-200 bg-white p-1 text-popover-foreground shadow-xl z-50",
+                    "absolute right-0 mt-2 w-48 sm:w-56 rounded-xl border border-teal-200 bg-white p-1 text-popover-foreground shadow-xl z-50",
                     "origin-top-right animate-in fade-in-0 zoom-in-95"
                   )}
                 >
@@ -221,7 +222,7 @@ const DashboardHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
             </div>
           ) : (
             <Link href="/login">
-              <Button className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl">
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2">
                 Sign In
               </Button>
             </Link>

@@ -21,7 +21,7 @@ export function MobileNav({ activeTab, onTabChange }) {
   // Hardcoded five routes per role, including Home and excluding Settings
   const simplifiedMenus = {
     user: [
-      { title: "Dashboard", icon: Home, href: "/" },
+      { title: "Dashboard", icon: Home, href: "/dashboard/user" },
       { title: "Tasks", icon: CheckCircle, href: "/dashboard/user/task" },
       { title: "Wallet", icon: DollarSign, href: "/dashboard/user/wallet" },
       { title: "Profile", icon: User, href: "/dashboard/user/profile" },
@@ -32,7 +32,7 @@ export function MobileNav({ activeTab, onTabChange }) {
       {
         title: "Create",
         icon: CheckCircle,
-        href: "/dashboard/advertiser/campaigns/create",
+        href: "/dashboard/advertiser/create-task",
       },
       {
         title: "Wallet",
@@ -70,8 +70,8 @@ export function MobileNav({ activeTab, onTabChange }) {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2">
-      <div className="flex justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 z-50 w-full max-w-full">
+      <div className="flex justify-around w-full max-w-full">
         {flattenedNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -81,16 +81,17 @@ export function MobileNav({ activeTab, onTabChange }) {
               key={item.id}
               href={item.href}
               onClick={() => onTabChange(item.id)}
+              className="flex-1 min-w-0"
             >
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex flex-col gap-1 h-auto py-2 px-3 ${
+                className={`flex flex-col gap-1 h-auto py-2 px-1 w-full ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                <span className="text-xs">{item.label}</span>
+                <span className="text-xs truncate">{item.label}</span>
               </Button>
             </Link>
           );

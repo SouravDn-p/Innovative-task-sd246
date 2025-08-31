@@ -119,5 +119,48 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Ensure all elements respect the viewport width */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Fix for mobile dashboard overflow issues */
+  .dashboard-layout {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .dashboard-content {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Ensure cards don't overflow on mobile */
+  .card-container {
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Additional mobile-specific fixes */
+@media (max-width: 768px) {
+  /* Prevent text overflow */
+  .truncate-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Ensure modals don't overflow */
+  .mobile-modal {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
   }
 }

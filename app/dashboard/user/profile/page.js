@@ -378,19 +378,19 @@ function UserProfilePage() {
   if (!session) {
     return (
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="text-center space-y-6 p-8 bg-white rounded-2xl shadow-xl border border-teal-200"
+          className="text-center space-y-6 p-6 bg-white rounded-2xl shadow-xl border border-teal-200 w-full max-w-md"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-teal-900">Access Profile</h1>
+            <h1 className="text-2xl font-bold text-teal-900">Access Profile</h1>
             <p className="text-teal-600">
               You need to be logged in to view your profile
             </p>
@@ -398,7 +398,7 @@ function UserProfilePage() {
           <div className="space-y-4">
             <Button
               onClick={() => router.push("/login")}
-              className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 transition-all transform hover:scale-105"
+              className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 transition-all w-full"
               size="lg"
             >
               Login to Continue
@@ -422,7 +422,7 @@ function UserProfilePage() {
   if (userLoading || profileLoading || kycLoading || taskLoading) {
     return (
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -438,11 +438,11 @@ function UserProfilePage() {
   if (userError || profileError) {
     return (
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="text-center space-y-4 p-8 bg-white rounded-2xl shadow-xl border border-red-200">
+        <div className="text-center space-y-4 p-6 bg-white rounded-2xl shadow-xl border border-red-200 w-full max-w-md">
           <div className="text-red-600">
             <h2 className="text-xl font-bold mb-2">Error Loading Profile</h2>
             <p className="text-sm">
@@ -455,7 +455,7 @@ function UserProfilePage() {
           </div>
           <Button
             onClick={() => window.location.reload()}
-            className="bg-teal-600 hover:bg-teal-700"
+            className="bg-teal-600 hover:bg-teal-700 w-full"
           >
             Try Again
           </Button>
@@ -465,12 +465,12 @@ function UserProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Profile Header Card */}
       <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
-        <CardContent className="p-6 relative">
-          <div className="flex items-center gap-4">
+        <CardContent className="p-4 sm:p-6 relative">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative">
               <Avatar className="h-16 w-16 border-2 border-teal-200 ring-2 ring-teal-100">
                 <AvatarImage src={user.image} alt={user.name} />
@@ -486,10 +486,10 @@ function UserProfilePage() {
                 <Camera className="h-3 w-3" />
               </Button>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
+            <div className="flex-1 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-bold text-teal-900">
+                  <h2 className="text-xl font-bold text-teal-900 break-words">
                     {user.name}
                   </h2>
                   <p className="text-sm text-teal-600">@{user.username}</p>
@@ -498,26 +498,27 @@ function UserProfilePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(!isEditing)}
-                  className="border-teal-200 text-teal-700 hover:bg-teal-100"
+                  className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
                 >
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  <span className="hidden xs:inline">Edit Profile</span>
+                  <span className="xs:hidden">Edit</span>
                 </Button>
               </div>
-              <div className="flex items-center gap-6 mt-3">
-                <div className="text-center">
+              <div className="grid grid-cols-3 gap-3 mt-3">
+                <div className="text-center p-2 bg-teal-50 rounded-lg">
                   <p className="text-lg font-bold text-teal-900">
                     ₹{safeNumber(user.walletBalance).toFixed(2)}
                   </p>
-                  <p className="text-xs text-teal-600">Wallet Balance</p>
+                  <p className="text-xs text-teal-600">Wallet</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-2 bg-teal-50 rounded-lg">
                   <p className="text-lg font-bold text-teal-900">
                     {safeNumber(user.tasksCompleted)}
                   </p>
-                  <p className="text-xs text-teal-600">Tasks Completed</p>
+                  <p className="text-xs text-teal-600">Tasks</p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-2 bg-teal-50 rounded-lg">
                   <p className="text-lg font-bold text-teal-900">
                     {safeNumber(user.referralCount?.total)}
                   </p>
@@ -533,38 +534,38 @@ function UserProfilePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <Card className="border-teal-200">
           <CardContent className="p-0">
-            <TabsList className="grid w-full grid-cols-5 bg-white border-b border-teal-200">
+            <TabsList className="grid w-full grid-cols-5 bg-white border-b border-teal-200 overflow-x-auto">
               <TabsTrigger
                 value="personal"
-                className="flex flex-col gap-1 p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700"
+                className="flex flex-col gap-1 p-2 xs:p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 min-w-[60px]"
               >
                 <User className="h-4 w-4" />
                 <span className="text-xs">Personal</span>
               </TabsTrigger>
               <TabsTrigger
                 value="kyc"
-                className="flex flex-col gap-1 p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700"
+                className="flex flex-col gap-1 p-2 xs:p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 min-w-[60px]"
               >
                 <Shield className="h-4 w-4" />
                 <span className="text-xs">KYC</span>
               </TabsTrigger>
               <TabsTrigger
                 value="wallet"
-                className="flex flex-col gap-1 p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700"
+                className="flex flex-col gap-1 p-2 xs:p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 min-w-[60px]"
               >
                 <Wallet className="h-4 w-4" />
                 <span className="text-xs">Wallet</span>
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
-                className="flex flex-col gap-1 p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700"
+                className="flex flex-col gap-1 p-2 xs:p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 min-w-[60px]"
               >
                 <Activity className="h-4 w-4" />
                 <span className="text-xs">Activity</span>
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="flex flex-col gap-1 p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700"
+                className="flex flex-col gap-1 p-2 xs:p-3 data-[state=active]:bg-teal-100 data-[state=active]:text-teal-700 min-w-[60px]"
               >
                 <Settings className="h-4 w-4" />
                 <span className="text-xs">Settings</span>
@@ -574,7 +575,7 @@ function UserProfilePage() {
         </Card>
 
         {/* Personal Information Tab */}
-        <TabsContent value="personal" className="space-y-4 p-6">
+        <TabsContent value="personal" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -596,7 +597,7 @@ function UserProfilePage() {
                       setEditData({ ...editData, name: e.target.value })
                     }
                     disabled={!isEditing}
-                    className="border-teal-200 focus:border-teal-500"
+                    className="border-teal-200 focus:border-teal-500 w-full"
                   />
                 </div>
                 <div className="space-y-2">
@@ -607,7 +608,7 @@ function UserProfilePage() {
                     id="username"
                     value={user.username}
                     disabled
-                    className="bg-teal-50 border-teal-200"
+                    className="bg-teal-50 border-teal-200 w-full"
                   />
                 </div>
                 <div className="space-y-2">
@@ -619,12 +620,12 @@ function UserProfilePage() {
                       id="email"
                       value={user.email}
                       disabled
-                      className="bg-teal-50 border-teal-200"
+                      className="bg-teal-50 border-teal-200 w-full"
                     />
                     {user.isVerified ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                     ) : (
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
                     )}
                   </div>
                 </div>
@@ -642,9 +643,9 @@ function UserProfilePage() {
                         setEditData({ ...editData, phone: e.target.value })
                       }
                       disabled={!isEditing}
-                      className="border-teal-200 focus:border-teal-500"
+                      className="border-teal-200 focus:border-teal-500 w-full"
                     />
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -666,7 +667,7 @@ function UserProfilePage() {
                       })
                     }
                     disabled={!isEditing}
-                    className="border-teal-200 focus:border-teal-500"
+                    className="border-teal-200 focus:border-teal-500 w-full"
                   />
                 </div>
                 <div className="space-y-2">
@@ -677,10 +678,10 @@ function UserProfilePage() {
                     id="joinDate"
                     value={user.joinDate}
                     disabled
-                    className="bg-teal-50 border-teal-200"
+                    className="bg-teal-50 border-teal-200 w-full"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="location" className="text-teal-700">
                     Location
                   </Label>
@@ -696,7 +697,7 @@ function UserProfilePage() {
                     }
                     disabled={!isEditing}
                     placeholder="Enter your location"
-                    className="border-teal-200 focus:border-teal-500"
+                    className="border-teal-200 focus:border-teal-500 w-full"
                   />
                 </div>
               </div>
@@ -718,7 +719,7 @@ function UserProfilePage() {
                   }
                   disabled={!isEditing}
                   placeholder="Tell us about yourself..."
-                  className="border-teal-200 focus:border-teal-500 min-h-[80px]"
+                  className="border-teal-200 focus:border-teal-500 min-h-[80px] w-full"
                   maxLength={500}
                 />
                 {isEditing && (
@@ -728,17 +729,17 @@ function UserProfilePage() {
                 )}
               </div>
               {isEditing && (
-                <div className="flex gap-2 pt-4">
+                <div className="flex flex-col sm:flex-row gap-2 pt-4">
                   <Button
                     onClick={handleSave}
-                    className="bg-teal-600 hover:bg-teal-700"
+                    className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
                   >
                     Save Changes
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50 w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
@@ -749,7 +750,7 @@ function UserProfilePage() {
         </TabsContent>
 
         {/* KYC Information Tab */}
-        <TabsContent value="kyc" className="space-y-4">
+        <TabsContent value="kyc" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -759,7 +760,7 @@ function UserProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 relative">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="font-medium text-teal-800">
                     Verification Status
@@ -775,9 +776,9 @@ function UserProfilePage() {
 
               {user.kycStatus === "none" && (
                 <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600" />
-                    <div>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                    <div className="flex-1">
                       <p className="font-medium text-amber-800 dark:text-amber-200">
                         KYC Verification Required
                       </p>
@@ -787,7 +788,7 @@ function UserProfilePage() {
                     </div>
                     <Button
                       size="sm"
-                      className="ml-auto bg-teal-600 hover:bg-teal-700"
+                      className="bg-teal-600 hover:bg-teal-700 whitespace-nowrap mt-2 sm:mt-0"
                     >
                       Pay ₹49 & Verify
                     </Button>
@@ -797,9 +798,9 @@ function UserProfilePage() {
 
               {user.kycStatus === "rejected" && (
                 <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
-                    <div>
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                    <div className="flex-1">
                       <p className="font-medium text-red-800 dark:text-red-200">
                         Account Suspended
                       </p>
@@ -807,7 +808,11 @@ function UserProfilePage() {
                         Pay ₹49 to reactivate your account
                       </p>
                     </div>
-                    <Button size="sm" variant="destructive" className="ml-auto">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="whitespace-nowrap mt-2 sm:mt-0"
+                    >
                       Pay ₹49 & Reactivate
                     </Button>
                   </div>
@@ -837,7 +842,7 @@ function UserProfilePage() {
         </TabsContent>
 
         {/* Wallet & Earnings Tab */}
-        <TabsContent value="wallet" className="space-y-4">
+        <TabsContent value="wallet" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -845,11 +850,11 @@ function UserProfilePage() {
                 Current Balance
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
-              <p className="text-3xl font-bold text-teal-900">
+            <CardContent className="relative p-4 sm:p-6">
+              <p className="text-2xl sm:text-3xl font-bold text-teal-900 text-center">
                 ₹{safeNumber(user.walletBalance).toFixed(2)}
               </p>
-              <p className="text-sm text-teal-600 mt-1">
+              <p className="text-sm text-teal-600 mt-1 text-center">
                 Available for withdrawal
               </p>
             </CardContent>
@@ -862,11 +867,13 @@ function UserProfilePage() {
                 Total Earnings
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
-              <p className="text-3xl font-bold text-green-600">
+            <CardContent className="relative p-4 sm:p-6">
+              <p className="text-2xl sm:text-3xl font-bold text-green-600 text-center">
                 ₹{safeNumber(user.totalEarnings).toFixed(2)}
               </p>
-              <p className="text-sm text-teal-600 mt-1">Lifetime earnings</p>
+              <p className="text-sm text-teal-600 mt-1 text-center">
+                Lifetime earnings
+              </p>
             </CardContent>
           </Card>
 
@@ -878,7 +885,7 @@ function UserProfilePage() {
                 Earnings Breakdown
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
+            <CardContent className="space-y-4 relative p-4 sm:p-6">
               <div className="flex justify-between items-center">
                 <span className="text-teal-700">Referral Earnings</span>
                 <span className="font-medium text-teal-900">
@@ -898,25 +905,26 @@ function UserProfilePage() {
                   ₹{safeNumber(user.withdrawableBalance).toFixed(2)}
                 </span>
               </div>
-              <Button
-                className="w-full bg-teal-600 hover:bg-teal-700"
-                disabled={user.kycStatus !== "verified"}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Withdraw Funds
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-teal-200 text-teal-700 hover:bg-teal-50"
-                onClick={() => router.push("/wallet")}
-              >
-                View Transaction History
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button
+                  className="bg-teal-600 hover:bg-teal-700 w-full"
+                  disabled={user.kycStatus !== "verified"}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Withdraw Funds
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-teal-200 text-teal-700 hover:bg-teal-50 w-full"
+                  onClick={() => router.push("/wallet")}
+                >
+                  View History
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
           {/* Referral Information */}
-
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -925,57 +933,59 @@ function UserProfilePage() {
                 Referral Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
-              <div className="space-y-2">
+            <CardContent className="space-y-4 relative p-4 sm:p-6">
+              <div className="space-y-3">
                 <Label className="text-teal-700">Your Referral Code</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     value={user.referralCode}
                     disabled
-                    className="bg-teal-50 border-teal-200"
+                    className="bg-teal-50 border-teal-200 flex-1"
                   />
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(user.referralCode)}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-100"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-4 w-4 mr-1" />
+                    <span className="hidden xs:inline">Copy</span>
                   </Button>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-teal-700">Referral Link</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     value={generateReferralLink()}
                     disabled
-                    className="bg-teal-50 border-teal-200 text-xs"
+                    className="bg-teal-50 border-teal-200 text-xs flex-1"
                   />
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(generateReferralLink())}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-100"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-4 w-4 mr-1" />
+                    <span className="hidden xs:inline">Copy</span>
                   </Button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-3 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg">
-                  <p className="text-2xl font-bold text-teal-900">
+                  <p className="text-xl font-bold text-teal-900">
                     {safeNumber(user.referralCount?.today)}
                   </p>
-                  <p className="text-sm text-teal-600">Today</p>
+                  <p className="text-xs text-teal-600">Today</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg">
-                  <p className="text-2xl font-bold text-teal-900">
+                  <p className="text-xl font-bold text-teal-900">
                     {safeNumber(user.referralCount?.total)}
                   </p>
-                  <p className="text-sm text-teal-600">Total</p>
+                  <p className="text-xs text-teal-600">Total</p>
                 </div>
               </div>
 
@@ -1004,7 +1014,7 @@ function UserProfilePage() {
         </TabsContent>
 
         {/* Activity & Stats Tab */}
-        <TabsContent value="activity" className="space-y-4">
+        <TabsContent value="activity" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -1013,31 +1023,31 @@ function UserProfilePage() {
                 Task & Activity Stats
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-4 relative p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                  <p className="text-2xl font-bold text-green-700">
+                  <p className="text-xl font-bold text-green-700">
                     {safeNumber(user.tasksCompleted)}
                   </p>
-                  <p className="text-sm text-green-600">Completed</p>
+                  <p className="text-xs text-green-600">Completed</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg">
-                  <p className="text-2xl font-bold text-yellow-700">
+                  <p className="text-xl font-bold text-yellow-700">
                     {safeNumber(user.pendingSubmissions)}
                   </p>
-                  <p className="text-sm text-yellow-600">Pending</p>
+                  <p className="text-xs text-yellow-600">Pending</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-700">
+                  <p className="text-xl font-bold text-blue-700">
                     {safeNumber(user.approvedSubmissions)}
                   </p>
-                  <p className="text-sm text-blue-600">Approved</p>
+                  <p className="text-xs text-blue-600">Approved</p>
                 </div>
                 <div className="text-center p-3 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-lg">
-                  <p className="text-2xl font-bold text-red-700">
+                  <p className="text-xl font-bold text-red-700">
                     {safeNumber(user.rejectedSubmissions)}
                   </p>
-                  <p className="text-sm text-red-600">Rejected</p>
+                  <p className="text-xs text-red-600">Rejected</p>
                 </div>
               </div>
 
@@ -1075,7 +1085,7 @@ function UserProfilePage() {
         </TabsContent>
 
         {/* Settings & Security Tab */}
-        <TabsContent value="settings" className="space-y-4">
+        <TabsContent value="settings" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
             <CardHeader className="relative">
@@ -1084,8 +1094,8 @@ function UserProfilePage() {
                 Security Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
-              <div className="space-y-2">
+            <CardContent className="space-y-4 relative p-4 sm:p-6">
+              <div className="space-y-3">
                 <Label htmlFor="currentPassword" className="text-teal-700">
                   Current Password
                 </Label>
@@ -1094,7 +1104,7 @@ function UserProfilePage() {
                     id="currentPassword"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter current password"
-                    className="border-teal-200 focus:border-teal-500"
+                    className="border-teal-200 focus:border-teal-500 w-full"
                   />
                   <Button
                     type="button"
@@ -1111,27 +1121,29 @@ function UserProfilePage() {
                   </Button>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full border-teal-200 text-teal-700 hover:bg-teal-100"
-              >
-                <Key className="h-4 w-4 mr-2" />
-                Change Password
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-teal-200 text-teal-700 hover:bg-teal-100"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Enable 2FA (Coming Soon)
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-teal-200 text-teal-700 hover:bg-teal-100"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Active Sessions
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Change Password
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  <span className="truncate">Enable 2FA (Coming Soon)</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full sm:col-span-2"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Active Sessions
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -1143,25 +1155,25 @@ function UserProfilePage() {
                 Notifications & Support
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 relative">
+            <CardContent className="space-y-4 relative p-4 sm:p-6">
               <div className="space-y-3">
                 <p className="text-sm font-medium text-teal-800">
                   Recent Notifications
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-2 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-teal-900">
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-teal-900 truncate">
                         Referral credited - ₹50
                       </p>
                       <p className="text-xs text-teal-600">2 hours ago</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-2 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-teal-900">
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-teal-900 truncate">
                         Task approved - ₹25
                       </p>
                       <p className="text-xs text-teal-600">5 hours ago</p>
@@ -1173,14 +1185,14 @@ function UserProfilePage() {
               <div className="grid grid-cols-1 gap-3">
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100"
+                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Contact Support (WhatsApp)
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100"
+                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
                   Help & FAQ

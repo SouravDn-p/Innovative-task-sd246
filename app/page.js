@@ -9,7 +9,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <Header />
       <Hero />
-      <TaskEarnerHub />
+      {/* <TaskEarnerHub /> */}
       <EarnTaskFeatures />
       <Footer />
     </div>

@@ -145,7 +145,7 @@ export default function UserDashboard() {
     >
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
       >
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -250,7 +250,7 @@ export default function UserDashboard() {
 
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
@@ -277,7 +277,7 @@ export default function UserDashboard() {
                         }`}
                       />
                       <div>
-                        <p className="font-medium text-teal-900">
+                        <p className="font-medium text-teal-900 text-sm">
                           {task.title}
                         </p>
                         <p className="text-sm text-teal-600">{task.date}</p>
@@ -308,9 +308,10 @@ export default function UserDashboard() {
               )}
             </div>
             <Button
-              className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
+              className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-xs"
               aria-label="View all tasks"
               onClick={() => router.push("/dashboard/user/task")}
+              size="sm"
             >
               View All Tasks
             </Button>
@@ -370,7 +371,7 @@ export default function UserDashboard() {
                     <achievement.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-teal-900">
+                    <p className="font-medium text-teal-900 text-sm">
                       {achievement.name}
                     </p>
                     <p className="text-sm text-teal-600">
@@ -386,9 +387,10 @@ export default function UserDashboard() {
               ))}
             </div>
             <Button
-              className="w-full mt-4 bg-teal-600 hover:bg-teal-700"
+              className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-xs"
               aria-label="View all achievements"
               onClick={() => router.push("/dashboard/user")}
+              size="sm"
             >
               View All Achievements
             </Button>

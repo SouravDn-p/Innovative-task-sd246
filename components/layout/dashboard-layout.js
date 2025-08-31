@@ -24,7 +24,7 @@ function DashboardContent({ children }) {
         />
       )}
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen w-full max-w-full overflow-x-hidden">
         {/* Header for both mobile and desktop */}
         <DashboardHeader
           isSidebarOpen={isSidebarOpen}
@@ -32,8 +32,12 @@ function DashboardContent({ children }) {
         />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className={`${isMobile ? "p-4 pb-20" : "p-6"} min-h-full`}>
+        <main className="flex-1 overflow-y-auto w-full max-w-full">
+          <div
+            className={`${
+              isMobile ? "p-4 pb-24" : "p-6"
+            } min-h-full w-full max-w-full overflow-x-hidden`}
+          >
             {children}
           </div>
         </main>
@@ -47,13 +51,13 @@ function DashboardContent({ children }) {
       {/* Mobile Sidebar Overlay */}
       {isMobile && isSidebarOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop */}`
           <div
             className="fixed inset-0 bg-black/50 z-40 transition-opacity"
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Mobile Sidebar */}
-          <div className="fixed left-0 top-0 h-full z-50 w-80 transform transition-transform duration-300 ease-in-out">
+          <div className="fixed left-0 top-0 h-full z-50 w-64 transform transition-transform duration-300 ease-in-out">
             <DashboardSidebar
               role={role}
               collapsed={false}

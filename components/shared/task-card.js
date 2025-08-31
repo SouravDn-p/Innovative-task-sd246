@@ -129,14 +129,16 @@ export function TaskCard({ title, reward, description, difficulty, taskId }) {
   };
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-6 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-4">
+    <Card className="h-full hover:shadow-lg transition-shadow duration-200 w-full max-w-full">
+      <CardContent className="p-4 md:p-6 flex flex-col h-full">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 gap-2">
           <div className="flex items-center gap-2">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-lg leading-tight">{title}</h3>
+            <ClipboardCheck className="h-5 w-5 text-primary flex-shrink-0" />
+            <h3 className="font-semibold text-lg leading-tight break-words">
+              {title}
+            </h3>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge className={config.color}>
               <div className="flex items-center gap-1">
                 {Array.from({ length: config.flames }).map((_, i) => (
@@ -157,18 +159,18 @@ export function TaskCard({ title, reward, description, difficulty, taskId }) {
           </div>
         </div>
 
-        <p className="text-muted-foreground text-sm mb-4 flex-grow leading-relaxed">
+        <p className="text-muted-foreground text-sm mb-4 flex-grow leading-relaxed break-words">
           {description}
         </p>
 
-        <div className="flex items-center justify-between mt-auto">
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-auto gap-2">
           <div className="flex items-center gap-1 text-primary font-semibold">
             <Coins className="h-4 w-4" />
             <span>${reward}</span>
           </div>
           <Button
             size="sm"
-            className="px-4 bg-teal-500 hover:bg-teal-600"
+            className="px-4 bg-teal-500 hover:bg-teal-600 w-full sm:w-auto"
             onClick={handleStartTask}
             disabled={taskStarted}
           >

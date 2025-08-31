@@ -400,7 +400,7 @@ function TasksPageContent() {
 
   if (status === "loading" || kycLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
       </div>
     );
@@ -412,23 +412,27 @@ function TasksPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-teal-200 p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="text-teal-700 hover:bg-teal-100"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-teal-900">My Tasks</h1>
-            <p className="text-sm text-teal-600">
-              {userEmail ? `Tasks for ${userEmail}` : "Login to see your tasks"}
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="text-teal-700 hover:bg-teal-100 p-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold text-teal-900">My Tasks</h1>
+              <p className="text-sm text-teal-600 truncate max-w-[200px]">
+                {userEmail
+                  ? `Tasks for ${userEmail}`
+                  : "Login to see your tasks"}
+              </p>
+            </div>
           </div>
           <div className="ml-auto">
             <Button
@@ -438,10 +442,10 @@ function TasksPageContent() {
                 refetchAvailable();
                 refetchUserTasks();
               }}
-              className="border-teal-200 text-teal-700 hover:bg-teal-50"
+              className="border-teal-200 text-teal-700 hover:bg-teal-50 whitespace-nowrap"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              <span className="hidden xs:inline">Refresh</span>
             </Button>
           </div>
         </div>
@@ -456,7 +460,7 @@ function TasksPageContent() {
               placeholder="Search tasks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-teal-200 focus:border-teal-500 bg-white"
+              className="pl-10 border-teal-200 focus:border-teal-500 bg-white w-full"
             />
           </div>
         </div>
@@ -467,30 +471,38 @@ function TasksPageContent() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-4 bg-white border border-teal-200">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-white border border-teal-200 overflow-x-auto">
             <TabsTrigger
               value="available"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
             >
-              Available ({availableTasks.length})
+              <span className="hidden xs:inline">Available</span>
+              <span className="xs:hidden">Avail</span>
+              <span className="ml-1">({availableTasks.length})</span>
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
             >
-              Active ({activeTasksData.length})
+              <span className="hidden xs:inline">Active</span>
+              <span className="xs:hidden">Active</span>
+              <span className="ml-1">({activeTasksData.length})</span>
             </TabsTrigger>
             <TabsTrigger
               value="pending"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
             >
-              Pending ({pendingTasksData.length})
+              <span className="hidden xs:inline">Pending</span>
+              <span className="xs:hidden">Pend</span>
+              <span className="ml-1">({pendingTasksData.length})</span>
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
             >
-              Completed ({completedTasksData.length})
+              <span className="hidden xs:inline">Completed</span>
+              <span className="xs:hidden">Done</span>
+              <span className="ml-1">({completedTasksData.length})</span>
             </TabsTrigger>
           </TabsList>
           {/* Available Tasks */}
@@ -505,15 +517,15 @@ function TasksPageContent() {
                 {availableTasks.map((task) => (
                   <Card
                     key={task.id || task._id}
-                    className="hover:shadow-md transition-shadow border-teal-200"
+                    className="hover:shadow-md transition-shadow border-teal-200 w-full"
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-base text-teal-900">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base text-teal-900 break-words">
                             {task.title}
                           </CardTitle>
-                          <CardDescription className="text-sm mt-1 text-teal-600">
+                          <CardDescription className="text-sm mt-1 text-teal-600 break-words">
                             {task.description}
                           </CardDescription>
                         </div>
@@ -524,8 +536,8 @@ function TasksPageContent() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm gap-2">
+                          <div className="flex flex-wrap items-center gap-4">
                             <span className="font-semibold text-teal-700 flex items-center">
                               <DollarSign className="h-4 w-4 mr-1" />₹
                               {task.reward}
@@ -537,7 +549,7 @@ function TasksPageContent() {
                           </div>
                           <Badge
                             variant="outline"
-                            className="border-teal-200 text-teal-700"
+                            className="border-teal-200 text-teal-700 whitespace-nowrap"
                           >
                             {task.category}
                           </Badge>
@@ -570,15 +582,15 @@ function TasksPageContent() {
                 {activeTasksData.map((task) => (
                   <Card
                     key={task._id}
-                    className="hover:shadow-md transition-shadow border-teal-200"
+                    className="hover:shadow-md transition-shadow border-teal-200 w-full"
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-base text-teal-900">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base text-teal-900 break-words">
                             {task.task?.title}
                           </CardTitle>
-                          <CardDescription className="text-sm mt-1 text-teal-600">
+                          <CardDescription className="text-sm mt-1 text-teal-600 break-words">
                             {task.task?.description}
                           </CardDescription>
                         </div>
@@ -589,7 +601,7 @@ function TasksPageContent() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm gap-2">
                           <span className="font-semibold text-teal-700 flex items-center">
                             <DollarSign className="h-4 w-4 mr-1" />₹
                             {task.payment}
@@ -641,11 +653,11 @@ function TasksPageContent() {
                 {pendingTasksData.map((task) => {
                   const submission = task.submission;
                   return (
-                    <Card key={task._id} className="border-yellow-200">
+                    <Card key={task._id} className="border-yellow-200 w-full">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-base text-teal-900 mb-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base text-teal-900 mb-1 break-words">
                               {task.task?.title}
                             </CardTitle>
                             <CardDescription className="text-sm text-yellow-600">
@@ -653,14 +665,14 @@ function TasksPageContent() {
                               {formatRelativeTime(submission?.submittedAt)}
                             </CardDescription>
                           </div>
-                          <Badge className="bg-yellow-100 text-yellow-800">
+                          <Badge className="bg-yellow-100 text-yellow-800 whitespace-nowrap">
                             Pending Review
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                               <Award className="h-4 w-4 text-teal-600" />
                               <span className="font-semibold text-teal-900">
@@ -678,7 +690,7 @@ function TasksPageContent() {
                           {submission?.proofData?.description && (
                             <div className="text-xs text-teal-600 bg-teal-50 p-2 rounded">
                               <p className="font-medium mb-1">Your note:</p>
-                              <p className="line-clamp-2">
+                              <p className="line-clamp-2 break-words">
                                 {submission.proofData.description}
                               </p>
                             </div>
@@ -689,7 +701,7 @@ function TasksPageContent() {
                               <p className="text-xs font-medium text-teal-700 mb-2">
                                 Submitted Images:
                               </p>
-                              <div className="flex gap-2 overflow-x-auto">
+                              <div className="flex gap-2 overflow-x-auto pb-2">
                                 {submission.proofData.images
                                   .slice(0, 3)
                                   .map((image, index) => (
@@ -749,11 +761,11 @@ function TasksPageContent() {
                 {completedTasksData.map((task) => {
                   const submission = task.submission;
                   return (
-                    <Card key={task._id} className="border-green-200">
+                    <Card key={task._id} className="border-green-200 w-full">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-base text-teal-900 mb-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base text-teal-900 mb-1 break-words">
                               {task.task?.title}
                             </CardTitle>
                             <CardDescription className="text-sm text-green-600">
@@ -761,14 +773,14 @@ function TasksPageContent() {
                               {formatRelativeTime(submission?.reviewedAt)}
                             </CardDescription>
                           </div>
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className="bg-green-100 text-green-800 whitespace-nowrap">
                             Completed
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div className="flex items-center gap-2">
                               <Award className="h-4 w-4 text-green-600" />
                               <span className="font-semibold text-green-900">
@@ -788,7 +800,7 @@ function TasksPageContent() {
                               <p className="text-xs font-medium text-teal-700 mb-2">
                                 Your proof:
                               </p>
-                              <div className="flex gap-2 overflow-x-auto">
+                              <div className="flex gap-2 overflow-x-auto pb-2">
                                 {submission.proofData.images
                                   .slice(0, 4)
                                   .map((image, index) => (
@@ -831,10 +843,10 @@ function TasksPageContent() {
 
       {/* Enhanced Submission Modal */}
       <Dialog open={showSubmissionModal} onOpenChange={setShowSubmissionModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
           <DialogHeader>
             <DialogTitle className="text-teal-900">Submit Proof</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="break-words">
               Upload proof of completion for: {selectedTask?.task?.title}
             </DialogDescription>
           </DialogHeader>
@@ -869,7 +881,7 @@ function TasksPageContent() {
 
                 {/* Image Previews */}
                 {previewUrls.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                     {previewUrls.map((url, index) => (
                       <div key={index} className="relative">
                         <div className="w-full h-20 bg-teal-100 rounded border border-teal-200 flex items-center justify-center overflow-hidden">
@@ -905,7 +917,7 @@ function TasksPageContent() {
                   }))
                 }
                 rows={4}
-                className="border-teal-200 focus:border-teal-500"
+                className="border-teal-200 focus:border-teal-500 w-full"
                 required
               />
             </div>
@@ -923,7 +935,7 @@ function TasksPageContent() {
                     links: e.target.value,
                   }))
                 }
-                className="border-teal-200 focus:border-teal-500"
+                className="border-teal-200 focus:border-teal-500 w-full"
               />
             </div>
 
@@ -936,11 +948,11 @@ function TasksPageContent() {
                 value={submissionNote}
                 onChange={(e) => setSubmissionNote(e.target.value)}
                 rows={2}
-                className="border-teal-200 focus:border-teal-500"
+                className="border-teal-200 focus:border-teal-500 w-full"
               />
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -951,14 +963,14 @@ function TasksPageContent() {
                   setProofData({ images: [], links: "", description: "" });
                   setSubmissionNote("");
                 }}
-                className="border-teal-200 text-teal-700"
+                className="border-teal-200 text-teal-700 w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={submittingProof || !proofData.description.trim()}
-                className="bg-teal-600 hover:bg-teal-700"
+                className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
               >
                 {submittingProof ? "Submitting..." : "Submit for Review"}
               </Button>
@@ -969,9 +981,9 @@ function TasksPageContent() {
 
       {/* Task Join Modal */}
       <Dialog open={showTaskJoinModal} onOpenChange={setShowTaskJoinModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-full sm:max-w-2xl mx-4 sm:mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-teal-900">
+            <DialogTitle className="text-teal-900 break-words">
               {selectedTask?.title}
             </DialogTitle>
             <DialogDescription>
@@ -985,11 +997,11 @@ function TasksPageContent() {
                 <h4 className="font-medium text-teal-900 mb-2">
                   Task Overview
                 </h4>
-                <p className="text-sm text-teal-700 mb-3">
+                <p className="text-sm text-teal-700 mb-3 break-words">
                   {selectedTask.description}
                 </p>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Award className="h-4 w-4 text-teal-600" />
                     <span className="font-medium text-teal-900">
@@ -1027,7 +1039,7 @@ function TasksPageContent() {
                     {selectedTask.requirements.map((req, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="text-teal-500 mt-1">•</span>
-                        {req}
+                        <span className="break-words">{req}</span>
                       </li>
                     ))}
                   </ul>
@@ -1039,7 +1051,7 @@ function TasksPageContent() {
                   <h4 className="font-medium text-teal-900 mb-2">
                     What to Submit
                   </h4>
-                  <p className="text-sm text-teal-700">
+                  <p className="text-sm text-teal-700 break-words">
                     {selectedTask.proofRequirements.details ||
                       "Follow the task instructions and submit proof of completion."}
                   </p>
@@ -1048,11 +1060,11 @@ function TasksPageContent() {
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => setShowTaskJoinModal(false)}
-              className="border-teal-200 text-teal-700"
+              className="border-teal-200 text-teal-700 w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -1061,7 +1073,7 @@ function TasksPageContent() {
                 handleJoinTask(selectedTask?.id || selectedTask?._id)
               }
               disabled={joiningTask}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
             >
               {joiningTask ? "Joining..." : "Join This Task"}
             </Button>
@@ -1074,7 +1086,7 @@ function TasksPageContent() {
 
 function TasksPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="p-4">Loading...</div>}>
       <TasksPageContent />
     </Suspense>
   );
