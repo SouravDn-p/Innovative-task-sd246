@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import client from "@/lib/mongoClient";
-import { sanitizeInput, validateEmail, validatePhone, safeNumber } from "@/lib/utils";
+import {
+  sanitizeInput,
+  validateEmail,
+  validatePhone,
+  safeNumber,
+} from "@/lib/utils";
 
 export async function POST(req) {
   try {
@@ -45,7 +50,9 @@ export async function POST(req) {
     const sanitizedPhone = phone ? sanitizeInput(phone) : null;
 
     const db = client.db("TaskEarnDB");
-    const userExists = await db.collection("Users").findOne({ email: sanitizedEmail });
+    const userExists = await db
+      .collection("Users")
+      .findOne({ email: sanitizedEmail });
 
     if (userExists) {
       return NextResponse.json(
@@ -78,6 +85,7 @@ export async function POST(req) {
       signupBonusEligibleAt: null,
       referrerId: null,
       dailyReferralsCount: 0,
+      totalReferralsCount: 0,
       weeklyEarnAmount: 0,
       walletBalance: 0,
       totalEarn: 0,
@@ -103,9 +111,9 @@ export async function POST(req) {
   } catch (e) {
     console.error("Registration error:", e);
     return NextResponse.json(
-      { 
+      {
         error: "Server error during registration",
-        details: process.env.NODE_ENV === 'development' ? e.message : undefined
+        details: process.env.NODE_ENV === "development" ? e.message : undefined,
       },
       { status: 500 }
     );

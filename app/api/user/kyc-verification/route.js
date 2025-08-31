@@ -374,6 +374,62 @@ export async function POST(req) {
           },
           { session }
         );
+
+        // Check if user was referred and award Rs.49 to referrer upon KYC completion
+        if (user.referrerId) {
+          const referrer = await usersCollection.findOne(
+            { _id: new ObjectId(user.referrerId) },
+            { session }
+          );
+
+          if (referrer) {
+            // Award Rs.49 to referrer
+            const referralReward = 49;
+
+            // Prepare referral entry for dashboard
+            const referralEntry = {
+              name: user.name || "Unknown",
+              email: user.email || "no-email",
+              joinDate: user.createdAt || new Date().toISOString(),
+              referralDate: new Date().toISOString(),
+              status: user.isSuspended ? "Suspended" : "Active",
+              kycStatus: "Verified",
+              earned: `₹${referralReward}`,
+            };
+
+            // Update referrer's wallet and referral records
+            await usersCollection.updateOne(
+              { _id: new ObjectId(user.referrerId) },
+              {
+                $inc: {
+                  walletBalance: referralReward,
+                  totalReferralsCount: 1,
+                  dailyReferralsCount: 1,
+                },
+                $push: {
+                  Recent_Referrals: {
+                    $each: [referralEntry],
+                    $slice: -10, // Keep only latest 10 referrals
+                  },
+                },
+                $set: { updatedAt: new Date().toISOString() },
+              },
+              { session }
+            );
+
+            // Add transaction to wallet history
+            await db.collection("walletTransactions").insertOne(
+              {
+                userId: new ObjectId(user.referrerId),
+                type: "credit",
+                amount: referralReward,
+                description: `Referral reward for ${user.name || user.email}`,
+                timestamp: new Date(),
+              },
+              { session }
+            );
+          }
+        }
       }
 
       await session.commitTransaction();

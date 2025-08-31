@@ -252,6 +252,7 @@ export async function POST(req, { params }) {
                   walletBalance: reward,
                   totalEarned: reward,
                   tasksCompleted: 1,
+                  weeklyEarnAmount: reward, // Track weekly earnings for activity rules
                 },
                 $set: {
                   updatedAt: new Date(),

@@ -112,7 +112,7 @@ export const api = createApi({
     // ==========================================
     addReferral: builder.mutation({
       query: ({ referrerId, newUser }) => ({
-        url: `/user/addReferral/${referrerId}`,
+        url: `/user/addReferral`,
         method: "POST",
         body: { referrerId, newUser },
       }),
@@ -127,10 +127,9 @@ export const api = createApi({
       providesTags: ["Referral"],
     }),
     setReferralId: builder.mutation({
-      query: ({ userId, referralId }) => ({
-        url: `user/${userId}/set-referral`,
+      query: () => ({
+        url: `user/setReferralId`,
         method: "POST",
-        body: { referralId },
       }),
       invalidatesTags: ["User", "Referral"],
     }),

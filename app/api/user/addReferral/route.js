@@ -27,8 +27,20 @@ export async function POST(req) {
     const db = client.db("TaskEarnDB");
     const users = db.collection("Users");
 
-    // Find referrer
-    const referrer = await users.findOne({ _id: new ObjectId(referrerId) });
+    // Find referrer by ObjectId (since that's what we use as referral ID)
+    let referrer;
+    if (ObjectId.isValid(referrerId)) {
+      referrer = await users.findOne({ _id: new ObjectId(referrerId) });
+    } else {
+      return new Response(
+        JSON.stringify({ message: "Invalid referrer ID format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     if (!referrer) {
       return new Response(JSON.stringify({ message: "Referrer not found" }), {
         status: 404,
@@ -36,27 +48,59 @@ export async function POST(req) {
       });
     }
 
-    // Add 50 to walletBalance
-    const incrementAmount = 50;
+    // Check if the current user is already referred
+    const currentUser = await users.findOne({
+      email: token.email || newUser.email,
+    });
+    if (currentUser && currentUser.referrerId) {
+      return new Response(
+        JSON.stringify({ message: "User already has a referrer" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    // Prepare referral entry
+    // Prepare referral entry (initial state - not yet verified)
     const referralEntry = {
-      name: newUser.name || "Unknown",
-      email: newUser.email || "no-email",
+      name: newUser.name || currentUser?.name || "Unknown",
+      email: newUser.email || currentUser?.email || "no-email",
       joinDate: new Date().toISOString(),
-      status: "Active",
-      earned: `₹${incrementAmount}`,
+      referralDate: new Date().toISOString(),
+      status: currentUser?.isSuspended ? "Suspended" : "Active",
+      kycStatus: "Not Verified", // Default to Not Verified until KYC is completed
+      earned: "₹0",
     };
 
     // Update referrer wallet and referrals
     await users.updateOne(
       { _id: referrer._id },
       {
-        $inc: { walletBalance: incrementAmount },
-        $push: { recentReferrals: referralEntry },
+        $push: {
+          Recent_Referrals: {
+            $each: [referralEntry],
+            $slice: -10, // Keep only latest 10 referrals
+          },
+        },
+        $inc: { totalReferralsCount: 1 }, // Increment total referrals count
         $set: { updatedAt: new Date().toISOString() },
       }
     );
+
+    // Update the current user's record with referrerId
+    const userEmail = token.email || newUser.email;
+    if (userEmail) {
+      await users.updateOne(
+        { email: userEmail },
+        {
+          $set: {
+            referrerId: referrer._id.toString(),
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      );
+    }
 
     const updatedReferrer = await users.findOne({ _id: referrer._id });
 

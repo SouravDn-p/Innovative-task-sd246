@@ -979,12 +979,25 @@ function UserProfilePage() {
                 </div>
               </div>
 
+              <div className="bg-teal-50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2 text-teal-700">
+                  How Referrals Work:
+                </h4>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  <li>• Share your referral link with friends</li>
+                  <li>
+                    • When they complete KYC verification (₹99), you earn ₹49
+                  </li>
+                  <li>• Weekly activity rules apply after KYC completion</li>
+                </ul>
+              </div>
+
               <Button
                 variant="outline"
                 className="w-full border-teal-200 text-teal-700 hover:bg-teal-100"
+                onClick={() => router.push("/dashboard/user/referrals")}
               >
-                <QrCode className="h-4 w-4 mr-2" />
-                Generate QR Code
+                View Referral Dashboard
               </Button>
             </CardContent>
           </Card>
