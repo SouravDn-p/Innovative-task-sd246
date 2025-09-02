@@ -414,23 +414,21 @@ function TasksPageContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-teal-200 p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-teal-200 p-2 sm:p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.back()}
-              className="text-teal-700 hover:bg-teal-100 p-2"
+              className="text-teal-700 hover:bg-teal-100 p-1"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-teal-900">My Tasks</h1>
-              <p className="text-sm text-teal-600 truncate max-w-[200px]">
-                {userEmail
-                  ? `Tasks for ${userEmail}`
-                  : "Login to see your tasks"}
+              <h1 className="text-lg font-bold text-teal-900">My Tasks</h1>
+              <p className="text-xs text-teal-600 truncate max-w-[200px]">
+                {userEmail ? `${userEmail}` : "Login to see your tasks"}
               </p>
             </div>
           </div>
@@ -442,67 +440,69 @@ function TasksPageContent() {
                 refetchAvailable();
                 refetchUserTasks();
               }}
-              className="border-teal-200 text-teal-700 hover:bg-teal-50 whitespace-nowrap"
+              className="border-teal-200 text-teal-700 hover:bg-teal-50 whitespace-nowrap text-xs py-1 px-2"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-3 w-3 mr-1" />
               <span className="hidden xs:inline">Refresh</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="p-4">
+      <div className="p-2 sm:p-4">
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="mb-3 sm:mb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-teal-400" />
             <Input
               placeholder="Search tasks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-teal-200 focus:border-teal-500 bg-white w-full"
+              className="pl-8 border-teal-200 focus:border-teal-500 bg-white w-full text-sm h-8"
             />
           </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            onClick={() => router.push("/dashboard/user/task/pending")}
+            variant="outline"
+            className="border-yellow-200 text-yellow-700 hover:bg-yellow-50 text-xs py-1 px-2 h-8"
+          >
+            <Clock className="h-3 w-3 mr-1" />
+            Pending Tasks ({pendingTasksData.length})
+          </Button>
+          <Button
+            onClick={() => router.push("/dashboard/user/task/completed")}
+            variant="outline"
+            className="border-green-200 text-green-700 hover:bg-green-50 text-xs py-1 px-2 h-8"
+          >
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Completed Tasks ({completedTasksData.length})
+          </Button>
         </div>
 
         {/* Tabs */}
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="space-y-6"
+          className="space-y-3 sm:space-y-4"
         >
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-white border border-teal-200 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 bg-white border border-teal-200 overflow-x-auto h-9 min-h-0 p-0.5">
             <TabsTrigger
               value="available"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs py-1 px-0"
             >
-              <span className="hidden xs:inline">Available</span>
-              <span className="xs:hidden">Avail</span>
-              <span className="ml-1">({availableTasks.length})</span>
+              <span>Available</span>
+              <span className="ml-1 text-xs">({availableTasks.length})</span>
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
+              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs py-1 px-0"
             >
-              <span className="hidden xs:inline">Active</span>
-              <span className="xs:hidden">Active</span>
-              <span className="ml-1">({activeTasksData.length})</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="pending"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
-            >
-              <span className="hidden xs:inline">Pending</span>
-              <span className="xs:hidden">Pend</span>
-              <span className="ml-1">({pendingTasksData.length})</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs sm:text-sm py-2 px-1 sm:px-4"
-            >
-              <span className="hidden xs:inline">Completed</span>
-              <span className="xs:hidden">Done</span>
-              <span className="ml-1">({completedTasksData.length})</span>
+              <span>Active</span>
+              <span className="ml-1 text-xs">({activeTasksData.length})</span>
             </TabsTrigger>
           </TabsList>
           {/* Available Tasks */}
@@ -519,27 +519,31 @@ function TasksPageContent() {
                     key={task.id || task._id}
                     className="hover:shadow-md transition-shadow border-teal-200 w-full"
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-2 pt-3 px-3">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base text-teal-900 break-words">
+                          <CardTitle className="text-sm text-teal-900 break-words">
                             {task.title}
                           </CardTitle>
-                          <CardDescription className="text-sm mt-1 text-teal-600 break-words">
+                          <CardDescription className="text-xs mt-1 text-teal-600 break-words line-clamp-2">
                             {task.description}
                           </CardDescription>
                         </div>
-                        <Badge className={getStatusColor(task.taskStatus)}>
+                        <Badge
+                          className={`${getStatusColor(
+                            task.taskStatus
+                          )} text-xs py-0.5 px-1.5`}
+                        >
                           Available
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm gap-2">
-                          <div className="flex flex-wrap items-center gap-4">
+                    <CardContent className="px-3 pb-3 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-between text-xs gap-1">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold text-teal-700 flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" />₹
+                              <DollarSign className="h-3 w-3 mr-0.5" />₹
                               {task.reward}
                             </span>
                             <div className="flex items-center gap-1 text-teal-600">
@@ -549,17 +553,17 @@ function TasksPageContent() {
                           </div>
                           <Badge
                             variant="outline"
-                            className="border-teal-200 text-teal-700 whitespace-nowrap"
+                            className="border-teal-200 text-teal-700 whitespace-nowrap text-xs py-0 px-1.5"
                           >
                             {task.category}
                           </Badge>
                         </div>
                         <Button
                           onClick={() => handleViewTaskDetails(task)}
-                          className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                          className="w-full bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
                           disabled={joiningTask || task.remaining === 0}
                         >
-                          <Eye className="h-4 w-4 mr-2" />
+                          <Eye className="h-3 w-3 mr-1" />
                           {joiningTask ? "Joining..." : "View & Join"}
                         </Button>
                       </div>
@@ -571,43 +575,47 @@ function TasksPageContent() {
           </TabsContent>
 
           {/* Active Tasks */}
-          <TabsContent value="active" className="space-y-4">
+          <TabsContent value="active" className="space-y-3">
             {loadingUserTasks ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                <p className="text-teal-700">Loading your tasks...</p>
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600 mx-auto mb-2"></div>
+                <p className="text-teal-700 text-sm">Loading your tasks...</p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-3">
                 {activeTasksData.map((task) => (
                   <Card
                     key={task._id}
                     className="hover:shadow-md transition-shadow border-teal-200 w-full"
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-2 pt-3 px-3">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base text-teal-900 break-words">
+                          <CardTitle className="text-sm text-teal-900 break-words">
                             {task.task?.title}
                           </CardTitle>
-                          <CardDescription className="text-sm mt-1 text-teal-600 break-words">
+                          <CardDescription className="text-xs mt-1 text-teal-600 break-words line-clamp-2">
                             {task.task?.description}
                           </CardDescription>
                         </div>
-                        <Badge className={getStatusColor("active")}>
+                        <Badge
+                          className={`${getStatusColor(
+                            "active"
+                          )} text-xs py-0.5 px-1.5`}
+                        >
                           Active
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm gap-2">
+                    <CardContent className="px-3 pb-3 pt-0">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-between text-xs gap-1">
                           <span className="font-semibold text-teal-700 flex items-center">
-                            <DollarSign className="h-4 w-4 mr-1" />₹
+                            <DollarSign className="h-3 w-3 mr-0.5" />₹
                             {task.payment}
                           </span>
                           {task.task?.endAt && (
-                            <div className="flex items-center gap-1 text-teal-600">
+                            <div className="flex items-center gap-1 text-teal-600 text-xs">
                               <Clock className="h-3 w-3" />
                               Ends {formatDate(task.task.endAt)}
                             </div>
@@ -618,9 +626,9 @@ function TasksPageContent() {
                             setSelectedTask(task);
                             setShowSubmissionModal(true);
                           }}
-                          className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                          className="w-full bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
                         >
-                          <Send className="h-4 w-4 mr-2" />
+                          <Send className="h-3 w-3 mr-1" />
                           Submit Proof
                         </Button>
                       </div>
@@ -630,232 +638,26 @@ function TasksPageContent() {
               </div>
             )}
           </TabsContent>
-
-          {/* Pending Submissions */}
-          <TabsContent value="pending" className="space-y-4">
-            {loadingUserTasks ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                <p className="text-teal-700">Loading pending submissions...</p>
-              </div>
-            ) : pendingTasksData.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-yellow-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-teal-900 mb-2">
-                  No Pending Submissions
-                </h3>
-                <p className="text-teal-600">
-                  Submit proof for your active tasks to see them here!
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {pendingTasksData.map((task) => {
-                  const submission = task.submission;
-                  return (
-                    <Card key={task._id} className="border-yellow-200 w-full">
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base text-teal-900 mb-1 break-words">
-                              {task.task?.title}
-                            </CardTitle>
-                            <CardDescription className="text-sm text-yellow-600">
-                              Submitted{" "}
-                              {formatRelativeTime(submission?.submittedAt)}
-                            </CardDescription>
-                          </div>
-                          <Badge className="bg-yellow-100 text-yellow-800 whitespace-nowrap">
-                            Pending Review
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Award className="h-4 w-4 text-teal-600" />
-                              <span className="font-semibold text-teal-900">
-                                ₹{task.payment}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-yellow-600" />
-                              <span className="text-yellow-700">
-                                Under Review
-                              </span>
-                            </div>
-                          </div>
-
-                          {submission?.proofData?.description && (
-                            <div className="text-xs text-teal-600 bg-teal-50 p-2 rounded">
-                              <p className="font-medium mb-1">Your note:</p>
-                              <p className="line-clamp-2 break-words">
-                                {submission.proofData.description}
-                              </p>
-                            </div>
-                          )}
-
-                          {submission?.proofData?.images?.length > 0 && (
-                            <div>
-                              <p className="text-xs font-medium text-teal-700 mb-2">
-                                Submitted Images:
-                              </p>
-                              <div className="flex gap-2 overflow-x-auto pb-2">
-                                {submission.proofData.images
-                                  .slice(0, 3)
-                                  .map((image, index) => (
-                                    <div key={index} className="flex-shrink-0">
-                                      <div className="w-12 h-12 bg-teal-100 rounded border border-teal-200 flex items-center justify-center">
-                                        <ImageIcon className="h-6 w-6 text-teal-600" />
-                                      </div>
-                                    </div>
-                                  ))}
-                                {submission.proofData.images.length > 3 && (
-                                  <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-teal-100 rounded border border-teal-200 flex items-center justify-center text-xs text-teal-600">
-                                      +{submission.proofData.images.length - 3}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {submission?.proofData?.links && (
-                            <div className="text-xs text-teal-600">
-                              <p className="font-medium flex items-center mb-1">
-                                <LinkIcon className="h-3 w-3 mr-1" />
-                                Links submitted
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Completed Tasks */}
-          <TabsContent value="completed" className="space-y-4">
-            {loadingUserTasks ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                <p className="text-teal-700">Loading completed tasks...</p>
-              </div>
-            ) : completedTasksData.length === 0 ? (
-              <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-teal-900 mb-2">
-                  No Completed Tasks
-                </h3>
-                <p className="text-teal-600">
-                  Your approved tasks will appear here with reward details!
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {completedTasksData.map((task) => {
-                  const submission = task.submission;
-                  return (
-                    <Card key={task._id} className="border-green-200 w-full">
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base text-teal-900 mb-1 break-words">
-                              {task.task?.title}
-                            </CardTitle>
-                            <CardDescription className="text-sm text-green-600">
-                              Completed{" "}
-                              {formatRelativeTime(submission?.reviewedAt)}
-                            </CardDescription>
-                          </div>
-                          <Badge className="bg-green-100 text-green-800 whitespace-nowrap">
-                            Completed
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Award className="h-4 w-4 text-green-600" />
-                              <span className="font-semibold text-green-900">
-                                ₹{task.payment}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              <span className="text-green-700 font-medium">
-                                Reward Credited 💰
-                              </span>
-                            </div>
-                          </div>
-
-                          {submission?.proofData?.images?.length > 0 && (
-                            <div>
-                              <p className="text-xs font-medium text-teal-700 mb-2">
-                                Your proof:
-                              </p>
-                              <div className="flex gap-2 overflow-x-auto pb-2">
-                                {submission.proofData.images
-                                  .slice(0, 4)
-                                  .map((image, index) => (
-                                    <div key={index} className="flex-shrink-0">
-                                      <div className="w-12 h-12 bg-green-100 rounded border border-green-200 flex items-center justify-center">
-                                        <ImageIcon className="h-6 w-6 text-green-600" />
-                                      </div>
-                                    </div>
-                                  ))}
-                                {submission.proofData.images.length > 4 && (
-                                  <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-green-100 rounded border border-green-200 flex items-center justify-center text-xs text-green-600">
-                                      +{submission.proofData.images.length - 4}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="bg-green-50 p-2 rounded text-xs text-green-700">
-                            <p className="font-medium">
-                              Task completed successfully!
-                            </p>
-                            <p>
-                              Payment processed on{" "}
-                              {formatDate(submission?.reviewedAt)}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
         </Tabs>
       </div>
 
       {/* Enhanced Submission Modal */}
       <Dialog open={showSubmissionModal} onOpenChange={setShowSubmissionModal}>
-        <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-teal-900">Submit Proof</DialogTitle>
-            <DialogDescription className="break-words">
-              Upload proof of completion for: {selectedTask?.task?.title}
+        <DialogContent className="max-w-full sm:max-w-md max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto p-3 sm:p-4">
+          <DialogHeader className="space-y-1 pb-2">
+            <DialogTitle className="text-base text-teal-900">
+              Submit Proof
+            </DialogTitle>
+            <DialogDescription className="break-words text-xs">
+              Upload proof for: {selectedTask?.task?.title}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmitProof} className="space-y-4">
+          <form onSubmit={handleSubmitProof} className="space-y-3">
             {/* Image Upload Section */}
-            <div className="space-y-2">
-              <Label>Upload Images (Optional)</Label>
-              <div className="border-2 border-dashed border-teal-200 rounded-lg p-4">
+            <div className="space-y-1">
+              <Label className="text-xs">Upload Images (Optional)</Label>
+              <div className="border-2 border-dashed border-teal-200 rounded-lg p-3">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -869,32 +671,32 @@ function TasksPageContent() {
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50 text-xs py-1 px-2 h-auto"
                   >
-                    <Camera className="h-4 w-4 mr-2" />
+                    <Camera className="h-3 w-3 mr-1" />
                     Add Images
                   </Button>
-                  <p className="text-sm text-teal-600 mt-2">
+                  <p className="text-xs text-teal-600 mt-1">
                     Max 5 images, 10MB each
                   </p>
                 </div>
 
                 {/* Image Previews */}
                 {previewUrls.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                  <div className="grid grid-cols-3 gap-2 mt-2">
                     {previewUrls.map((url, index) => (
                       <div key={index} className="relative">
-                        <div className="w-full h-20 bg-teal-100 rounded border border-teal-200 flex items-center justify-center overflow-hidden">
-                          <ImageIcon className="h-8 w-8 text-teal-600" />
+                        <div className="w-full h-16 bg-teal-100 rounded border border-teal-200 flex items-center justify-center overflow-hidden">
+                          <ImageIcon className="h-6 w-6 text-teal-600" />
                         </div>
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0"
                           onClick={() => removeImage(index)}
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-2.5 w-2.5" />
                         </Button>
                       </div>
                     ))}
@@ -904,8 +706,10 @@ function TasksPageContent() {
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Proof Description *</Label>
+            <div className="space-y-1">
+              <Label htmlFor="description" className="text-xs">
+                Proof Description *
+              </Label>
               <Textarea
                 id="description"
                 placeholder="Describe what you did to complete this task..."
@@ -916,18 +720,20 @@ function TasksPageContent() {
                     description: e.target.value,
                   }))
                 }
-                rows={4}
-                className="border-teal-200 focus:border-teal-500 w-full"
+                rows={3}
+                className="border-teal-200 focus:border-teal-500 w-full text-xs resize-none"
                 required
               />
             </div>
 
             {/* Links */}
-            <div className="space-y-2">
-              <Label htmlFor="links">Links (if applicable)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="links" className="text-xs">
+                Links (if applicable)
+              </Label>
               <Input
                 id="links"
-                placeholder="Paste relevant links here (one per line)"
+                placeholder="Paste relevant links here"
                 value={proofData.links}
                 onChange={(e) =>
                   setProofData((prev) => ({
@@ -935,24 +741,26 @@ function TasksPageContent() {
                     links: e.target.value,
                   }))
                 }
-                className="border-teal-200 focus:border-teal-500 w-full"
+                className="border-teal-200 focus:border-teal-500 w-full text-xs h-8"
               />
             </div>
 
             {/* Additional Notes */}
-            <div className="space-y-2">
-              <Label htmlFor="note">Additional Notes</Label>
+            <div className="space-y-1">
+              <Label htmlFor="note" className="text-xs">
+                Additional Notes
+              </Label>
               <Textarea
                 id="note"
                 placeholder="Any additional information for the reviewer..."
                 value={submissionNote}
                 onChange={(e) => setSubmissionNote(e.target.value)}
                 rows={2}
-                className="border-teal-200 focus:border-teal-500 w-full"
+                className="border-teal-200 focus:border-teal-500 w-full text-xs resize-none"
               />
             </div>
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-row gap-2 pt-2 justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -963,16 +771,16 @@ function TasksPageContent() {
                   setProofData({ images: [], links: "", description: "" });
                   setSubmissionNote("");
                 }}
-                className="border-teal-200 text-teal-700 w-full sm:w-auto"
+                className="border-teal-200 text-teal-700 text-xs py-1 px-2 h-7"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={submittingProof || !proofData.description.trim()}
-                className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
+                className="bg-teal-600 hover:bg-teal-700 text-xs py-1 px-2 h-7"
               >
-                {submittingProof ? "Submitting..." : "Submit for Review"}
+                {submittingProof ? "Submitting..." : "Submit"}
               </Button>
             </DialogFooter>
           </form>
@@ -981,48 +789,48 @@ function TasksPageContent() {
 
       {/* Task Join Modal */}
       <Dialog open={showTaskJoinModal} onOpenChange={setShowTaskJoinModal}>
-        <DialogContent className="max-w-full sm:max-w-2xl mx-4 sm:mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-teal-900 break-words">
+        <DialogContent className="max-w-full sm:max-w-md mx-2 sm:mx-auto p-3 sm:p-4">
+          <DialogHeader className="space-y-1 pb-2">
+            <DialogTitle className="text-base text-teal-900 break-words">
               {selectedTask?.title}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs">
               Review task details before joining
             </DialogDescription>
           </DialogHeader>
 
           {selectedTask && (
-            <div className="space-y-4">
-              <div className="bg-teal-50 p-4 rounded-lg">
-                <h4 className="font-medium text-teal-900 mb-2">
+            <div className="space-y-3">
+              <div className="bg-teal-50 p-3 rounded-lg">
+                <h4 className="font-medium text-sm text-teal-900 mb-1">
                   Task Overview
                 </h4>
-                <p className="text-sm text-teal-700 mb-3 break-words">
+                <p className="text-xs text-teal-700 mb-2 break-words">
                   {selectedTask.description}
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-teal-600" />
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Award className="h-3 w-3 text-teal-600" />
                     <span className="font-medium text-teal-900">
                       ₹{selectedTask.reward || selectedTask.rateToUser}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Timer className="h-4 w-4 text-teal-600" />
+                  <div className="flex items-center gap-1">
+                    <Timer className="h-3 w-3 text-teal-600" />
                     <span className="text-teal-700">
                       {selectedTask.estimatedTime || "30 mins"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-teal-600" />
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3 text-teal-600" />
                     <span className="text-teal-700">
                       {selectedTask.remainingSlots || selectedTask.remaining}{" "}
                       slots left
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-teal-600" />
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-teal-600" />
                     <span className="text-teal-700">
                       {getRemainingTime(selectedTask.endAt)}
                     </span>
@@ -1032,13 +840,13 @@ function TasksPageContent() {
 
               {selectedTask.requirements?.length > 0 && (
                 <div>
-                  <h4 className="font-medium text-teal-900 mb-2">
+                  <h4 className="font-medium text-sm text-teal-900 mb-1">
                     Requirements
                   </h4>
-                  <ul className="text-sm text-teal-700 space-y-1">
+                  <ul className="text-xs text-teal-700 space-y-1">
                     {selectedTask.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-teal-500 mt-1">•</span>
+                      <li key={index} className="flex items-start gap-1">
+                        <span className="text-teal-500 mt-0.5">•</span>
                         <span className="break-words">{req}</span>
                       </li>
                     ))}
@@ -1048,10 +856,10 @@ function TasksPageContent() {
 
               {selectedTask.proofRequirements && (
                 <div>
-                  <h4 className="font-medium text-teal-900 mb-2">
+                  <h4 className="font-medium text-sm text-teal-900 mb-1">
                     What to Submit
                   </h4>
-                  <p className="text-sm text-teal-700 break-words">
+                  <p className="text-xs text-teal-700 break-words">
                     {selectedTask.proofRequirements.details ||
                       "Follow the task instructions and submit proof of completion."}
                   </p>
@@ -1060,11 +868,11 @@ function TasksPageContent() {
             </div>
           )}
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex flex-row gap-2 pt-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setShowTaskJoinModal(false)}
-              className="border-teal-200 text-teal-700 w-full sm:w-auto"
+              className="border-teal-200 text-teal-700 text-xs py-1 px-2 h-7"
             >
               Cancel
             </Button>
@@ -1073,9 +881,9 @@ function TasksPageContent() {
                 handleJoinTask(selectedTask?.id || selectedTask?._id)
               }
               disabled={joiningTask}
-              className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
+              className="bg-teal-600 hover:bg-teal-700 text-xs py-1 px-2 h-7"
             >
-              {joiningTask ? "Joining..." : "Join This Task"}
+              {joiningTask ? "Joining..." : "Join Task"}
             </Button>
           </DialogFooter>
         </DialogContent>

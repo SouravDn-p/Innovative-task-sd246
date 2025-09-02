@@ -1,12 +1,16 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongoClient";
+// Import client directly instead of clientPromise
+import client from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 
 export async function POST(req, context) {
   try {
-    const { params } = await context;
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    // Await params before using its properties
+    const params = await context.params;
+    const taskId = params.id;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +23,6 @@ export async function POST(req, context) {
       );
     }
 
-    const taskId = params.id;
     const body = await req.json();
     const { action, reason, duration } = body; // action: "pause" | "resume"
 
@@ -30,7 +33,8 @@ export async function POST(req, context) {
       );
     }
 
-    const client = await clientPromise;
+    // Connect client and get database
+    await client.connect();
     const db = client.db("TaskEarnDB");
 
     // Find task
@@ -99,14 +103,7 @@ export async function POST(req, context) {
         resumedBy: token.email,
         resumeReason: reason || "Admin resume",
         updatedAt: new Date(),
-        // Clear pause data
-        $unset: {
-          pausedAt: "",
-          pausedBy: "",
-          pauseReason: "",
-          pauseDuration: "",
-          previousStatus: "",
-        },
+        // We'll handle clearing pause data separately
       };
 
       actionMessage = "Task resumed successfully";
@@ -115,13 +112,23 @@ export async function POST(req, context) {
     // Update task
     const result = await db
       .collection("tasks")
-      .updateOne(
+      .updateOne({ _id: new ObjectId(taskId) }, { $set: updateData });
+
+    // If resuming, also clear the pause-related fields
+    if (action === "resume") {
+      await db.collection("tasks").updateOne(
         { _id: new ObjectId(taskId) },
         {
-          $set: updateData,
-          ...(updateData.$unset && { $unset: updateData.$unset }),
+          $unset: {
+            pausedAt: "",
+            pausedBy: "",
+            pauseReason: "",
+            pauseDuration: "",
+            previousStatus: "",
+          },
         }
       );
+    }
 
     if (result.modifiedCount === 0) {
       return NextResponse.json(
@@ -183,7 +190,7 @@ export async function POST(req, context) {
       },
     });
   } catch (error) {
-    console.error(`Admin ${action} task error:`, error);
+    console.error("Admin task error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

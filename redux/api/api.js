@@ -369,9 +369,9 @@ export const api = createApi({
       query: ({ taskId, note }) => {
         console.log("[REDUX API] Approving task:", { taskId, note });
         return {
-          url: `admin/tasks/${taskId}/approve`,
-          method: "POST",
-          body: { note },
+          url: `admin/tasks/statusUpdate/${taskId}`,
+          method: "PUT",
+          body: { status: "approved", note },
           headers: {
             "Cache-Control": "no-cache",
           },
