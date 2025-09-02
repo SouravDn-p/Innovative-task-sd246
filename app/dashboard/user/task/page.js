@@ -198,10 +198,25 @@ function TasksPageContent() {
       });
     } catch (error) {
       console.error("Failed to join task:", error);
+      // Enhanced error handling with more detailed messages
+      let errorMessage = "Failed to join task";
+
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+        // Add details if available
+        if (error.data.details) {
+          errorMessage += ": " + error.data.details;
+        }
+      } else if (error?.error) {
+        errorMessage = error.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.data?.message || "Failed to join task",
+        text: errorMessage,
       });
     }
   };
@@ -394,9 +409,82 @@ function TasksPageContent() {
     }
   };
 
+  // New function to check if a task is live
+  const isTaskLive = (task) => {
+    const now = new Date();
+    const startAt = new Date(task.startAt);
+    const endAt = new Date(task.endAt);
+
+    // Task is live if it has started, hasn't ended, and user hasn't joined it yet
+    return now >= startAt && now <= endAt && task.remainingSlots > 0;
+  };
+
+  // New function to check if task has not started yet
+  const isTaskNotStarted = (task) => {
+    const now = new Date();
+    const startAt = new Date(task.startAt);
+    return now < startAt;
+  };
+
+  // New function to check if a task is already assigned to the user
+  const isTaskAssigned = (task) => {
+    // Check if task exists in any of the user's task lists
+    const allUserTasks = [
+      ...activeTasksData,
+      ...pendingTasksData,
+      ...completedTasksData,
+    ];
+    return allUserTasks.some(
+      (userTask) =>
+        userTask.taskId === task.id ||
+        userTask.taskId === task._id ||
+        userTask._id === task.id ||
+        userTask._id === task._id
+    );
+  };
+
+  // New function to get user task status
+  const getUserTaskStatus = (task) => {
+    // Check active tasks
+    const activeTask = activeTasksData.find(
+      (userTask) => userTask.taskId === task.id || userTask.taskId === task._id
+    );
+    if (activeTask) return "active";
+
+    // Check pending tasks
+    const pendingTask = pendingTasksData.find(
+      (userTask) => userTask.taskId === task.id || userTask.taskId === task._id
+    );
+    if (pendingTask) return "pending";
+
+    // Check completed tasks
+    const completedTask = completedTasksData.find(
+      (userTask) => userTask.taskId === task.id || userTask.taskId === task._id
+    );
+    if (completedTask) return "completed";
+
+    return null;
+  };
+
+  // New function to format date for display
+  const formatTaskDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const activeTasksData = userTasks?.active || [];
   const pendingTasksData = userTasks?.pending || [];
   const completedTasksData = userTasks?.completed || [];
+
+  // Filter available tasks to exclude those already assigned to the user
+  const filteredAvailableTasks = availableTasks.filter(
+    (task) => !isTaskAssigned(task)
+  );
 
   if (status === "loading" || kycLoading) {
     return (
@@ -495,7 +583,9 @@ function TasksPageContent() {
               className="data-[state=active]:bg-teal-100 data-[state=active]:text-teal-900 text-xs py-1 px-0"
             >
               <span>Available</span>
-              <span className="ml-1 text-xs">({availableTasks.length})</span>
+              <span className="ml-1 text-xs">
+                ({filteredAvailableTasks.length})
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="active"
@@ -514,62 +604,108 @@ function TasksPageContent() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {availableTasks.map((task) => (
-                  <Card
-                    key={task.id || task._id}
-                    className="hover:shadow-md transition-shadow border-teal-200 w-full"
-                  >
-                    <CardHeader className="pb-2 pt-3 px-3">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm text-teal-900 break-words">
-                            {task.title}
-                          </CardTitle>
-                          <CardDescription className="text-xs mt-1 text-teal-600 break-words line-clamp-2">
-                            {task.description}
-                          </CardDescription>
-                        </div>
-                        <Badge
-                          className={`${getStatusColor(
-                            task.taskStatus
-                          )} text-xs py-0.5 px-1.5`}
-                        >
-                          Available
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="px-3 pb-3 pt-0">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center justify-between text-xs gap-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-semibold text-teal-700 flex items-center">
-                              <DollarSign className="h-3 w-3 mr-0.5" />₹
-                              {task.reward}
-                            </span>
-                            <div className="flex items-center gap-1 text-teal-600">
-                              <Users className="h-3 w-3" />
-                              {task.remaining}/{task.total}
-                            </div>
+                {filteredAvailableTasks.map((task) => {
+                  const userTaskStatus = getUserTaskStatus(task);
+                  const taskNotStarted = isTaskNotStarted(task);
+                  const taskLive = isTaskLive(task);
+
+                  return (
+                    <Card
+                      key={task.id || task._id}
+                      className="hover:shadow-md transition-shadow border-teal-200 w-full"
+                    >
+                      <CardHeader className="pb-2 pt-3 px-3">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-sm text-teal-900 break-words">
+                              {task.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs mt-1 text-teal-600 break-words line-clamp-2">
+                              {task.description}
+                            </CardDescription>
                           </div>
                           <Badge
-                            variant="outline"
-                            className="border-teal-200 text-teal-700 whitespace-nowrap text-xs py-0 px-1.5"
+                            className={`${getStatusColor(
+                              task.taskStatus
+                            )} text-xs py-0.5 px-1.5`}
                           >
-                            {task.category}
+                            Available
                           </Badge>
                         </div>
-                        <Button
-                          onClick={() => handleViewTaskDetails(task)}
-                          className="w-full bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
-                          disabled={joiningTask || task.remaining === 0}
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          {joiningTask ? "Joining..." : "View & Join"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardHeader>
+                      <CardContent className="px-3 pb-3 pt-0">
+                        <div className="space-y-2">
+                          {/* Task dates and reward info */}
+                          <div className="flex flex-wrap items-center justify-between text-xs gap-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-teal-700 flex items-center">
+                                <DollarSign className="h-3 w-3 mr-0.5" />₹
+                                {task.reward}
+                              </span>
+                              <div className="flex items-center gap-1 text-teal-600">
+                                <Users className="h-3 w-3" />
+                                {task.remaining}/{task.total}
+                              </div>
+                            </div>
+                            {/* LIVE badge for active tasks */}
+                            {taskLive && (
+                              <Badge className="bg-red-500 text-white text-xs py-0.5 px-1.5 animate-pulse">
+                                LIVE
+                              </Badge>
+                            )}
+                            {!taskLive && (
+                              <Badge
+                                variant="outline"
+                                className="border-teal-200 text-teal-700 whitespace-nowrap text-xs py-0 px-1.5"
+                              >
+                                {task.category}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Task timing information */}
+                          <div className="text-xs text-teal-600 grid grid-cols-2 gap-1">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span className="truncate">
+                                Start: {formatTaskDate(task.startAt)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span className="truncate">
+                                End: {formatTaskDate(task.endAt)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            onClick={() => handleViewTaskDetails(task)}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
+                            disabled={
+                              joiningTask ||
+                              task.remaining === 0 ||
+                              taskNotStarted ||
+                              userTaskStatus === "pending" ||
+                              userTaskStatus === "completed"
+                            }
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            {joiningTask
+                              ? "Joining..."
+                              : userTaskStatus === "completed"
+                              ? "Done"
+                              : userTaskStatus === "pending"
+                              ? "Pending"
+                              : taskNotStarted
+                              ? "Not Started"
+                              : "View & Join"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -609,6 +745,7 @@ function TasksPageContent() {
                     </CardHeader>
                     <CardContent className="px-3 pb-3 pt-0">
                       <div className="space-y-2">
+                        {/* Payment and timing info */}
                         <div className="flex flex-wrap items-center justify-between text-xs gap-1">
                           <span className="font-semibold text-teal-700 flex items-center">
                             <DollarSign className="h-3 w-3 mr-0.5" />₹
@@ -617,19 +754,46 @@ function TasksPageContent() {
                           {task.task?.endAt && (
                             <div className="flex items-center gap-1 text-teal-600 text-xs">
                               <Clock className="h-3 w-3" />
-                              Ends {formatDate(task.task.endAt)}
+                              Ends {formatTaskDate(task.task.endAt)}
                             </div>
                           )}
                         </div>
+
+                        {/* Task timing information */}
+                        {task.task?.startAt && task.task?.endAt && (
+                          <div className="text-xs text-teal-600 grid grid-cols-2 gap-1">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span className="truncate">
+                                Start: {formatTaskDate(task.task.startAt)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span className="truncate">
+                                End: {formatTaskDate(task.task.endAt)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         <Button
                           onClick={() => {
                             setSelectedTask(task);
                             setShowSubmissionModal(true);
                           }}
                           className="w-full bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
+                          disabled={
+                            task.submission?.status === "pending" ||
+                            task.submission?.status === "approved"
+                          }
                         >
                           <Send className="h-3 w-3 mr-1" />
-                          Submit Proof
+                          {task.submission?.status === "pending"
+                            ? "Pending Review"
+                            : task.submission?.status === "approved"
+                            ? "Completed"
+                            : "Submit Proof"}
                         </Button>
                       </div>
                     </CardContent>
@@ -838,21 +1002,69 @@ function TasksPageContent() {
                 </div>
               </div>
 
-              {selectedTask.requirements?.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-sm text-teal-900 mb-1">
-                    Requirements
-                  </h4>
-                  <ul className="text-xs text-teal-700 space-y-1">
-                    {selectedTask.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-1">
-                        <span className="text-teal-500 mt-0.5">•</span>
-                        <span className="break-words">{req}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* Task timing information */}
+              <div className="bg-amber-50 p-3 rounded-lg">
+                <h4 className="font-medium text-sm text-amber-900 mb-1">
+                  Task Schedule
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-amber-600" />
+                    <span className="text-amber-700">
+                      Start: {formatTaskDate(selectedTask.startAt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-amber-600" />
+                    <span className="text-amber-700">
+                      End: {formatTaskDate(selectedTask.endAt)}
+                    </span>
+                  </div>
                 </div>
-              )}
+                {isTaskLive(selectedTask) && (
+                  <div className="mt-2">
+                    <Badge className="bg-red-500 text-white text-xs py-0.5 px-1.5 animate-pulse">
+                      LIVE - Join now!
+                    </Badge>
+                  </div>
+                )}
+                {isTaskNotStarted(selectedTask) && (
+                  <div className="mt-2">
+                    <Badge className="bg-yellow-500 text-white text-xs py-0.5 px-1.5">
+                      Not Started
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Fix the requirements rendering to handle non-array values */}
+              {selectedTask.requirements &&
+                (Array.isArray(selectedTask.requirements) ? (
+                  selectedTask.requirements.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-sm text-teal-900 mb-1">
+                        Requirements
+                      </h4>
+                      <ul className="text-xs text-teal-700 space-y-1">
+                        {selectedTask.requirements.map((req, index) => (
+                          <li key={index} className="flex items-start gap-1">
+                            <span className="text-teal-500 mt-0.5">•</span>
+                            <span className="break-words">{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                ) : typeof selectedTask.requirements === "string" ? (
+                  <div>
+                    <h4 className="font-medium text-sm text-teal-900 mb-1">
+                      Requirements
+                    </h4>
+                    <p className="text-xs text-teal-700 break-words">
+                      {selectedTask.requirements}
+                    </p>
+                  </div>
+                ) : null)}
 
               {selectedTask.proofRequirements && (
                 <div>
@@ -861,6 +1073,7 @@ function TasksPageContent() {
                   </h4>
                   <p className="text-xs text-teal-700 break-words">
                     {selectedTask.proofRequirements.details ||
+                      selectedTask.proofRequirements ||
                       "Follow the task instructions and submit proof of completion."}
                   </p>
                 </div>

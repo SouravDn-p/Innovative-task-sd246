@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobiles";
 import DashboardSidebar from "./dashboard-sidebar";
 import DashboardHeader from "./dashboard-header";
 import { MobileNav } from "@/components/user/mobile-nav";
+import { Toaster } from "@/components/ui/sonner";
 
 function DashboardContent({ children }) {
   const role = useSelector((state) => state?.auth?.role) || "user";
@@ -48,10 +49,13 @@ function DashboardContent({ children }) {
         )}
       </div>
 
+      {/* Toaster for notifications */}
+      <Toaster />
+
       {/* Mobile Sidebar Overlay */}
       {isMobile && isSidebarOpen && (
         <>
-          {/* Backdrop */}`
+          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/50 z-40 transition-opacity"
             onClick={() => setIsSidebarOpen(false)}

@@ -190,7 +190,7 @@ export function Header() {
               </span>
             </Link>
             <Link
-              href="/tasks"
+              href="dashboard/user/task"
               className="relative text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:text-teal-600"
             >
               <span className="inline-block py-1.5 px-1 cursor-pointer">

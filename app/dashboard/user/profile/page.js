@@ -783,14 +783,14 @@ function UserProfilePage() {
                         KYC Verification Required
                       </p>
                       <p className="text-sm text-amber-600 dark:text-amber-400">
-                        Pay ₹49 to start verification process
+                        Pay ₹99 to start verification process
                       </p>
                     </div>
                     <Button
                       size="sm"
                       className="bg-teal-600 hover:bg-teal-700 whitespace-nowrap mt-2 sm:mt-0"
                     >
-                      Pay ₹49 & Verify
+                      Pay ₹99 & Verify
                     </Button>
                   </div>
                 </div>
@@ -996,7 +996,7 @@ function UserProfilePage() {
                 <ul className="text-sm text-slate-600 space-y-1">
                   <li>• Share your referral link with friends</li>
                   <li>
-                    • When they complete KYC verification (₹99), you earn ₹49
+                    • When they complete KYC verification (₹99), you earn ₹99
                   </li>
                   <li>• Weekly activity rules apply after KYC completion</li>
                 </ul>

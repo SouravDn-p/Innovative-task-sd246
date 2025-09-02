@@ -69,6 +69,18 @@ export async function GET(req) {
         const assignedCount = assignmentMap[taskIdStr] || 0;
         const remainingSlots = Math.max(0, task.limitCount - assignedCount);
 
+        // Ensure requirements is always an array
+        let requirements = [];
+        if (Array.isArray(task.proofRequirements?.details)) {
+          requirements = task.proofRequirements.details;
+        } else if (typeof task.proofRequirements?.details === "string") {
+          requirements = [task.proofRequirements.details];
+        } else if (Array.isArray(task.proofRequirements)) {
+          requirements = task.proofRequirements;
+        } else if (typeof task.proofRequirements === "string") {
+          requirements = [task.proofRequirements];
+        }
+
         return {
           ...task,
           _id: taskIdStr,
@@ -80,7 +92,7 @@ export async function GET(req) {
           remaining: remainingSlots,
           total: task.limitCount,
           category: task.type,
-          requirements: task.proofRequirements?.details || [],
+          requirements: requirements,
           estimatedTime: task.estimatedTime || "30 mins",
           taskStatus: "available",
         };

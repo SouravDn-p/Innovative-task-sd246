@@ -31,6 +31,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import {
   Search,
   Filter,
   MoreHorizontal,
@@ -67,6 +78,15 @@ export default function AdminTaskSubmissionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [selectedSubmissions, setSelectedSubmissions] = useState(new Set());
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    submissionId: null,
+    action: null,
+    taskTitle: "",
+    userName: "",
+    reward: 0,
+  });
+  const [feedback, setFeedback] = useState("");
 
   // API queries
   const {
@@ -113,6 +133,68 @@ export default function AdminTaskSubmissionsPage() {
     });
   };
 
+  const openConfirmDialog = (
+    submissionId,
+    action,
+    taskTitle,
+    userName,
+    reward
+  ) => {
+    setConfirmDialog({
+      open: true,
+      submissionId,
+      action,
+      taskTitle,
+      userName,
+      reward,
+    });
+    setFeedback("");
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog({
+      open: false,
+      submissionId: null,
+      action: null,
+      taskTitle: "",
+      userName: "",
+      reward: 0,
+    });
+    setFeedback("");
+  };
+
+  const handleReviewSubmission = async () => {
+    try {
+      await reviewSubmission({
+        submissionId: confirmDialog.submissionId,
+        action: confirmDialog.action,
+        feedback,
+      }).unwrap();
+
+      toast.success(
+        `Task ${
+          confirmDialog.action === "approve" ? "approved" : "rejected"
+        } successfully`,
+        {
+          description:
+            confirmDialog.action === "approve"
+              ? `₹${confirmDialog.reward} has been credited to ${confirmDialog.userName}'s wallet`
+              : `Task submission has been rejected`,
+        }
+      );
+
+      refetch();
+      closeConfirmDialog();
+    } catch (error) {
+      console.error(`Failed to ${confirmDialog.action} submission:`, error);
+      toast.error("Error", {
+        description: `Failed to ${confirmDialog.action} submission: ${
+          error?.data?.error || "Unknown error"
+        }`,
+      });
+    }
+  };
+
   const handleQuickAction = async (submissionId, action) => {
     try {
       await reviewSubmission({
@@ -120,9 +202,22 @@ export default function AdminTaskSubmissionsPage() {
         action,
         feedback: action === "approve" ? "Approved" : "Rejected",
       }).unwrap();
+
+      toast.success(`Task ${action}d successfully`, {
+        description:
+          action === "approve"
+            ? "Reward has been credited to user's wallet"
+            : "Task submission has been rejected",
+      });
+
       refetch();
     } catch (error) {
       console.error(`Failed to ${action} submission:`, error);
+      toast.error("Error", {
+        description: `Failed to ${action} submission: ${
+          error?.data?.error || "Unknown error"
+        }`,
+      });
     }
   };
 
@@ -188,6 +283,88 @@ export default function AdminTaskSubmissionsPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => !open && closeConfirmDialog()}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmDialog.action === "approve"
+                ? "Approve Task Submission"
+                : "Reject Task Submission"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmDialog.action === "approve"
+                ? `Are you sure you want to approve this task submission? This will credit ₹${confirmDialog.reward} to ${confirmDialog.userName}'s wallet.`
+                : `Are you sure you want to reject this task submission? No reward will be given.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <span className="text-sm font-medium">Task:</span>
+              <span className="col-span-3 text-sm">
+                {confirmDialog.taskTitle}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <span className="text-sm font-medium">User:</span>
+              <span className="col-span-3 text-sm">
+                {confirmDialog.userName}
+              </span>
+            </div>
+            {confirmDialog.action === "approve" && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="text-sm font-medium">Reward:</span>
+                <span className="col-span-3 text-sm font-medium text-green-600">
+                  ₹{confirmDialog.reward}
+                </span>
+              </div>
+            )}
+            <div className="grid gap-2">
+              <label htmlFor="feedback" className="text-sm font-medium">
+                Feedback {confirmDialog.action === "reject" && "(Required)"}
+              </label>
+              <Textarea
+                id="feedback"
+                placeholder={
+                  confirmDialog.action === "reject"
+                    ? "Reason for rejection..."
+                    : "Optional feedback..."
+                }
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                required={confirmDialog.action === "reject"}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeConfirmDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReviewSubmission}
+              disabled={
+                reviewingSubmission ||
+                (confirmDialog.action === "reject" && !feedback.trim())
+              }
+              className={
+                confirmDialog.action === "approve"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }
+            >
+              {reviewingSubmission
+                ? "Processing..."
+                : confirmDialog.action === "approve"
+                ? "Approve"
+                : "Reject"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
@@ -375,21 +552,35 @@ export default function AdminTaskSubmissionsPage() {
                               <>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleQuickAction(submission._id, "approve")
+                                    openConfirmDialog(
+                                      submission._id,
+                                      "approve",
+                                      submission.task?.title || "Unknown Task",
+                                      submission.user?.name ||
+                                        submission.userName,
+                                      submission.task?.reward || 0
+                                    )
                                   }
                                   disabled={reviewingSubmission}
                                 >
                                   <CheckCircle className="h-4 w-4 mr-2" />
-                                  Quick Approve
+                                  Approve
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleQuickAction(submission._id, "reject")
+                                    openConfirmDialog(
+                                      submission._id,
+                                      "reject",
+                                      submission.task?.title || "Unknown Task",
+                                      submission.user?.name ||
+                                        submission.userName,
+                                      submission.task?.reward || 0
+                                    )
                                   }
                                   disabled={reviewingSubmission}
                                 >
                                   <XCircle className="h-4 w-4 mr-2" />
-                                  Quick Reject
+                                  Reject
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -435,6 +626,47 @@ export default function AdminTaskSubmissionsPage() {
                           <p className="text-xs text-teal-600 line-clamp-2">
                             {submission.proofData.description}
                           </p>
+                        </div>
+                      )}
+
+                      {/* Action Buttons for Mobile */}
+                      {submission.status === "pending" && (
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            onClick={() =>
+                              openConfirmDialog(
+                                submission._id,
+                                "approve",
+                                submission.task?.title || "Unknown Task",
+                                submission.user?.name || submission.userName,
+                                submission.task?.reward || 0
+                              )
+                            }
+                            disabled={reviewingSubmission}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() =>
+                              openConfirmDialog(
+                                submission._id,
+                                "reject",
+                                submission.task?.title || "Unknown Task",
+                                submission.user?.name || submission.userName,
+                                submission.task?.reward || 0
+                              )
+                            }
+                            disabled={reviewingSubmission}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -543,43 +775,63 @@ export default function AdminTaskSubmissionsPage() {
                         </div>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewDetails(submission._id)}
+                        {submission.status === "pending" ? (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 h-8"
+                              onClick={() =>
+                                openConfirmDialog(
+                                  submission._id,
+                                  "approve",
+                                  submission.task?.title || "Unknown Task",
+                                  submission.user?.name || submission.userName,
+                                  submission.task?.reward || 0
+                                )
+                              }
+                              disabled={reviewingSubmission}
                             >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            {submission.status === "pending" && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleQuickAction(submission._id, "approve")
-                                  }
-                                  disabled={reviewingSubmission}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Quick Approve
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleQuickAction(submission._id, "reject")
-                                  }
-                                  disabled={reviewingSubmission}
-                                >
-                                  <XCircle className="h-4 w-4 mr-2" />
-                                  Quick Reject
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-8"
+                              onClick={() =>
+                                openConfirmDialog(
+                                  submission._id,
+                                  "reject",
+                                  submission.task?.title || "Unknown Task",
+                                  submission.user?.name || submission.userName,
+                                  submission.task?.reward || 0
+                                )
+                              }
+                              disabled={reviewingSubmission}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleViewDetails(submission._id)
+                                }
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

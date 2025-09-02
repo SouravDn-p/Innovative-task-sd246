@@ -162,9 +162,26 @@ export async function POST(req) {
     }
 
     const now = new Date();
-    if (now < new Date(task.startAt) || now > new Date(task.endAt)) {
+    if (now < new Date(task.startAt)) {
       return new Response(
-        JSON.stringify({ message: "Task not available at this time" }),
+        JSON.stringify({
+          message: "Task not available yet",
+          details: `This task starts on ${new Date(
+            task.startAt
+          ).toLocaleString()}`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (now > new Date(task.endAt)) {
+      return new Response(
+        JSON.stringify({
+          message: "Task has expired",
+          details: `This task ended on ${new Date(
+            task.endAt
+          ).toLocaleString()}`,
+        }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

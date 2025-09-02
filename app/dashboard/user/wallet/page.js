@@ -51,7 +51,7 @@ import {
   X,
   Eye,
 } from "lucide-react";
-import { useGetUserByEmailQuery } from "@/redux/api/api";
+import { useGetWalletQuery } from "@/redux/api/api";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -74,7 +74,6 @@ export default function UserWalletPage() {
   // State management
   const [walletData, setWalletData] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 0,
@@ -93,56 +92,30 @@ export default function UserWalletPage() {
     limit: 20,
   });
 
-  // Fetch user data (which includes wallet info)
-  const {
-    data: userData,
-    isLoading: userLoading,
-    error: userError,
-  } = useGetUserByEmailQuery(session?.user?.email, {
-    skip: !session?.user?.email,
-  });
-
   // Fetch wallet data
-  const fetchWalletData = async (newFilters = filters) => {
-    try {
-      setLoading(true);
+  const {
+    data: walletResponse,
+    isLoading: walletLoading,
+    error: walletError,
+    refetch,
+  } = useGetWalletQuery();
 
-      // For now, we'll use the user data from Redux which includes wallet info
-      if (userData?.user) {
-        // Simulate API response structure
-        const walletInfo = {
-          balance: userData.user.walletBalance || 0,
-          totalEarnings: userData.user.totalEarn || 0,
-          totalSpent: 0, // Users don't spend, they earn
-          totalCredits: userData.user.totalEarn || 0,
-        };
-
-        // Get transactions from user data
-        const userTransactions = userData.user.transactions || [];
-
-        setWalletData(walletInfo);
-        setTransactions(userTransactions);
-        setPagination({
+  // Update state when wallet data changes
+  useEffect(() => {
+    if (walletResponse) {
+      setWalletData(walletResponse.wallet);
+      setTransactions(walletResponse.transactions || []);
+      setPagination(
+        walletResponse.pagination || {
           currentPage: 1,
           totalPages: 1,
-          totalTransactions: userTransactions.length,
+          totalTransactions: walletResponse.transactions?.length || 0,
           hasNext: false,
           hasPrev: false,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching wallet data:", error);
-    } finally {
-      setLoading(false);
+        }
+      );
     }
-  };
-
-  // Load data on component mount and when user data changes
-  useEffect(() => {
-    if (session?.user && userData?.user) {
-      fetchWalletData();
-    }
-  }, [session, userData]);
+  }, [walletResponse]);
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -151,7 +124,7 @@ export default function UserWalletPage() {
 
   // Apply search and date filters
   const applyFilters = () => {
-    fetchWalletData();
+    refetch();
   };
 
   // Reset filters
@@ -295,7 +268,7 @@ export default function UserWalletPage() {
   }, [status, router]);
 
   // Loading state
-  if (status === "loading" || userLoading) {
+  if (status === "loading" || walletLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <RefreshCw className="h-6 w-6 animate-spin text-teal-600" />
@@ -329,14 +302,6 @@ export default function UserWalletPage() {
             View your balance and transaction history
           </p>
         </div>
-        <Button
-          onClick={() => router.push("/dashboard/user")}
-          size="sm"
-          className="w-full sm:w-auto text-xs sm:text-sm"
-        >
-          <ArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          Back to Dashboard
-        </Button>
       </motion.div>
 
       {/* Wallet Balance Card */}
@@ -470,169 +435,161 @@ export default function UserWalletPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 sm:p-3 md:p-6 pt-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-6 sm:py-8">
-                <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-teal-600" />
-                <span className="ml-2 text-teal-800 text-xs sm:text-sm">
-                  Loading transactions...
-                </span>
-              </div>
-            ) : (
-              <>
-                {/* Mobile View - Card Layout */}
-                <div className="sm:hidden space-y-3 p-3">
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((transaction) => (
-                      <Card
-                        key={transaction._id || transaction.id}
-                        className="w-full"
-                      >
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="rounded-full bg-muted p-1.5">
-                                {getTransactionIcon(transaction.type)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm truncate">
-                                  {transaction.description}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {transaction.reference}
-                                </p>
-                              </div>
+            {/* Removed the local loading state check and rely only on walletLoading */}
+            <>
+              {/* Mobile View - Card Layout */}
+              <div className="sm:hidden space-y-3 p-3">
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((transaction) => (
+                    <Card
+                      key={transaction._id || transaction.id}
+                      className="w-full"
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-full bg-muted p-1.5">
+                              {getTransactionIcon(transaction.type)}
                             </div>
-                            <div className="text-right">
-                              <p
-                                className={`font-semibold text-sm ${
-                                  transaction.type === "credit"
-                                    ? "text-green-600"
-                                    : "text-red-600"
-                                }`}
-                              >
-                                {transaction.type === "credit" ? "+" : "-"}₹
-                                {transaction.amount?.toFixed(2) || "0.00"}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">
+                                {transaction.description}
                               </p>
-                              {getStatusBadge(transaction.status)}
+                              <p className="text-xs text-muted-foreground truncate">
+                                {transaction.reference}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(
-                                  transaction.createdAt
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                            {getCategoryBadge(transaction.category)}
-                            {getTransactionTypeDisplay(transaction.type)}
-                          </div>
-                          {transaction.failureReason && (
-                            <p className="text-xs text-red-600 mt-1">
-                              {transaction.failureReason}
+                          <div className="text-right">
+                            <p
+                              className={`font-semibold text-sm ${
+                                transaction.type === "credit"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {transaction.type === "credit" ? "+" : "-"}₹
+                              {transaction.amount?.toFixed(2) || "0.00"}
                             </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-6 sm:py-8">
-                      <Activity className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
-                      <h3 className="mt-3 sm:mt-4 font-medium text-sm sm:text-base">
-                        No transactions found
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Your transaction history will appear here
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Desktop View - Table Layout */}
-                <div className="hidden sm:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Transaction</TableHead>
-                        <TableHead className="text-xs">Type</TableHead>
-                        <TableHead className="text-xs">Category</TableHead>
-                        <TableHead className="text-xs">Amount</TableHead>
-                        <TableHead className="text-xs">Status</TableHead>
-                        <TableHead className="text-xs">Date</TableHead>
-                        <TableHead className="text-xs">Reference</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.length > 0 ? (
-                        filteredTransactions.map((transaction) => (
-                          <TableRow key={transaction._id || transaction.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="rounded-full bg-muted p-2">
-                                  {getTransactionIcon(transaction.type)}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-sm">
-                                    {transaction.description}
-                                  </p>
-                                  {transaction.failureReason && (
-                                    <p className="text-xs text-red-600">
-                                      {transaction.failureReason}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {getTransactionTypeDisplay(transaction.type)}
-                            </TableCell>
-                            <TableCell>
-                              {getCategoryBadge(transaction.category)}
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={
-                                  transaction.type === "credit"
-                                    ? "text-green-600 text-sm"
-                                    : "text-red-600 text-sm"
-                                }
-                              >
-                                {transaction.type === "credit" ? "+" : "-"}₹
-                                {transaction.amount?.toFixed(2) || "0.00"}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(transaction.status)}
-                            </TableCell>
-                            <TableCell className="text-xs">
+                            {getStatusBadge(transaction.status)}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
                               {new Date(
                                 transaction.createdAt
                               ).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">
-                              {transaction.reference}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8">
-                            <Activity className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h3 className="mt-4 font-medium">
-                              No transactions found
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Your transaction history will appear here
-                            </p>
+                            </span>
+                          </div>
+                          {getCategoryBadge(transaction.category)}
+                          {getTransactionTypeDisplay(transaction.type)}
+                        </div>
+                        {transaction.failureReason && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {transaction.failureReason}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-6 sm:py-8">
+                    <Activity className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
+                    <h3 className="mt-3 sm:mt-4 font-medium text-sm sm:text-base">
+                      No transactions found
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Your transaction history will appear here
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop View - Table Layout */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Transaction</TableHead>
+                      <TableHead className="text-xs">Type</TableHead>
+                      <TableHead className="text-xs">Category</TableHead>
+                      <TableHead className="text-xs">Amount</TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
+                      <TableHead className="text-xs">Date</TableHead>
+                      <TableHead className="text-xs">Reference</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.length > 0 ? (
+                      filteredTransactions.map((transaction) => (
+                        <TableRow key={transaction._id || transaction.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-full bg-muted p-2">
+                                {getTransactionIcon(transaction.type)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {transaction.description}
+                                </p>
+                                {transaction.failureReason && (
+                                  <p className="text-xs text-red-600">
+                                    {transaction.failureReason}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getTransactionTypeDisplay(transaction.type)}
+                          </TableCell>
+                          <TableCell>
+                            {getCategoryBadge(transaction.category)}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                transaction.type === "credit"
+                                  ? "text-green-600 text-sm"
+                                  : "text-red-600 text-sm"
+                              }
+                            >
+                              {transaction.type === "credit" ? "+" : "-"}₹
+                              {transaction.amount?.toFixed(2) || "0.00"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(transaction.status)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {new Date(
+                              transaction.createdAt
+                            ).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {transaction.reference}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </>
-            )}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <Activity className="mx-auto h-12 w-12 text-muted-foreground" />
+                          <h3 className="mt-4 font-medium">
+                            No transactions found
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your transaction history will appear here
+                          </p>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           </CardContent>
         </Card>
       </motion.div>

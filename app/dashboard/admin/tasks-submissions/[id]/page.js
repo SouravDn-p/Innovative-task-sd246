@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Calendar,
@@ -73,12 +74,26 @@ export default function TaskSubmissionDetailsPage({ params }) {
         feedback: reviewFeedback,
       }).unwrap();
 
+      toast.success(`Task ${reviewAction}d successfully`, {
+        description:
+          reviewAction === "approve"
+            ? `₹${submission.task?.reward || 0} has been credited to ${
+                submission.user?.name || submission.userName
+              }'s wallet`
+            : `Task submission has been rejected`,
+      });
+
       setShowReviewModal(false);
       setReviewAction("");
       setReviewFeedback("");
       refetch();
     } catch (error) {
       console.error("Failed to review submission:", error);
+      toast.error("Error", {
+        description: `Failed to ${reviewAction} submission: ${
+          error?.data?.error || "Unknown error"
+        }`,
+      });
     }
   };
 

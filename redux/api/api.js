@@ -226,9 +226,9 @@ export const api = createApi({
     }),
     joinTask: builder.mutation({
       query: ({ taskId, userEmail, userName }) => ({
-        url: `tasks/${taskId}/join`,
+        url: `user/tasks`,
         method: "POST",
-        body: { userEmail, userName },
+        body: { taskId, userEmail, userName },
       }),
       invalidatesTags: ["Task", "UserTasks", "AdminDashboard"],
     }),
