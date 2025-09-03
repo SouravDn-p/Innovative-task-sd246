@@ -403,6 +403,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Task", "AdminDashboard"],
     }),
+    createAdminTask: builder.mutation({
+      query: (taskData) => ({
+        url: `admin/tasks`,
+        method: "POST",
+        body: taskData,
+      }),
+      invalidatesTags: ["Task", "AdminDashboard"],
+    }),
 
     // ==========================================
     // ADMIN TASK SUBMISSIONS (ACTIVE)
@@ -599,6 +607,7 @@ export const {
   usePauseResumeTaskMutation,
   useCompleteTaskMutation,
   useDeleteAdminTaskMutation,
+  useCreateAdminTaskMutation,
 
   // Admin Task Submissions
   useGetAdminTaskSubmissionsQuery,

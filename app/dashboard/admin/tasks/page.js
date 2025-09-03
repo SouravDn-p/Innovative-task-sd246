@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -67,6 +68,7 @@ import {
   usePauseResumeTaskMutation,
   useCompleteTaskMutation,
   useDeleteAdminTaskMutation,
+  useCreateAdminTaskMutation,
 } from "@/redux/api/api";
 import TaskDetailsModal from "@/components/admin/task-details-modal";
 import { useIsMobile } from "@/hooks/use-mobiles";
@@ -83,6 +85,17 @@ export default function AdminTasksPage() {
   const [selectedTasks, setSelectedTasks] = useState(new Set());
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [newTaskData, setNewTaskData] = useState({
+    title: "",
+    type: "video",
+    description: "",
+    proofRequirements: "",
+    rateToUser: "",
+    limitCount: "",
+    startAt: "",
+    endAt: "",
+  });
   const [actionLoading, setActionLoading] = useState(null); // Track which action is loading
   const [successMessage, setSuccessMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -109,6 +122,7 @@ export default function AdminTasksPage() {
   const [pauseResumeTask] = usePauseResumeTaskMutation();
   const [completeTask] = useCompleteTaskMutation();
   const [deleteTask] = useDeleteAdminTaskMutation();
+  const [createTask] = useCreateAdminTaskMutation();
 
   const tasks = tasksData?.tasks || [];
   const pagination = tasksData?.pagination || {};
@@ -236,6 +250,91 @@ export default function AdminTasksPage() {
 
       // Clear error message after 5 seconds
       setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCreateTask = async () => {
+    try {
+      setActionLoading("create");
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      // Validate required fields
+      const requiredFields = [
+        "title",
+        "type",
+        "description",
+        "proofRequirements",
+        "rateToUser",
+        "limitCount",
+        "startAt",
+        "endAt",
+      ];
+
+      const missingFields = requiredFields.filter(
+        (field) =>
+          !newTaskData[field] || newTaskData[field].toString().trim() === ""
+      );
+
+      if (missingFields.length > 0) {
+        setErrorMessage(`Missing required fields: ${missingFields.join(", ")}`);
+        return;
+      }
+
+      // Validate dates
+      if (new Date(newTaskData.startAt) >= new Date(newTaskData.endAt)) {
+        setErrorMessage("End date must be after start date");
+        return;
+      }
+
+      // Validate numbers
+      const rateToUser = parseFloat(newTaskData.rateToUser);
+      const limitCount = parseInt(newTaskData.limitCount);
+
+      if (isNaN(rateToUser) || rateToUser <= 0) {
+        setErrorMessage("Rate to user must be a positive number");
+        return;
+      }
+
+      if (isNaN(limitCount) || limitCount <= 0) {
+        setErrorMessage("Limit count must be a positive integer");
+        return;
+      }
+
+      const taskData = {
+        ...newTaskData,
+        rateToUser,
+        limitCount,
+      };
+
+      await createTask(taskData).unwrap();
+
+      setSuccessMessage("Task created successfully!");
+      setShowCreateTaskModal(false);
+      setNewTaskData({
+        title: "",
+        type: "video",
+        description: "",
+        proofRequirements: "",
+        rateToUser: "",
+        limitCount: "",
+        startAt: "",
+        endAt: "",
+      });
+      refetch();
+    } catch (error) {
+      console.error("[ADMIN TASK] Failed to create task:", error);
+      let errorMessage = "Unknown error occurred";
+      if (error?.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+      setErrorMessage(`Failed to create task: ${errorMessage}`);
     } finally {
       setActionLoading(null);
     }
@@ -479,6 +578,7 @@ export default function AdminTasksPage() {
               <Button
                 size={isMobile ? "sm" : "default"}
                 className="bg-teal-600 hover:bg-teal-700 flex-1 sm:flex-initial"
+                onClick={() => setShowCreateTaskModal(true)}
               >
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 {isMobile ? "Create" : "Create Task"}
@@ -945,6 +1045,162 @@ export default function AdminTasksPage() {
         }}
         task={selectedTask}
       />
+      {/* Create Task Modal */}
+      <Dialog open={showCreateTaskModal} onOpenChange={setShowCreateTaskModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Task Title *</Label>
+                <Input
+                  id="title"
+                  value={newTaskData.title}
+                  onChange={(e) =>
+                    setNewTaskData({ ...newTaskData, title: e.target.value })
+                  }
+                  placeholder="Enter task title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="type">Task Type *</Label>
+                <Select
+                  value={newTaskData.type}
+                  onValueChange={(value) =>
+                    setNewTaskData({ ...newTaskData, type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select task type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="install">Install</SelectItem>
+                    <SelectItem value="share">Share</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="social">Social</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={newTaskData.description}
+                onChange={(e) =>
+                  setNewTaskData({
+                    ...newTaskData,
+                    description: e.target.value,
+                  })
+                }
+                placeholder="Enter task description"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="proofRequirements">Proof Requirements *</Label>
+              <Textarea
+                id="proofRequirements"
+                value={newTaskData.proofRequirements}
+                onChange={(e) =>
+                  setNewTaskData({
+                    ...newTaskData,
+                    proofRequirements: e.target.value,
+                  })
+                }
+                placeholder="Enter proof requirements (e.g., screenshot, link, etc.)"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rateToUser">Reward per User (₹) *</Label>
+                <Input
+                  id="rateToUser"
+                  type="number"
+                  value={newTaskData.rateToUser}
+                  onChange={(e) =>
+                    setNewTaskData({
+                      ...newTaskData,
+                      rateToUser: e.target.value,
+                    })
+                  }
+                  placeholder="Enter reward amount"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <Label htmlFor="limitCount">Task Limit *</Label>
+                <Input
+                  id="limitCount"
+                  type="number"
+                  value={newTaskData.limitCount}
+                  onChange={(e) =>
+                    setNewTaskData({
+                      ...newTaskData,
+                      limitCount: e.target.value,
+                    })
+                  }
+                  placeholder="Enter task limit"
+                  min="1"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startAt">Start Date *</Label>
+                <Input
+                  id="startAt"
+                  type="datetime-local"
+                  value={newTaskData.startAt}
+                  onChange={(e) =>
+                    setNewTaskData({ ...newTaskData, startAt: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="endAt">End Date *</Label>
+                <Input
+                  id="endAt"
+                  type="datetime-local"
+                  value={newTaskData.endAt}
+                  onChange={(e) =>
+                    setNewTaskData({ ...newTaskData, endAt: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateTaskModal(false)}
+              disabled={actionLoading === "create"}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateTask}
+              disabled={actionLoading === "create"}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {actionLoading === "create" ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                  Creating...
+                </>
+              ) : (
+                "Create Task"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
