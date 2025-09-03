@@ -89,8 +89,8 @@ export function Header() {
           background: "#1e3a8a",
           color: "#fff",
           customClass: {
-            popup: "max-w-xs w-full text-sm break-words", // fixes overflow
-            title: "truncate text-ellipsis", // keep title short
+            popup: "max-w-xs w-full text-sm break-words",
+            title: "truncate text-ellipsis",
           },
         });
         sessionStorage.setItem("welcomed", "true");
@@ -151,15 +151,32 @@ export function Header() {
   const dashboardLink = getDashboardRoute(userRole);
   const roleSpecificLinks = getRoleSpecificLinks(userRole);
 
+  // Animation variants for mobile sidebar
+  const sidebarVariants = {
+    hidden: { x: "100%" },
+    visible: { x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+    exit: { x: "100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm dark:bg-gray-900/95 border-b border-gray-100 dark:border-gray-800 shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-teal-100 shadow-sm">
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6">
         <div className="flex h-12 sm:h-14 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md sm:rounded-lg bg-teal-600 shadow-sm"
+              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-gradient-to-r from-teal-500 to-cyan-500 shadow-sm"
             >
               <Image
                 src="/logos/logo.png"
@@ -170,10 +187,10 @@ export function Header() {
               />
             </motion.div>
             <div className="hidden sm:flex flex-col leading-tight">
-              <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100">
+              <span className="text-sm sm:text-base font-bold text-teal-800">
                 TaskEarn
               </span>
-              <span className="hidden sm:block text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+              <span className="hidden sm:block text-[10px] sm:text-xs text-teal-600">
                 Smart task matching
               </span>
             </div>
@@ -183,15 +200,15 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-3 sm:gap-4">
             <Link
               href="/"
-              className="relative text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:text-teal-600"
+              className="relative text-xs sm:text-sm font-medium text-teal-700 hover:text-teal-500 transition-colors"
             >
               <span className="inline-block py-1.5 px-1 cursor-pointer">
                 Home
               </span>
             </Link>
             <Link
-              href="dashboard/user/task"
-              className="relative text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:text-teal-600"
+              href="/dashboard/user/task"
+              className="relative text-xs sm:text-sm font-medium text-teal-700 hover:text-teal-500 transition-colors"
             >
               <span className="inline-block py-1.5 px-1 cursor-pointer">
                 Tasks
@@ -199,7 +216,7 @@ export function Header() {
             </Link>
             <Link
               href="/about"
-              className="relative text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:text-teal-600"
+              className="relative text-xs sm:text-sm font-medium text-teal-700 hover:text-teal-500 transition-colors"
             >
               <span className="inline-block py-1.5 px-1 cursor-pointer">
                 About
@@ -214,7 +231,7 @@ export function Header() {
                 {/* Desktop Dashboard Button */}
                 <Link
                   href={dashboardLink}
-                  className="hidden md:flex items-center gap-1 rounded-md bg-teal-600 px-2 py-1 text-xs font-medium text-white hover:bg-teal-500 transition-colors"
+                  className="hidden md:flex items-center gap-1 rounded-md bg-gradient-to-r from-teal-500 to-cyan-500 px-2 py-1 text-xs font-medium text-white hover:bg-teal-600 transition-colors"
                 >
                   <User className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Dashboard</span>
@@ -224,16 +241,16 @@ export function Header() {
                 <div className="hidden md:flex items-center gap-1.5">
                   <button
                     onClick={() => setIsDropdownOpen((prev) => !prev)}
-                    className="flex items-center gap-1 rounded-full px-1 py-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                    className="flex items-center gap-1 rounded-full px-1 py-1 cursor-pointer hover:bg-teal-100 transition"
                   >
                     <Image
                       src={session.user?.image || "/default-avatar.png"}
                       alt="User Avatar"
                       width={24}
                       height={24}
-                      className="rounded-full border border-gray-300 dark:border-gray-700"
+                      className="rounded-full border border-teal-200"
                     />
-                    <ChevronDown className="h-3 w-3 text-gray-600 dark:text-gray-300" />
+                    <ChevronDown className="h-3 w-3 text-teal-600" />
                   </button>
 
                   <AnimatePresence>
@@ -243,26 +260,26 @@ export function Header() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-9 w-40 sm:w-44 rounded-md shadow-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden"
+                        className="absolute right-0 top-9 w-44 rounded-md shadow-lg bg-white border border-teal-200 overflow-hidden"
                       >
-                        <div className="px-2.5 py-2 border-b border-gray-100 dark:border-gray-800">
-                          <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <div className="px-2.5 py-2 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-cyan-50">
+                          <p className="text-sm font-medium text-teal-800 truncate">
                             {session.user.name}
                           </p>
-                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 capitalize">
+                          <p className="text-xs text-teal-600 capitalize">
                             {userRole} Account
                           </p>
                         </div>
                         <Link
                           href={dashboardLink}
-                          className="block px-3 py-2 text-xs sm:text-sm hover:bg-teal-50 dark:hover:bg-gray-800 cursor-pointer"
+                          className="block px-3 py-2 text-sm text-teal-700 hover:bg-teal-100 cursor-pointer"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Dashboard
                         </Link>
                         <button
                           onClick={handleLogout}
-                          className="flex w-full items-center gap-1.5 px-3 py-2 text-xs sm:text-sm hover:bg-teal-50 dark:hover:bg-gray-800 cursor-pointer"
+                          className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-teal-700 hover:bg-teal-100 cursor-pointer"
                         >
                           <LogOut className="h-3.5 w-3.5 text-red-500" />
                           Sign out
@@ -278,13 +295,13 @@ export function Header() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="px-2 py-1 text-xs hover:text-teal-100 cursor-pointer"
+                    className="px-2 py-1 text-xs text-teal-700 hover:text-teal-500 cursor-pointer"
                   >
                     Login
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="rounded-full px-2.5 py-1 text-xs bg-teal-600 hover:bg-teal-500 text-white shadow-sm hover:scale-105 transition-transform cursor-pointer">
+                  <Button className="rounded-full px-2.5 py-1 text-xs bg-gradient-to-r from-teal-500 to-cyan-500 hover:bg-teal-600 text-white shadow-sm hover:scale-105 transition-transform cursor-pointer">
                     Get Started
                   </Button>
                 </Link>
@@ -297,12 +314,12 @@ export function Header() {
                 onClick={() => setIsMenuOpen((s) => !s)}
                 aria-expanded={isMenuOpen}
                 aria-label="Toggle menu"
-                className="inline-flex items-center justify-center rounded-md p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center rounded-md p-1 hover:bg-teal-100 transition-colors cursor-pointer"
               >
                 {isMenuOpen ? (
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 text-teal-600" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-5 w-5 text-teal-600" />
                 )}
               </button>
             </div>
@@ -333,11 +350,11 @@ export function Header() {
 
             {/* Sidebar */}
             <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="sidebar z-[9999] w-[85vw] max-w-[300px] min-w-[260px] bg-white dark:bg-gray-900 shadow-xl flex flex-col md:hidden"
+              variants={sidebarVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="sidebar z-[9999] w-[85vw] max-w-[300px] min-w-[260px] bg-white shadow-lg flex flex-col md:hidden border-l border-teal-200"
               style={{
                 position: "fixed",
                 right: 0,
@@ -347,122 +364,155 @@ export function Header() {
               }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-600 to-teal-500 text-white">
+              <div className="p-4 border-b border-teal-100 flex items-center justify-between bg-gradient-to-r from-teal-500 to-cyan-500 text-white">
                 {session ? (
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Image
-                      src={session?.user?.image || "/default-avatar.png"}
-                      alt="User Avatar"
-                      width={32}
-                      height={32}
-                      className="rounded-full border-2 border-white shadow-sm flex-shrink-0"
-                    />
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="relative">
+                      <Image
+                        src={session?.user?.image || "/default-avatar.png"}
+                        alt="User Avatar"
+                        width={40}
+                        height={40}
+                        className="rounded-full border-2 border-white shadow-sm flex-shrink-0"
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                    </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-semibold text-sm truncate">
+                      <span className="font-bold text-sm text-white truncate">
                         {session?.user?.name}
                       </span>
-                      <span className="text-[10px] opacity-90 capitalize">
-                        {userRole} Account
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block px-2 py-0.5 bg-teal-700 rounded-full text-white text-xs font-semibold capitalize">
+                          {userRole}
+                        </span>
+                        <span className="text-xs text-teal-100">Online</span>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <span className="font-semibold text-base">Menu</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-teal-600 to-cyan-600 rounded flex items-center justify-center text-white font-bold text-sm shadow-md">
+                      TE
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white">TaskEarn</h2>
+                      <p className="text-xs text-teal-100">Smart task matching</p>
+                    </div>
+                  </div>
                 )}
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="rounded-full p-1.5 hover:bg-white/20 transition-colors cursor-pointer flex-shrink-0 ml-1"
+                  className="rounded-full p-2 hover:bg-teal-600 transition-colors cursor-pointer flex-shrink-0"
                   aria-label="Close menu"
                 >
-                  <X className="h-4.5 w-4.5 text-white" />
+                  <X className="h-4 w-4 text-white" />
                 </button>
               </div>
 
               {/* Navigation (scrollable middle section) */}
-              <nav className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-4 space-y-0.5">
-                <Link
-                  href="/"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
+              <nav className="flex-1 overflow-y-auto py-4">
+                <motion.ul
+                  className="space-y-1 p-2"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
                 >
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/tasks"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
-                >
-                  <span>Tasks</span>
-                </Link>
-                <Link
-                  href="/about"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
-                >
-                  <span>About</span>
-                </Link>
-
-                {/* Role-specific links */}
-                {session && (
-                  <>
-                    <div className="pt-1.5 pb-1 border-t border-gray-200 dark:border-gray-700 mt-1.5">
-                      <h3 className="px-2.5 py-1.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Dashboard
-                      </h3>
-                    </div>
+                  <motion.li variants={itemVariants}>
                     <Link
-                      href={dashboardLink}
+                      href="/"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
                     >
-                      <User className="h-4 w-4" />
-                      <span>Dashboard</span>
+                      <span className="text-sm font-medium">Home</span>
                     </Link>
+                  </motion.li>
+                  <motion.li variants={itemVariants}>
+                    <Link
+                      href="/dashboard/user/task"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
+                    >
+                      <span className="text-sm font-medium">Tasks</span>
+                    </Link>
+                  </motion.li>
+                  <motion.li variants={itemVariants}>
+                    <Link
+                      href="/about"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
+                    >
+                      <span className="text-sm font-medium">About</span>
+                    </Link>
+                  </motion.li>
 
-                    {roleSpecificLinks.map((link) => {
-                      const Icon = link.icon;
-                      return (
+                  {/* Role-specific links */}
+                  {session && (
+                    <>
+                      <motion.li variants={itemVariants} className="pt-4">
+                        <div className="px-4 py-2 text-xs font-semibold text-teal-600 uppercase tracking-wider">
+                          Dashboard
+                        </div>
+                      </motion.li>
+                      <motion.li variants={itemVariants}>
                         <Link
-                          key={link.name}
-                          href={link.href}
+                          href={dashboardLink}
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-gray-800 hover:text-teal-600 transition-all duration-200 cursor-pointer"
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
                         >
-                          <Icon className="h-4 w-4" />
-                          <span>{link.name}</span>
+                          <User className="h-5 w-5 text-teal-600" />
+                          <span className="text-sm font-medium">Dashboard</span>
                         </Link>
-                      );
-                    })}
-                  </>
-                )}
+                      </motion.li>
+                      {roleSpecificLinks.map((link, index) => {
+                        const Icon = link.icon;
+                        return (
+                          <motion.li key={link.name} variants={itemVariants}>
+                            <Link
+                              href={link.href}
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
+                            >
+                              <Icon className="h-5 w-5 text-teal-600" />
+                              <span className="text-sm font-medium">{link.name}</span>
+                            </Link>
+                          </motion.li>
+                        );
+                      })}
+                    </>
+                  )}
+                </motion.ul>
               </nav>
 
               {/* Footer (sticks at bottom) */}
-              <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="p-4 border-t border-teal-100 mt-auto bg-gradient-to-t from-teal-50 to-white">
                 {session ? (
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <LogOut className="h-4 w-4 text-red-500" />
-                      <span>Sign out</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full rounded-lg border border-teal-200 px-4 py-3 text-sm font-medium text-teal-700 hover:bg-teal-500 hover:text-white transition-colors duration-200 shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4 text-red-500" />
+                    <span>Sign out</span>
+                  </button>
                 ) : (
                   <div className="space-y-2">
                     <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer">
+                      <button className="w-full rounded-lg border border-teal-200 px-4 py-3 text-sm font-medium text-teal-700 hover:bg-teal-100 transition-colors duration-200 shadow-sm">
                         Login
                       </button>
                     </Link>
                     <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                      <button className="w-full rounded-md bg-teal-600 text-white px-3 py-2.5 text-sm font-medium hover:bg-teal-500 transition-all duration-200 hover:scale-[1.02] cursor-pointer">
+                      <button className="w-full rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-4 py-3 text-sm font-medium hover:bg-teal-600 transition-colors duration-200 shadow-sm hover:scale-[1.02]">
                         Get Started
                       </button>
                     </Link>
                   </div>
                 )}
+                <div className="text-center mt-4">
+                  <p className="text-xs text-teal-600">TaskEarn v1.0.0</p>
+                  <p className="text-[10px] text-teal-400 mt-1">
+                    © 2025 All Rights Reserved
+                  </p>
+                </div>
               </div>
             </motion.div>
           </>
