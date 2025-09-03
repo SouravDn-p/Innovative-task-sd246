@@ -2,15 +2,19 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useGetKYCDataQuery } from "@/redux/api/api";
 import {
   Home,
   Briefcase,
   DollarSign,
-  HomeIcon,
   User,
   TrendingUp,
   CheckCircle,
   Shield,
+  Users,
+  Settings,
+  Eye,
+  Activity,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -18,14 +22,40 @@ export function MobileNav({ activeTab, onTabChange }) {
   const { data: session, status } = useSession();
   const role = session?.user?.role?.toLowerCase() || "user";
 
-  // Hardcoded five routes per role, including Home and excluding Settings
+  // Fetch KYC data for user role
+  const { data: kycData } = useGetKYCDataQuery(undefined, {
+    skip: role !== "user",
+  });
+
+  // Hardcoded five routes per role as specified
   const simplifiedMenus = {
     user: [
       { title: "Dashboard", icon: Home, href: "/dashboard/user" },
       { title: "Tasks", icon: CheckCircle, href: "/dashboard/user/task" },
-      { title: "Wallet", icon: DollarSign, href: "/dashboard/user/wallet" },
-      { title: "Profile", icon: User, href: "/dashboard/user/profile" },
-      { title: "Home", icon: HomeIcon, href: "/" },
+      // Conditionally show either Wallet (for KYC verified) or KYC Verification (for non-KYC verified)
+      ...(role === "user"
+        ? kycData?.status === "verified"
+          ? [
+              {
+                title: "Wallet",
+                icon: DollarSign,
+                href: "/dashboard/user/wallet",
+              },
+            ]
+          : [
+              {
+                title: "KYC",
+                icon: Shield,
+                href: "/dashboard/user/kyc-verification",
+              },
+            ]
+        : []),
+      {
+        title: "Completed",
+        icon: CheckCircle,
+        href: "/dashboard/user/task/completed",
+      },
+      { title: "Referrals", icon: Users, href: "/dashboard/user/referrals" },
     ],
     advertiser: [
       { title: "Dashboard", icon: Home, href: "/dashboard/advertiser" },
@@ -40,17 +70,25 @@ export function MobileNav({ activeTab, onTabChange }) {
         href: "/dashboard/advertiser/wallet",
       },
       {
-        title: "Analytics",
-        icon: TrendingUp,
-        href: "/dashboard/advertiser/analytics",
+        title: "Active",
+        icon: Activity,
+        href: "/dashboard/advertiser/active-tasks",
       },
-      { title: "Home", icon: HomeIcon, href: "/" },
+      {
+        title: "Referrals",
+        icon: Users,
+        href: "/dashboard/advertiser/referrals",
+      },
     ],
     admin: [
       { title: "Dashboard", icon: Home, href: "/dashboard/admin" },
       { title: "Tasks", icon: CheckCircle, href: "/dashboard/admin/tasks" },
       { title: "KYC", icon: Shield, href: "/dashboard/admin/kyc-management" },
-      { title: "Payouts", icon: DollarSign, href: "/dashboard/admin/payouts" },
+      {
+        title: "Submissions",
+        icon: Eye,
+        href: "/dashboard/admin/tasks-submissions",
+      },
       { title: "Users", icon: User, href: "/dashboard/admin/users" },
     ],
   };

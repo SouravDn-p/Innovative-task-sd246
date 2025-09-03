@@ -529,6 +529,19 @@ export const api = createApi({
         };
       },
       invalidatesTags: ["KYC"],
+      // Add transformErrorResponse to handle errors properly
+      transformErrorResponse: (response, meta, arg) => {
+        // Ensure we return a proper error object with a string message
+        if (response?.data?.error && typeof response.data.error === "string") {
+          return { message: response.data.error };
+        }
+        return {
+          message:
+            response?.data?.message ||
+            response?.error ||
+            "Upload failed. Please try again.",
+        };
+      },
     }),
   }),
 });

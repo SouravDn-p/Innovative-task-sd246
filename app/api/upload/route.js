@@ -2,6 +2,15 @@
 import { getToken } from "next-auth/jwt";
 import { v2 as cloudinary } from "cloudinary";
 
+// Add validation for Cloudinary configuration
+if (
+  !process.env.CLOUDINARY_CLOUD_NAME ||
+  !process.env.CLOUDINARY_API_KEY ||
+  !process.env.CLOUDINARY_API_SECRET
+) {
+  console.error("Cloudinary environment variables are not properly configured");
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -56,6 +65,26 @@ export async function POST(req) {
       );
     }
 
+    // Check if Cloudinary is properly configured
+    if (
+      !process.env.CLOUDINARY_CLOUD_NAME ||
+      !process.env.CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_SECRET
+    ) {
+      console.error(
+        "Cloudinary environment variables are not properly configured"
+      );
+      return new Response(
+        JSON.stringify({
+          error:
+            "Upload service is not properly configured. Please contact support.",
+        }),
+        {
+          status: 500,
+        }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const uploadResult = await new Promise((resolve, reject) => {
@@ -65,8 +94,14 @@ export async function POST(req) {
           resource_type: "auto",
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(
+              new Error(`Upload failed: ${error.message || "Unknown error"}`)
+            );
+          } else {
+            resolve(result);
+          }
         }
       );
       stream.end(buffer);
@@ -83,7 +118,10 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error("Upload error:", error);
-    return new Response(JSON.stringify({ error: "Failed to upload file" }), {
+    // Return a more user-friendly error message
+    const errorMessage =
+      error.message || "Failed to upload file. Please try again.";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
     });
   }

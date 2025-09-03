@@ -495,7 +495,11 @@ export async function POST(req) {
       );
     } catch (error) {
       if (session) {
-        await session.abortTransaction();
+        try {
+          await session.abortTransaction();
+        } catch (abortError) {
+          console.error("Error aborting transaction:", abortError);
+        }
       }
 
       if (
@@ -509,15 +513,23 @@ export async function POST(req) {
       }
 
       console.error("Error processing KYC data:", error);
+      // Return a more user-friendly error message
+      const errorMessage =
+        error.message ||
+        "Internal server error occurred while processing your request.";
       return new Response(
         JSON.stringify({
-          message: error.message || "Internal server error",
+          message: errorMessage,
         }),
         { status: 500 }
       );
     } finally {
       if (session) {
-        await session.endSession();
+        try {
+          await session.endSession();
+        } catch (sessionError) {
+          console.error("Error ending session:", sessionError);
+        }
       }
       break;
     }

@@ -163,9 +163,16 @@ const KYCDashboard = ({ userEmail }) => {
       });
     } catch (err) {
       console.error("Upload error:", err);
+      // Fix the error handling to ensure we're passing strings to toast
+      let errorMessage = "Please try again.";
+      if (err?.data?.message && typeof err.data.message === "string") {
+        errorMessage = err.data.message;
+      } else if (err?.message && typeof err.message === "string") {
+        errorMessage = err.message;
+      }
       toast({
         title: "Upload failed",
-        description: err.data?.message || err.message || "Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -351,7 +358,7 @@ const KYCDashboard = ({ userEmail }) => {
         {/* Status Overview */}
         <Card className={`border-2 ${getStatusColor(localKycData.status)}`}>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-background rounded-full shadow-sm">
                   <UserCheck className="h-8 w-8 text-primary" />
@@ -368,7 +375,24 @@ const KYCDashboard = ({ userEmail }) => {
                 </div>
               </div>
               <div className="text-right">
-                <Badge variant="outline" className="bg-background/50">
+                <Badge
+                  variant="outline"
+                  className={(() => {
+                    switch (localKycData.status) {
+                      case "verified":
+                        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800";
+                      case "pending":
+                      case "under_review":
+                        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800";
+                      case "none":
+                        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800";
+                      case "rejected":
+                        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800";
+                      default:
+                        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800";
+                    }
+                  })()}
+                >
                   <div className="flex items-center gap-2">
                     {getStatusIcon(localKycData.status)}
                     {localKycData.status.replace("_", " ").toUpperCase()}

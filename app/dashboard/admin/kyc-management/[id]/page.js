@@ -73,10 +73,11 @@ export default function AdminKYCDetailsPage() {
       refetch();
     } catch (error) {
       console.error("Failed to approve KYC:", error);
-      const errorMessage = error?.data?.message || 
-                          error?.message || 
-                          "Failed to approve KYC application. Please try again.";
-      
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to approve KYC application. Please try again.";
+
       toast({
         title: "Approval Failed",
         description: errorMessage,
@@ -114,10 +115,11 @@ export default function AdminKYCDetailsPage() {
       refetch();
     } catch (error) {
       console.error("Failed to reject KYC:", error);
-      const errorMessage = error?.data?.message || 
-                          error?.message || 
-                          "Failed to reject KYC application. Please try again.";
-      
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to reject KYC application. Please try again.";
+
       toast({
         title: "Rejection Failed",
         description: errorMessage,
@@ -222,7 +224,7 @@ export default function AdminKYCDetailsPage() {
           <Button
             variant="outline"
             onClick={() => router.back()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hidden sm:flex"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to List
