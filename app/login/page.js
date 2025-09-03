@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useLoginUserMutation } from "@/redux/api/api";
 import { loginSuccess } from "@/redux/slice/authSlice";
 import { Eye, EyeOff, Mail, Lock, Sparkles, ShieldCheck } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
@@ -51,7 +50,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [loginUser, { isLoading }] = useLoginUserMutation();
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -104,34 +103,51 @@ function LoginPage() {
       return;
     }
 
+    setIsLoading(true);
     try {
-      const result = await loginUser(formData).unwrap();
-      dispatch(loginSuccess(result));
       const signInResult = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
         redirect: false,
       });
+
       if (signInResult?.error) {
-        throw new Error("Failed to update session");
+        throw new Error(signInResult.error);
       }
-      router.push("/dashboard");
+
+      // Fetch user data from session
+      const response = await fetch("/api/auth/session");
+      const sessionData = await response.json();
+      if (sessionData?.user) {
+        dispatch(loginSuccess({
+          token: signInResult.token, // Note: NextAuth.js doesn't return a token directly; this is for Redux state
+          user: {
+            id: sessionData.user.id,
+            name: sessionData.user.name,
+            email: sessionData.user.email,
+            role: sessionData.user.role,
+          },
+        }));
+        router.push("/dashboard");
+      } else {
+        throw new Error("Failed to retrieve session data");
+      }
     } catch (err) {
       Swal.fire({
         toast: true,
         icon: "error",
-        title:
-          err?.data?.error || err?.message || "Login failed. Please try again.",
+        title: err.message || "Login failed. Please try again.",
         position: "top-end",
         timer: 3500,
         showConfirmButton: false,
         background: "#164e63",
         color: "#fff",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // small UI helpers for micro-interactions
   const handleSocialSignIn = useCallback((provider) => {
     signIn(provider, { callbackUrl: "/dashboard" });
   }, []);
@@ -146,7 +162,7 @@ function LoginPage() {
           <Image
             src={
               session?.user?.image ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+mania              `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 session?.user?.name || "User"
               )}&background=14b8a6&color=fff`
             }
@@ -174,7 +190,6 @@ function LoginPage() {
 
   return (
     <main className="relative min-h-screen bg-gradient-to-br from-teal-950 via-teal-900 to-teal-800 flex flex-col items-center justify-center overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
-      {/* subtle grid and blobs for Pinterest/Dribbble inspiration */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(30%_25%_at_10%_20%,rgba(45,212,191,0.08),transparent),radial-gradient(30%_25%_at_90%_80%,rgba(16,185,129,0.06),transparent)] opacity-95" />
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-teal-500/12 blur-3xl animate-blob" />
@@ -182,7 +197,7 @@ function LoginPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-10" />
       </div>
 
-      <header className="w-full max-w-md text-center z-10 mb-6">
+      <header className="w-full max-w-md text-center z-10/favicon.ico mb-6">
         <div className="inline-flex items-center justify-center gap-3 mb-4">
           <div className="h-12 w-12 rounded-2xl bg-white/6 border border-white/10 flex items-center justify-center">
             <Sparkles className="h-6 w-6 text-teal-200" />

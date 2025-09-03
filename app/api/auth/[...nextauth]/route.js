@@ -17,19 +17,26 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
 
         const db = client.db("TaskEarnDB");
         const user = await db
           .collection("Users")
           .findOne({ email: credentials.email });
-        if (!user) throw new Error("No user found");
+
+        if (!user) {
+          throw new Error("No user found");
+        }
 
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
-        if (!isValid) throw new Error("Invalid password");
+        if (!isValid) {
+          throw new Error("Invalid password");
+        }
 
         return {
           id: user._id.toString(),
@@ -78,7 +85,6 @@ export const authOptions = {
               email,
               image,
               role: "user",
-              // profile/kyc defaults
               kycStatus: "none",
               kycPaidAt: null,
               kycReferenceId: null,

@@ -428,7 +428,7 @@ export default function RegisterPage() {
                     className="w-full rounded-md bg-white/5 border border-white/20 text-white placeholder:text-teal-200/60 focus:border-teal-400 focus:ring-teal-400/30 p-2"
                   >
                     <option value="user" className="bg-slate-900">User</option>
-                    <option value="advertiser" className="bg-slate-900">Advertiser</option>
+                    {/* <option value="advertiser" className="bg-slate-900">Advertiser</option> */}
                   </select>
                 </div>
 
