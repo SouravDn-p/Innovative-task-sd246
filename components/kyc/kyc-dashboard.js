@@ -28,7 +28,7 @@ import {
   useUpdateKYCDataMutation,
   useUploadDocumentMutation,
 } from "@/redux/api/api"; // Added useUploadDocumentMutation
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast"; // Fixed import path
 
 const KYCDashboard = ({ userEmail }) => {
   const { toast } = useToast();
@@ -313,15 +313,13 @@ const KYCDashboard = ({ userEmail }) => {
   const canUploadDocuments =
     (canStartKYC || canResubmit) && localKycData.status !== "pending";
 
-  // Show payment only at 100% progress and not paid
-  const canPay =
-    localKycData.completionPercentage === 100 &&
-    localKycData.paymentStatus !== "paid";
+  // Show payment only when all documents are uploaded and not paid
+  const canPay = allDocsUploaded && localKycData.paymentStatus !== "paid";
 
-  // Show submit only after payment and at 100% progress
+  // Show submit only after payment and when all documents are uploaded
   const canSubmitApplication =
     localKycData.paymentStatus === "paid" &&
-    localKycData.completionPercentage === 100 &&
+    allDocsUploaded &&
     (canStartKYC || canResubmit);
 
   if (isLoading) {
@@ -506,7 +504,7 @@ const KYCDashboard = ({ userEmail }) => {
               />
 
               {/* Show message if all documents are uploaded */}
-              {allDocsUploaded && (
+              {allDocsUploaded && localKycData.paymentStatus !== "paid" && (
                 <Alert className="border-success/20 bg-success-light">
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
@@ -519,7 +517,7 @@ const KYCDashboard = ({ userEmail }) => {
           </Card>
         )}
 
-        {/* Payment Section - shown only at 100% progress */}
+        {/* Payment Section - shown when all documents are uploaded */}
         {canPay && (
           <Card className="border-warning/20 bg-warning-light">
             <CardContent className="p-6">
@@ -550,26 +548,6 @@ const KYCDashboard = ({ userEmail }) => {
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Action Buttons - shown after payment */}
-        {canSubmitApplication && (
-          <div className="flex gap-4 justify-center">
-            <Button
-              onClick={handleSubmitKYC}
-              disabled={isSubmitting}
-              size="lg"
-              className="px-8"
-            >
-              {isSubmitting
-                ? canResubmit
-                  ? "Resubmitting..."
-                  : "Submitting..."
-                : canResubmit
-                ? "Resubmit Documents"
-                : "Submit Application"}
-            </Button>
-          </div>
         )}
 
         {/* Benefits Section */}
@@ -609,6 +587,37 @@ const KYCDashboard = ({ userEmail }) => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Submit Application Section - shown at the bottom after payment and when all documents are uploaded */}
+        {canSubmitApplication && (
+          <Card className="border-success/20 bg-success-light">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-background rounded-full">
+                    <CheckCircle className="h-6 w-6 text-success" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-success-foreground">
+                      Ready to Submit
+                    </h3>
+                    <p className="text-sm text-success-foreground/80">
+                      All documents uploaded and payment completed. Submit for
+                      review.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleSubmitKYC}
+                  disabled={isSubmitting}
+                  className="bg-success hover:bg-success/90 text-success-foreground"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit for Review"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

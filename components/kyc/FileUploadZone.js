@@ -1,7 +1,7 @@
 // Modified FileUploadZone (no major changes needed, as it uses onFileUpload prop)
 import React, { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";

@@ -30,7 +30,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function UserSettings() {
   const { data: session } = useSession();
@@ -83,8 +83,8 @@ export default function UserSettings() {
     setIsSaving(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast({
         title: "Settings Saved",
         description: "Your user settings have been updated successfully.",
@@ -109,7 +109,7 @@ export default function UserSettings() {
       timezone: "Asia/Kolkata",
       language: "en",
     });
-    
+
     setNotificationSettings({
       emailNotifications: true,
       pushNotifications: true,
@@ -118,31 +118,31 @@ export default function UserSettings() {
       referralAlerts: true,
       promotionAlerts: false,
     });
-    
+
     setSecuritySettings({
       twoFactorAuth: false,
       loginAlerts: true,
       sessionTimeout: 30,
     });
-    
+
     setPrivacySettings({
       profileVisibility: "public",
       taskHistoryVisibility: "friends",
       earningsVisibility: "private",
     });
-    
+
     setAppearanceSettings({
       theme: "light",
       primaryColor: "#0d9488",
       compactMode: false,
     });
-    
+
     setPaymentSettings({
       preferredPaymentMethod: "bank_transfer",
       autoWithdrawal: false,
       withdrawalThreshold: 500,
     });
-    
+
     toast({
       title: "Settings Reset",
       description: "Settings have been reset to default values.",
@@ -200,7 +200,10 @@ export default function UserSettings() {
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">General</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TabsTrigger
+              value="notifications"
+              className="flex items-center gap-2"
+            >
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
@@ -241,7 +244,12 @@ export default function UserSettings() {
                     <Input
                       id="name"
                       value={generalSettings.name}
-                      onChange={(e) => setGeneralSettings({...generalSettings, name: e.target.value})}
+                      onChange={(e) =>
+                        setGeneralSettings({
+                          ...generalSettings,
+                          name: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -250,7 +258,12 @@ export default function UserSettings() {
                       id="email"
                       type="email"
                       value={generalSettings.email}
-                      onChange={(e) => setGeneralSettings({...generalSettings, email: e.target.value})}
+                      onChange={(e) =>
+                        setGeneralSettings({
+                          ...generalSettings,
+                          email: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -258,7 +271,12 @@ export default function UserSettings() {
                     <Input
                       id="phone"
                       value={generalSettings.phone}
-                      onChange={(e) => setGeneralSettings({...generalSettings, phone: e.target.value})}
+                      onChange={(e) =>
+                        setGeneralSettings({
+                          ...generalSettings,
+                          phone: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -266,7 +284,12 @@ export default function UserSettings() {
                     <Input
                       id="timezone"
                       value={generalSettings.timezone}
-                      onChange={(e) => setGeneralSettings({...generalSettings, timezone: e.target.value})}
+                      onChange={(e) =>
+                        setGeneralSettings({
+                          ...generalSettings,
+                          timezone: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -275,7 +298,12 @@ export default function UserSettings() {
                       id="language"
                       className="w-full p-2 border rounded-md"
                       value={generalSettings.language}
-                      onChange={(e) => setGeneralSettings({...generalSettings, language: e.target.value})}
+                      onChange={(e) =>
+                        setGeneralSettings({
+                          ...generalSettings,
+                          language: e.target.value,
+                        })
+                      }
                     >
                       <option value="en">English</option>
                       <option value="hi">Hindi</option>
@@ -311,7 +339,12 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, emailNotifications: checked})}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          emailNotifications: checked,
+                        })
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -323,11 +356,16 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={notificationSettings.pushNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, pushNotifications: checked})}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          pushNotifications: checked,
+                        })
+                      }
                     />
                   </div>
                 </div>
-                
+
                 <div className="border-t pt-4">
                   <h3 className="font-medium mb-4">Alert Preferences</h3>
                   <div className="space-y-4">
@@ -340,7 +378,12 @@ export default function UserSettings() {
                       </div>
                       <Switch
                         checked={notificationSettings.taskAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, taskAlerts: checked})}
+                        onCheckedChange={(checked) =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            taskAlerts: checked,
+                          })
+                        }
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -352,7 +395,12 @@ export default function UserSettings() {
                       </div>
                       <Switch
                         checked={notificationSettings.paymentAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, paymentAlerts: checked})}
+                        onCheckedChange={(checked) =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            paymentAlerts: checked,
+                          })
+                        }
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -364,7 +412,12 @@ export default function UserSettings() {
                       </div>
                       <Switch
                         checked={notificationSettings.referralAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, referralAlerts: checked})}
+                        onCheckedChange={(checked) =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            referralAlerts: checked,
+                          })
+                        }
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -376,7 +429,12 @@ export default function UserSettings() {
                       </div>
                       <Switch
                         checked={notificationSettings.promotionAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, promotionAlerts: checked})}
+                        onCheckedChange={(checked) =>
+                          setNotificationSettings({
+                            ...notificationSettings,
+                            promotionAlerts: checked,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -408,7 +466,12 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={securitySettings.twoFactorAuth}
-                      onCheckedChange={(checked) => setSecuritySettings({...securitySettings, twoFactorAuth: checked})}
+                      onCheckedChange={(checked) =>
+                        setSecuritySettings({
+                          ...securitySettings,
+                          twoFactorAuth: checked,
+                        })
+                      }
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -420,21 +483,33 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={securitySettings.loginAlerts}
-                      onCheckedChange={(checked) => setSecuritySettings({...securitySettings, loginAlerts: checked})}
+                      onCheckedChange={(checked) =>
+                        setSecuritySettings({
+                          ...securitySettings,
+                          loginAlerts: checked,
+                        })
+                      }
                     />
                   </div>
                 </div>
-                
+
                 <div className="border-t pt-4">
                   <h3 className="font-medium mb-4">Session Management</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
+                      <Label htmlFor="sessionTimeout">
+                        Session Timeout (minutes)
+                      </Label>
                       <Input
                         id="sessionTimeout"
                         type="number"
                         value={securitySettings.sessionTimeout}
-                        onChange={(e) => setSecuritySettings({...securitySettings, sessionTimeout: parseInt(e.target.value) || 0})}
+                        onChange={(e) =>
+                          setSecuritySettings({
+                            ...securitySettings,
+                            sessionTimeout: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -458,12 +533,19 @@ export default function UserSettings() {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="profileVisibility">Profile Visibility</Label>
+                    <Label htmlFor="profileVisibility">
+                      Profile Visibility
+                    </Label>
                     <select
                       id="profileVisibility"
                       className="w-full p-2 border rounded-md mt-2"
                       value={privacySettings.profileVisibility}
-                      onChange={(e) => setPrivacySettings({...privacySettings, profileVisibility: e.target.value})}
+                      onChange={(e) =>
+                        setPrivacySettings({
+                          ...privacySettings,
+                          profileVisibility: e.target.value,
+                        })
+                      }
                     >
                       <option value="public">Public</option>
                       <option value="friends">Friends Only</option>
@@ -473,14 +555,21 @@ export default function UserSettings() {
                       Control who can view your profile information
                     </p>
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="taskHistoryVisibility">Task History Visibility</Label>
+                    <Label htmlFor="taskHistoryVisibility">
+                      Task History Visibility
+                    </Label>
                     <select
                       id="taskHistoryVisibility"
                       className="w-full p-2 border rounded-md mt-2"
                       value={privacySettings.taskHistoryVisibility}
-                      onChange={(e) => setPrivacySettings({...privacySettings, taskHistoryVisibility: e.target.value})}
+                      onChange={(e) =>
+                        setPrivacySettings({
+                          ...privacySettings,
+                          taskHistoryVisibility: e.target.value,
+                        })
+                      }
                     >
                       <option value="public">Public</option>
                       <option value="friends">Friends Only</option>
@@ -490,14 +579,21 @@ export default function UserSettings() {
                       Control who can view your task completion history
                     </p>
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="earningsVisibility">Earnings Visibility</Label>
+                    <Label htmlFor="earningsVisibility">
+                      Earnings Visibility
+                    </Label>
                     <select
                       id="earningsVisibility"
                       className="w-full p-2 border rounded-md mt-2"
                       value={privacySettings.earningsVisibility}
-                      onChange={(e) => setPrivacySettings({...privacySettings, earningsVisibility: e.target.value})}
+                      onChange={(e) =>
+                        setPrivacySettings({
+                          ...privacySettings,
+                          earningsVisibility: e.target.value,
+                        })
+                      }
                     >
                       <option value="public">Public</option>
                       <option value="friends">Friends Only</option>
@@ -532,7 +628,12 @@ export default function UserSettings() {
                       id="theme"
                       className="w-full p-2 border rounded-md"
                       value={appearanceSettings.theme}
-                      onChange={(e) => setAppearanceSettings({...appearanceSettings, theme: e.target.value})}
+                      onChange={(e) =>
+                        setAppearanceSettings({
+                          ...appearanceSettings,
+                          theme: e.target.value,
+                        })
+                      }
                     >
                       <option value="light">Light</option>
                       <option value="dark">Dark</option>
@@ -547,16 +648,26 @@ export default function UserSettings() {
                         type="color"
                         className="w-12 h-12 border-0 rounded cursor-pointer"
                         value={appearanceSettings.primaryColor}
-                        onChange={(e) => setAppearanceSettings({...appearanceSettings, primaryColor: e.target.value})}
+                        onChange={(e) =>
+                          setAppearanceSettings({
+                            ...appearanceSettings,
+                            primaryColor: e.target.value,
+                          })
+                        }
                       />
                       <Input
                         value={appearanceSettings.primaryColor}
-                        onChange={(e) => setAppearanceSettings({...appearanceSettings, primaryColor: e.target.value})}
+                        onChange={(e) =>
+                          setAppearanceSettings({
+                            ...appearanceSettings,
+                            primaryColor: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -567,7 +678,12 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={appearanceSettings.compactMode}
-                      onCheckedChange={(checked) => setAppearanceSettings({...appearanceSettings, compactMode: checked})}
+                      onCheckedChange={(checked) =>
+                        setAppearanceSettings({
+                          ...appearanceSettings,
+                          compactMode: checked,
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -590,12 +706,19 @@ export default function UserSettings() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="preferredPaymentMethod">Preferred Payment Method</Label>
+                    <Label htmlFor="preferredPaymentMethod">
+                      Preferred Payment Method
+                    </Label>
                     <select
                       id="preferredPaymentMethod"
                       className="w-full p-2 border rounded-md"
                       value={paymentSettings.preferredPaymentMethod}
-                      onChange={(e) => setPaymentSettings({...paymentSettings, preferredPaymentMethod: e.target.value})}
+                      onChange={(e) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          preferredPaymentMethod: e.target.value,
+                        })
+                      }
                     >
                       <option value="bank_transfer">Bank Transfer</option>
                       <option value="upi">UPI</option>
@@ -603,7 +726,7 @@ export default function UserSettings() {
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -614,19 +737,32 @@ export default function UserSettings() {
                     </div>
                     <Switch
                       checked={paymentSettings.autoWithdrawal}
-                      onCheckedChange={(checked) => setPaymentSettings({...paymentSettings, autoWithdrawal: checked})}
+                      onCheckedChange={(checked) =>
+                        setPaymentSettings({
+                          ...paymentSettings,
+                          autoWithdrawal: checked,
+                        })
+                      }
                     />
                   </div>
-                  
+
                   {paymentSettings.autoWithdrawal && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                       <div className="space-y-2">
-                        <Label htmlFor="withdrawalThreshold">Withdrawal Threshold (₹)</Label>
+                        <Label htmlFor="withdrawalThreshold">
+                          Withdrawal Threshold (₹)
+                        </Label>
                         <Input
                           id="withdrawalThreshold"
                           type="number"
                           value={paymentSettings.withdrawalThreshold}
-                          onChange={(e) => setPaymentSettings({...paymentSettings, withdrawalThreshold: parseFloat(e.target.value) || 0})}
+                          onChange={(e) =>
+                            setPaymentSettings({
+                              ...paymentSettings,
+                              withdrawalThreshold:
+                                parseFloat(e.target.value) || 0,
+                            })
+                          }
                         />
                       </div>
                     </div>

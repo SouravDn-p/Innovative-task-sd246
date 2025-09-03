@@ -77,7 +77,7 @@ import {
   useUpdateKYCApplicationMutation,
 } from "@/redux/api/api";
 import { AdminKYCDetails } from "@/components/kyc/admin-kyc-details";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AdminKYCManagementPage() {
   const router = useRouter();

@@ -29,7 +29,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AdvertiserSettings() {
   const { data: session } = useSession();
