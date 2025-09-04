@@ -266,6 +266,39 @@ export const api = createApi({
     }),
 
     // ==========================================
+    // ADVERTISER WALLET SYSTEM
+    // ==========================================
+    getAdvertiserWallet: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `advertiser/wallet?${searchParams.toString()}`;
+      },
+      providesTags: ["Wallet"],
+    }),
+    // Add this new endpoint for advertiser analytics
+    getAdvertiserAnalytics: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `advertiser/analytics?${searchParams.toString()}`;
+      },
+      providesTags: ["Task"],
+    }),
+    addAdvertiserFunds: builder.mutation({
+      query: (fundsData) => ({
+        url: "advertiser/wallet",
+        method: "POST",
+        body: fundsData,
+      }),
+      invalidatesTags: ["Wallet"],
+    }),
+
+    // ==========================================
     // ADMIN USER MANAGEMENT (ACTIVE)
     // ==========================================
     getAdminUsers: builder.query({
@@ -448,6 +481,11 @@ export const api = createApi({
       query: (taskId) => `tasks/${taskId}/submissions`,
       providesTags: ["TaskSubmissions"],
     }),
+    // Add this new endpoint for task analytics
+    getTaskAnalytics: builder.query({
+      query: (taskId) => `tasks/${taskId}/analytics`,
+      providesTags: ["Task"],
+    }),
     reviewTaskSubmissions: builder.mutation({
       query: ({ submissionIds, action, feedback }) => ({
         url: "admin/task-submissions/bulk-review",
@@ -551,6 +589,46 @@ export const api = createApi({
         };
       },
     }),
+
+    // ==========================================
+    // ADVERTISER MANAGEMENT
+    // ==========================================
+    registerAdvertiser: builder.mutation({
+      query: (advertiserData) => ({
+        url: "advertiser/register",
+        method: "POST",
+        body: advertiserData,
+      }),
+      invalidatesTags: ["User", "AdminDashboard"],
+    }),
+    getAdminAdvertiserRequests: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/advertisers/requests?${searchParams.toString()}`;
+      },
+      providesTags: ["User"],
+    }),
+    updateAdminAdvertiserRequest: builder.mutation({
+      query: (requestData) => ({
+        url: "admin/advertisers/requests",
+        method: "PUT",
+        body: requestData,
+      }),
+      invalidatesTags: ["User", "AdminDashboard"],
+    }),
+    getAdminActiveAdvertisers: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/advertisers/active?${searchParams.toString()}`;
+      },
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -588,6 +666,10 @@ export const {
   useGetWalletQuery,
   useGetTransactionsQuery,
 
+  // Advertiser Wallet System
+  useGetAdvertiserWalletQuery,
+  useAddAdvertiserFundsMutation,
+
   // Admin User Management
   useGetAdminUsersQuery,
   useGetAdminUserDetailsQuery,
@@ -624,6 +706,14 @@ export const {
 
   // Admin Dashboard
   useGetAdminDashboardStatsQuery,
+
+  // Advertiser Management
+  useRegisterAdvertiserMutation,
+  useGetAdminAdvertiserRequestsQuery,
+  useUpdateAdminAdvertiserRequestMutation,
+  useGetAdminActiveAdvertisersQuery,
+  // Add the missing export for advertiser analytics
+  useGetAdvertiserAnalyticsQuery,
 
   useUploadDocumentMutation,
 } = api;

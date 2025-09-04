@@ -39,6 +39,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  useGetAdvertiserWalletQuery,
+  useAddAdvertiserFundsMutation,
+} from "@/redux/api/api";
 import {
   Wallet,
   Plus,
@@ -75,6 +80,7 @@ const stagger = {
 export default function AdvertiserWalletPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
   // State management
   const [walletData, setWalletData] = useState(null);
@@ -106,38 +112,84 @@ export default function AdvertiserWalletPage() {
   });
   const [addingFunds, setAddingFunds] = useState(false);
 
-  // Fetch wallet data
-  const fetchWalletData = async (newFilters = filters) => {
+  // Redux hooks
+  const {
+    data: reduxWalletData,
+    isLoading: reduxLoading,
+    isError: reduxError,
+    refetch: refetchWallet,
+  } = useGetAdvertiserWalletQuery(filters);
+
+  const [addFunds, { isLoading: isAddingFunds }] =
+    useAddAdvertiserFundsMutation();
+
+  // Primary data fetching using direct API calls
+  const fetchWalletData = async () => {
+    if (!session?.user?.email) return;
+
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
 
-      Object.entries(newFilters).forEach(([key, value]) => {
-        if (value && value !== "all") queryParams.append(key, value);
+      // Add filters to query params
+      Object.keys(filters).forEach((key) => {
+        if (filters[key] && filters[key] !== "all") {
+          queryParams.append(key, filters[key]);
+        }
       });
 
-      const response = await fetch(`/api/advertiser/wallet?${queryParams}`);
+      const response = await fetch(
+        `/api/advertiser/wallet?${queryParams.toString()}`
+      );
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         setWalletData(data.wallet);
-        setTransactions(data.transactions);
-        setPagination(data.pagination);
+        setTransactions(data.transactions || []);
+        setPagination(
+          data.pagination || {
+            currentPage: 1,
+            totalPages: 1,
+            totalTransactions: data.transactions?.length || 0,
+            hasNext: false,
+            hasPrev: false,
+          }
+        );
       } else {
-        console.error("Failed to fetch wallet data");
+        toast({
+          title: "Error",
+          description: data.error || "Failed to fetch wallet data",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error fetching wallet data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch wallet data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  // Sync Redux data with local state as backup
+  useEffect(() => {
+    if (reduxWalletData && !loading) {
+      // Only use Redux data if direct API call failed
+      setWalletData(reduxWalletData.wallet);
+      setTransactions(reduxWalletData.transactions);
+      setPagination(reduxWalletData.pagination);
+    }
+  }, [reduxWalletData, loading]);
+
   // Load data on component mount and filter changes
   useEffect(() => {
-    if (session?.user) {
+    if (status === "authenticated") {
       fetchWalletData();
     }
-  }, [session, filters.page, filters.type]);
+  }, [session, filters, status]);
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -164,7 +216,11 @@ export default function AdvertiserWalletPage() {
   // Handle add funds
   const handleAddFunds = async () => {
     if (!addFundsData.amount || parseFloat(addFundsData.amount) <= 0) {
-      alert("Please enter a valid amount");
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -172,26 +228,40 @@ export default function AdvertiserWalletPage() {
       setAddingFunds(true);
       const response = await fetch("/api/advertiser/wallet", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           amount: parseFloat(addFundsData.amount),
           description: addFundsData.description || "Wallet top-up",
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const result = await response.json();
+        toast({
+          title: "Success",
+          description: "Funds added successfully!",
+        });
+
         setShowAddFunds(false);
         setAddFundsData({ amount: "", description: "" });
         fetchWalletData(); // Refresh data
-        alert("Funds added successfully!");
       } else {
-        const error = await response.json();
-        alert(error.error || "Failed to add funds");
+        toast({
+          title: "Error",
+          description: data.error || "Failed to add funds",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error adding funds:", error);
-      alert("Failed to add funds");
+      toast({
+        title: "Error",
+        description: "Failed to add funds",
+        variant: "destructive",
+      });
     } finally {
       setAddingFunds(false);
     }
@@ -250,6 +320,9 @@ export default function AdvertiserWalletPage() {
     return null;
   }
 
+  // Use direct API loading state when available, fallback to Redux loading state
+  const isLoading = loading || reduxLoading;
+
   return (
     <div className="min-h-screen bg-white text-slate-800">
       {/* Header Section */}
@@ -274,9 +347,9 @@ export default function AdvertiserWalletPage() {
               <p className="text-white/80 text-sm mb-2">Current Balance</p>
               <p className="text-4xl lg:text-5xl font-bold">
                 ₹
-                {walletData.balance.toLocaleString("en-IN", {
+                {walletData.balance?.toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
-                })}
+                }) || "0.00"}
               </p>
             </div>
           )}
@@ -302,9 +375,9 @@ export default function AdvertiserWalletPage() {
                       </p>
                       <p className="text-2xl font-bold text-teal-700">
                         ₹
-                        {walletData.balance.toLocaleString("en-IN", {
+                        {walletData.balance?.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
-                        })}
+                        }) || "0.00"}
                       </p>
                     </div>
                     <Wallet className="h-8 w-8 text-teal-600" />
@@ -321,9 +394,9 @@ export default function AdvertiserWalletPage() {
                       <p className="text-sm text-slate-600 mb-1">Total Spent</p>
                       <p className="text-2xl font-bold text-blue-700">
                         ₹
-                        {walletData.totalSpent.toLocaleString("en-IN", {
+                        {walletData.totalSpent?.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
-                        })}
+                        }) || "0.00"}
                       </p>
                     </div>
                     <TrendingDown className="h-8 w-8 text-blue-600" />
@@ -342,9 +415,9 @@ export default function AdvertiserWalletPage() {
                       </p>
                       <p className="text-2xl font-bold text-green-700">
                         ₹
-                        {walletData.totalCredits.toLocaleString("en-IN", {
+                        {walletData.totalCredits?.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
-                        })}
+                        }) || "0.00"}
                       </p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-green-600" />
@@ -498,6 +571,15 @@ export default function AdvertiserWalletPage() {
               <Button variant="outline" onClick={resetFilters}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
+              <Button
+                variant="outline"
+                onClick={fetchWalletData}
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -527,7 +609,7 @@ export default function AdvertiserWalletPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="h-8 w-8 animate-spin text-teal-600" />
                   <span className="ml-2 text-teal-800">
@@ -580,15 +662,15 @@ export default function AdvertiserWalletPage() {
                             }`}
                           >
                             {transaction.type === "credit" ? "+" : "-"}₹
-                            {transaction.amount.toLocaleString("en-IN", {
+                            {transaction.amount?.toLocaleString("en-IN", {
                               minimumFractionDigits: 2,
-                            })}
+                            }) || "0.00"}
                           </TableCell>
                           <TableCell className="text-right">
                             ₹
-                            {transaction.balanceAfter.toLocaleString("en-IN", {
+                            {transaction.balanceAfter?.toLocaleString("en-IN", {
                               minimumFractionDigits: 2,
-                            })}
+                            }) || "0.00"}
                           </TableCell>
                         </TableRow>
                       ))}

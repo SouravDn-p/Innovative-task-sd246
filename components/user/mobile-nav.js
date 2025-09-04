@@ -15,6 +15,8 @@ import {
   Settings,
   Eye,
   Activity,
+  Plus,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -61,8 +63,22 @@ export function MobileNav({ activeTab, onTabChange }) {
       { title: "Dashboard", icon: Home, href: "/dashboard/advertiser" },
       {
         title: "Create",
-        icon: CheckCircle,
+        icon: Plus,
         href: "/dashboard/advertiser/create-task",
+      },
+      {
+        title: "Tasks",
+        icon: CheckCircle,
+        items: [
+          {
+            name: "Active",
+            href: "/dashboard/advertiser/active-tasks",
+          },
+          {
+            name: "History",
+            href: "/dashboard/advertiser/task-history",
+          },
+        ],
       },
       {
         title: "Wallet",
@@ -70,14 +86,9 @@ export function MobileNav({ activeTab, onTabChange }) {
         href: "/dashboard/advertiser/wallet",
       },
       {
-        title: "Active",
-        icon: Activity,
-        href: "/dashboard/advertiser/active-tasks",
-      },
-      {
-        title: "Referrals",
-        icon: Users,
-        href: "/dashboard/advertiser/referrals",
+        title: "Analytics",
+        icon: BarChart3,
+        href: "/dashboard/advertiser/analytics",
       },
     ],
     admin: [

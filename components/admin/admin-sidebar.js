@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   LayoutDashboard,
   Users,
@@ -17,14 +17,18 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
-} from "lucide-react"
+} from "lucide-react";
 
 export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
-  const [expandedSections, setExpandedSections] = useState(["dashboard"])
+  const [expandedSections, setExpandedSections] = useState(["dashboard"]);
 
   const toggleSection = (section) => {
-    setExpandedSections((prev) => (prev.includes(section) ? prev.filter((s) => s !== section) : [...prev, section]))
-  }
+    setExpandedSections((prev) =>
+      prev.includes(section)
+        ? prev.filter((s) => s !== section)
+        : [...prev, section]
+    );
+  };
 
   const menuItems = [
     {
@@ -48,9 +52,21 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: Users,
       roles: ["super_admin", "manager", "kyc_manager", "support_agent"],
       children: [
-        { id: "users-list", label: "All Users", roles: ["super_admin", "manager", "support_agent"] },
-        { id: "users-kyc", label: "KYC Reviews", roles: ["super_admin", "kyc_manager"] },
-        { id: "users-suspended", label: "Suspended Users", roles: ["super_admin", "manager", "kyc_manager"] },
+        {
+          id: "users-list",
+          label: "All Users",
+          roles: ["super_admin", "manager", "support_agent"],
+        },
+        {
+          id: "users-kyc",
+          label: "KYC Reviews",
+          roles: ["super_admin", "kyc_manager"],
+        },
+        {
+          id: "users-suspended",
+          label: "Suspended Users",
+          roles: ["super_admin", "manager", "kyc_manager"],
+        },
       ],
     },
     {
@@ -59,9 +75,21 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: CheckCircle,
       roles: ["super_admin", "manager", "task_manager"],
       children: [
-        { id: "tasks-review", label: "Review Submissions", roles: ["super_admin", "task_manager"] },
-        { id: "tasks-campaigns", label: "Manage Campaigns", roles: ["super_admin", "manager", "task_manager"] },
-        { id: "tasks-audit", label: "Audit System", roles: ["super_admin", "task_manager"] },
+        {
+          id: "tasks-review",
+          label: "Review Submissions",
+          roles: ["super_admin", "task_manager"],
+        },
+        {
+          id: "tasks-campaigns",
+          label: "Manage Campaigns",
+          roles: ["super_admin", "manager", "task_manager"],
+        },
+        {
+          id: "tasks-audit",
+          label: "Audit System",
+          roles: ["super_admin", "task_manager"],
+        },
       ],
     },
     {
@@ -70,9 +98,21 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: Wallet,
       roles: ["super_admin", "manager", "payout_manager"],
       children: [
-        { id: "payouts-pending", label: "Pending Payouts", roles: ["super_admin", "payout_manager"] },
-        { id: "payouts-history", label: "Payout History", roles: ["super_admin", "manager", "payout_manager"] },
-        { id: "payouts-reconcile", label: "Reconciliation", roles: ["super_admin", "payout_manager"] },
+        {
+          id: "payouts-pending",
+          label: "Pending Payouts",
+          roles: ["super_admin", "payout_manager"],
+        },
+        {
+          id: "payouts-history",
+          label: "Payout History",
+          roles: ["super_admin", "manager", "payout_manager"],
+        },
+        {
+          id: "payouts-reconcile",
+          label: "Reconciliation",
+          roles: ["super_admin", "payout_manager"],
+        },
       ],
     },
     {
@@ -81,9 +121,16 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: UserCheck,
       roles: ["super_admin", "manager", "advertiser_manager"],
       children: [
-        { id: "advertisers-list", label: "All Advertisers", roles: ["super_admin", "manager", "advertiser_manager"] },
-        { id: "advertisers-campaigns", label: "Campaign Oversight", roles: ["super_admin", "advertiser_manager"] },
-        { id: "advertisers-refunds", label: "Refund Requests", roles: ["super_admin", "advertiser_manager"] },
+        {
+          id: "advertisers-requests",
+          label: "New Requests",
+          roles: ["super_admin", "manager", "advertiser_manager"],
+        },
+        {
+          id: "advertisers-active",
+          label: "Active Advertisers",
+          roles: ["super_admin", "manager", "advertiser_manager"],
+        },
       ],
     },
     {
@@ -92,9 +139,21 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: Shield,
       roles: ["super_admin", "manager", "kyc_manager"],
       children: [
-        { id: "fraud-flagged", label: "Flagged Users", roles: ["super_admin", "kyc_manager"] },
-        { id: "fraud-suspicious", label: "Suspicious Activity", roles: ["super_admin", "manager", "kyc_manager"] },
-        { id: "fraud-devices", label: "Device Tracking", roles: ["super_admin", "kyc_manager"] },
+        {
+          id: "fraud-flagged",
+          label: "Flagged Users",
+          roles: ["super_admin", "kyc_manager"],
+        },
+        {
+          id: "fraud-suspicious",
+          label: "Suspicious Activity",
+          roles: ["super_admin", "manager", "kyc_manager"],
+        },
+        {
+          id: "fraud-devices",
+          label: "Device Tracking",
+          roles: ["super_admin", "kyc_manager"],
+        },
       ],
     },
     {
@@ -103,9 +162,21 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: BarChart3,
       roles: ["super_admin", "manager", "analyst"],
       children: [
-        { id: "reports-earnings", label: "Earnings Report", roles: ["super_admin", "manager", "analyst"] },
-        { id: "reports-users", label: "User Analytics", roles: ["super_admin", "analyst"] },
-        { id: "reports-campaigns", label: "Campaign Performance", roles: ["super_admin", "manager", "analyst"] },
+        {
+          id: "reports-earnings",
+          label: "Earnings Report",
+          roles: ["super_admin", "manager", "analyst"],
+        },
+        {
+          id: "reports-users",
+          label: "User Analytics",
+          roles: ["super_admin", "analyst"],
+        },
+        {
+          id: "reports-campaigns",
+          label: "Campaign Performance",
+          roles: ["super_admin", "manager", "analyst"],
+        },
       ],
     },
     {
@@ -116,7 +187,11 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       children: [
         { id: "team-members", label: "Team Members", roles: ["super_admin"] },
         { id: "team-roles", label: "Role Management", roles: ["super_admin"] },
-        { id: "team-permissions", label: "Permissions", roles: ["super_admin"] },
+        {
+          id: "team-permissions",
+          label: "Permissions",
+          roles: ["super_admin"],
+        },
       ],
     },
     {
@@ -125,18 +200,30 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
       icon: Settings,
       roles: ["super_admin", "manager"],
       children: [
-        { id: "settings-fees", label: "Fee Configuration", roles: ["super_admin"] },
-        { id: "settings-notifications", label: "Notifications", roles: ["super_admin", "manager"] },
-        { id: "settings-system", label: "System Config", roles: ["super_admin"] },
+        {
+          id: "settings-fees",
+          label: "Fee Configuration",
+          roles: ["super_admin"],
+        },
+        {
+          id: "settings-notifications",
+          label: "Notifications",
+          roles: ["super_admin", "manager"],
+        },
+        {
+          id: "settings-system",
+          label: "System Config",
+          roles: ["super_admin"],
+        },
       ],
     },
-  ]
+  ];
 
   const hasAccess = (roles) => {
-    return roles.includes(userRole)
-  }
+    return roles.includes(userRole);
+  };
 
-  const filteredMenuItems = menuItems.filter((item) => hasAccess(item.roles))
+  const filteredMenuItems = menuItems.filter((item) => hasAccess(item.roles));
 
   return (
     <div className="w-64 bg-card border-r border-border h-screen flex flex-col">
@@ -158,13 +245,17 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
         {filteredMenuItems.map((item) => (
           <div key={item.id}>
             <Button
-              variant={activeSection === item.id || activeSection.startsWith(item.id) ? "secondary" : "ghost"}
+              variant={
+                activeSection === item.id || activeSection.startsWith(item.id)
+                  ? "secondary"
+                  : "ghost"
+              }
               className="w-full justify-start"
               onClick={() => {
                 if (item.children) {
-                  toggleSection(item.id)
+                  toggleSection(item.id);
                 } else {
-                  onSectionChange(item.id)
+                  onSectionChange(item.id);
                 }
               }}
             >
@@ -188,7 +279,9 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
                   .map((child) => (
                     <Button
                       key={child.id}
-                      variant={activeSection === child.id ? "secondary" : "ghost"}
+                      variant={
+                        activeSection === child.id ? "secondary" : "ghost"
+                      }
                       size="sm"
                       className="w-full justify-start text-sm"
                       onClick={() => onSectionChange(child.id)}
@@ -206,11 +299,14 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
 
       {/* Footer */}
       <div className="p-4">
-        <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
           <LogOut className="h-4 w-4 mr-2" />
           Logout
         </Button>
       </div>
     </div>
-  )
+  );
 }

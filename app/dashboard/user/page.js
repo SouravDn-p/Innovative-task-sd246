@@ -20,14 +20,17 @@ import {
   CheckCircle,
   Star,
   Loader2,
+  Megaphone,
 } from "lucide-react";
 import { useGetUserByEmailQuery, useGetUserTasksQuery } from "@/redux/api/api";
 import { useRouter } from "next/navigation";
+import { BecomeAdvertiser } from "@/components/user/become-advertiser";
 
 export default function UserDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [showBecomeAdvertiser, setShowBecomeAdvertiser] = useState(false);
 
   // Get user data
   const {
@@ -134,6 +137,32 @@ export default function UserDashboard() {
   // Not authenticated
   if (status === "unauthenticated") {
     return null;
+  }
+
+  // Show Become Advertiser form if requested
+  if (showBecomeAdvertiser) {
+    return (
+      <motion.div
+        className="space-y-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => setShowBecomeAdvertiser(false)}
+            className="border-teal-200 text-teal-700 hover:bg-teal-50"
+          >
+            ← Back to Dashboard
+          </Button>
+          <h1 className="text-2xl font-bold text-teal-900">
+            Become an Advertiser
+          </h1>
+        </div>
+        <BecomeAdvertiser />
+      </motion.div>
+    );
   }
 
   return (
@@ -386,14 +415,27 @@ export default function UserDashboard() {
                 </div>
               ))}
             </div>
-            <Button
-              className="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-xs"
-              aria-label="View all achievements"
-              onClick={() => router.push("/dashboard/user")}
-              size="sm"
-            >
-              View All Achievements
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+              <Button
+                className="bg-teal-600 hover:bg-teal-700 text-xs"
+                aria-label="View all achievements"
+                onClick={() => router.push("/dashboard/user")}
+                size="sm"
+              >
+                View All Achievements
+              </Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-xs"
+                aria-label="Become an advertiser"
+                onClick={() =>
+                  router.push("/dashboard/user/become-an-advertiser")
+                }
+                size="sm"
+              >
+                <Megaphone className="h-4 w-4 mr-2" />
+                Become an Advertiser
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
