@@ -97,7 +97,7 @@ export default function AdvertiserWalletPage() {
   // Filters
   const [filters, setFilters] = useState({
     search: "",
-    type: "all",
+    type: "",
     dateFrom: "",
     dateTo: "",
     page: 1,
@@ -131,9 +131,17 @@ export default function AdvertiserWalletPage() {
       setLoading(true);
       const queryParams = new URLSearchParams();
 
-      // Add filters to query params
+      // Add filters to query params - only add non-empty values
       Object.keys(filters).forEach((key) => {
-        if (filters[key] && filters[key] !== "all") {
+        if (
+          filters[key] !== undefined &&
+          filters[key] !== null &&
+          filters[key] !== ""
+        ) {
+          // Special handling for type filter - don't send "all"
+          if (key === "type" && filters[key] === "all") {
+            return; // Skip "all" type filter
+          }
           queryParams.append(key, filters[key]);
         }
       });
@@ -205,7 +213,7 @@ export default function AdvertiserWalletPage() {
   const resetFilters = () => {
     setFilters({
       search: "",
-      type: "all",
+      type: "",
       dateFrom: "",
       dateTo: "",
       page: 1,
@@ -533,7 +541,7 @@ export default function AdvertiserWalletPage() {
               </div>
 
               <Select
-                value={filters.type}
+                value={filters.type || "all"}
                 onValueChange={(value) => handleFilterChange("type", value)}
               >
                 <SelectTrigger className="w-full sm:w-40">

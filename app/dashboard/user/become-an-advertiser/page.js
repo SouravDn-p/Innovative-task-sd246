@@ -15,11 +15,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { BecomeAdvertiser } from "@/components/user/become-advertiser";
 import { ArrowLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobiles";
 
 export default function BecomeAdvertiserPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   if (status === "loading") {
     return (
@@ -82,12 +84,14 @@ export default function BecomeAdvertiserPage() {
                 Our team is currently reviewing your request. You will receive
                 an email notification once your advertiser account is approved.
               </p>
-              <Button
-                onClick={() => router.push("/dashboard/user")}
-                className="bg-teal-600 hover:bg-teal-700"
-              >
-                Back to Dashboard
-              </Button>
+              {!isMobile && (
+                <Button
+                  onClick={() => router.push("/dashboard/user")}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  Back to Dashboard
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -102,14 +106,16 @@ export default function BecomeAdvertiserPage() {
       className="max-w-4xl mx-auto p-4"
     >
       <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/dashboard/user")}
-          className="border-teal-200 text-teal-700 hover:bg-teal-50"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="outline"
+            onClick={() => router.push("/dashboard/user")}
+            className="border-teal-200 text-teal-700 hover:bg-teal-50"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
         <h1 className="text-2xl font-bold text-teal-900">
           Become an Advertiser
         </h1>

@@ -198,70 +198,70 @@ export const api = createApi({
       query: ({ taskId, proofData, note }) => ({
         url: `tasks/${taskId}/submit`,
         method: "POST",
-        body: { proofData, note },
+        body: { taskId, proofData, note },
       }),
-      invalidatesTags: [
-        "Task",
-        "UserTasks",
-        "TaskSubmissions",
-        "AdminDashboard",
-      ],
+      invalidatesTags: ["Task", "UserTasks"],
     }),
     getUserTasks: builder.query({
-      query: (userEmail) => `user/getUserTasks/${userEmail}`,
+      query: () => "user/tasks",
       providesTags: ["UserTasks"],
-      transformResponse: (response) => ({
-        userTasks:
-          response.userTasks?.map((task) => ({
-            ...task,
-            _id: task._id,
-          })) || [],
-        statistics: response.statistics || {},
-        recentTasks: response.recentTasks || [],
-      }),
     }),
     getUserTasksGrouped: builder.query({
       query: () => "user/tasks/grouped",
       providesTags: ["UserTasks"],
     }),
     joinTask: builder.mutation({
-      query: ({ taskId, userEmail, userName }) => ({
-        url: `user/tasks`,
+      query: (taskId) => ({
+        url: `user/tasks/${taskId}/join`,
         method: "POST",
-        body: { taskId, userEmail, userName },
       }),
-      invalidatesTags: ["Task", "UserTasks", "AdminDashboard"],
+      invalidatesTags: ["Task", "UserTasks"],
     }),
     startTask: builder.mutation({
-      query: ({ taskId, userEmail }) => ({
-        url: `tasks/${taskId}/start`,
+      query: (taskId) => ({
+        url: `user/tasks/${taskId}/start`,
         method: "POST",
-        body: { userEmail },
       }),
       invalidatesTags: ["Task", "UserTasks"],
     }),
     getMyTaskSubmissions: builder.query({
-      query: () => "user/my-task-submissions",
+      query: () => "user/taskSubmissions/my",
       providesTags: ["TaskSubmissions"],
     }),
     reviewMyTaskSubmission: builder.mutation({
-      query: ({ submissionId, action, feedback }) => ({
-        url: `user/task-submissions/${submissionId}/review`,
+      query: ({ submissionId, feedback }) => ({
+        url: `user/taskSubmissions/${submissionId}/review`,
         method: "POST",
-        body: { action, feedback },
+        body: { feedback },
       }),
-      invalidatesTags: ["TaskSubmissions", "UserTasks"],
+      invalidatesTags: ["TaskSubmissions"],
     }),
 
     // ==========================================
-    // WALLET SYSTEM (ACTIVE)
+    // WALLET SYSTEM (USER SIDE)
     // ==========================================
     getWallet: builder.query({
-      query: () => "user/wallet",
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (
+            params[key] !== undefined &&
+            params[key] !== null &&
+            params[key] !== ""
+          ) {
+            // Special handling for type filter - don't send "all"
+            if (key === "type" && params[key] === "all") {
+              return; // Skip "all" type filter
+            }
+            searchParams.append(key, params[key]);
+          }
+        });
+        return `user/wallet?${searchParams.toString()}`;
+      },
       providesTags: ["Wallet"],
     }),
     getTransactions: builder.query({
-      query: (userId) => `wallet/${userId}/transactions`,
+      query: () => "user/transactions",
       providesTags: ["Wallet"],
     }),
 
@@ -272,7 +272,17 @@ export const api = createApi({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
         Object.keys(params).forEach((key) => {
-          if (params[key]) searchParams.append(key, params[key]);
+          if (
+            params[key] !== undefined &&
+            params[key] !== null &&
+            params[key] !== ""
+          ) {
+            // Special handling for type filter - don't send "all"
+            if (key === "type" && params[key] === "all") {
+              return; // Skip "all" type filter
+            }
+            searchParams.append(key, params[key]);
+          }
         });
         return `advertiser/wallet?${searchParams.toString()}`;
       },
@@ -468,36 +478,21 @@ export const api = createApi({
       query: ({ submissionId, action, feedback }) => ({
         url: `admin/task-submissions/${submissionId}`,
         method: "POST",
-        body: { action, feedback },
+        body: { submissionId, action, feedback },
       }),
-      invalidatesTags: [
-        "TaskSubmissions",
-        "UserTasks",
-        "Wallet",
-        "AdminDashboard",
-      ],
+      invalidatesTags: ["TaskSubmissions"],
     }),
     getTaskSubmissions: builder.query({
-      query: (taskId) => `tasks/${taskId}/submissions`,
+      query: (taskId) => `admin/tasks/${taskId}/submissions`,
       providesTags: ["TaskSubmissions"],
     }),
-    // Add this new endpoint for task analytics
-    getTaskAnalytics: builder.query({
-      query: (taskId) => `tasks/${taskId}/analytics`,
-      providesTags: ["Task"],
-    }),
     reviewTaskSubmissions: builder.mutation({
-      query: ({ submissionIds, action, feedback }) => ({
-        url: "admin/task-submissions/bulk-review",
+      query: ({ taskId, action, feedback }) => ({
+        url: `admin/tasks/${taskId}/submissions/action`,
         method: "POST",
-        body: { submissionIds, action, feedback },
+        body: { taskId, action, feedback },
       }),
-      invalidatesTags: [
-        "TaskSubmissions",
-        "UserTasks",
-        "Wallet",
-        "AdminDashboard",
-      ],
+      invalidatesTags: ["TaskSubmissions"],
     }),
 
     // ==========================================
@@ -511,83 +506,37 @@ export const api = createApi({
         });
         return `admin/kyc?${searchParams.toString()}`;
       },
-      providesTags: ["KYC"], // Use unified KYC tag
+      providesTags: ["KYC"],
     }),
     getAdminKYCApplicationDetails: builder.query({
       query: (applicationId) => `admin/kyc/${applicationId}`,
       providesTags: (result, error, applicationId) => [
-        { type: "KYC", id: applicationId }, // Use unified KYC tag
+        { type: "KYC", id: applicationId },
       ],
     }),
     approveKYCApplication: builder.mutation({
-      query: ({ applicationId, action, rejectionReason, notes }) => ({
-        url: `admin/kyc/${applicationId}`,
+      query: ({ applicationId, notes }) => ({
+        url: `admin/kyc/${applicationId}/approve`,
         method: "POST",
-        body: { action, rejectionReason, notes },
+        body: { notes },
       }),
-      transformErrorResponse: (response) => {
-        // Provide better error messages for KYC approval
-        return (
-          response.data || { message: "Failed to process KYC application" }
-        );
-      },
       invalidatesTags: ["KYC", "User", "AdminDashboard"],
     }),
     updateKYCApplication: builder.mutation({
-      query: ({ applicationId, assignTo, notes, priority }) => ({
+      query: ({ applicationId, status, notes }) => ({
         url: `admin/kyc/${applicationId}`,
         method: "PUT",
-        body: { assignTo, notes, priority },
+        body: { status, notes },
       }),
-      transformErrorResponse: (response) => {
-        // Provide better error messages for KYC updates
-        return response.data || { message: "Failed to update KYC application" };
-      },
-      invalidatesTags: (result, error, { applicationId }) => [
-        { type: "KYC", id: applicationId },
-        "KYC",
-      ],
+      invalidatesTags: ["KYC", "User", "AdminDashboard"],
     }),
 
     // ==========================================
-    // ADMIN DASHBOARD STATISTICS (ACTIVE)
+    // ADMIN DASHBOARD (ACTIVE)
     // ==========================================
     getAdminDashboardStats: builder.query({
-      query: () => "admin/dashboard",
+      query: () => "admin/dashboard/stats",
       providesTags: ["AdminDashboard"],
-      // Refetch every 30 seconds for real-time updates
-      pollingInterval: 30000,
-    }),
-
-    uploadDocument: builder.mutation({
-      query: ({ file, documentType }) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("documentType", documentType);
-        return {
-          url: "/upload", // Points to /api/upload
-          method: "POST",
-          body: formData,
-          prepareHeaders: (headers) => {
-            headers.delete("Content-Type");
-            return headers;
-          },
-        };
-      },
-      invalidatesTags: ["KYC"],
-      // Add transformErrorResponse to handle errors properly
-      transformErrorResponse: (response, meta, arg) => {
-        // Ensure we return a proper error object with a string message
-        if (response?.data?.error && typeof response.data.error === "string") {
-          return { message: response.data.error };
-        }
-        return {
-          message:
-            response?.data?.message ||
-            response?.error ||
-            "Upload failed. Please try again.",
-        };
-      },
     }),
 
     // ==========================================

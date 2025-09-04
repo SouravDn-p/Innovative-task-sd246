@@ -25,12 +25,14 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobiles";
 
 export function BecomeAdvertiser() {
   const { data: session } = useSession();
   const router = useRouter();
   const { toast } = useToast();
   const [registerAdvertiser, { isLoading }] = useRegisterAdvertiserMutation();
+  const isMobile = useIsMobile();
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -158,13 +160,15 @@ export function BecomeAdvertiser() {
             </AlertDescription>
           </Alert>
           <div className="mt-4 flex gap-2">
-            <Button
-              onClick={() => router.push("/dashboard/user")}
-              variant="outline"
-              className="border-teal-200 text-teal-700 hover:bg-teal-50"
-            >
-              Back to Dashboard
-            </Button>
+            {!isMobile && (
+              <Button
+                onClick={() => router.push("/dashboard/user")}
+                variant="outline"
+                className="border-teal-200 text-teal-700 hover:bg-teal-50"
+              >
+                Back to Dashboard
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -386,14 +390,16 @@ export function BecomeAdvertiser() {
                 "Submit Request"
               )}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/user")}
-              className="border-teal-200 text-teal-700 hover:bg-teal-50"
-            >
-              Cancel
-            </Button>
+            {!isMobile && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/dashboard/user")}
+                className="border-teal-200 text-teal-700 hover:bg-teal-50"
+              >
+                Cancel
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>
