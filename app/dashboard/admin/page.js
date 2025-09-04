@@ -23,6 +23,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  UserCheck,
 } from "lucide-react";
 import { useGetAdminDashboardStatsQuery } from "@/redux/api/api";
 import { useSession } from "next-auth/react";
@@ -252,7 +253,7 @@ export default function AdminDashboard() {
       {/* Additional Stats Row */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4"
+        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4"
       >
         <Card className="border-blue-200 bg-blue-50/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -301,66 +302,18 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-yellow-200 bg-yellow-50/30">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-800">
-              Pending Review
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-900">
-              {stats.pendingSubmissions || 0}
-            </div>
-            <p className="text-xs text-yellow-600">Need attention</p>
-          </CardContent>
-        </Card>
-
         <Card className="border-purple-200 bg-purple-50/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-purple-800">
-              Growth Rate
+              Pending Advertiser Requests
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <UserCheck className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">
-              {stats.newUsersThisWeek && stats.totalUsers
-                ? Math.round(
-                    (stats.newUsersThisWeek / stats.totalUsers) * 100 * 52
-                  )
-                : 0}
-              %
+              {stats.pendingAdvertiserRequests || 0}
             </div>
-            <p className="text-xs text-purple-600">Annual rate</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-indigo-200 bg-indigo-50/30">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-indigo-800">
-              Efficiency
-            </CardTitle>
-            <Award className="h-4 w-4 text-indigo-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-indigo-900">
-              {stats.approvedSubmissions &&
-              stats.pendingSubmissions +
-                stats.approvedSubmissions +
-                stats.rejectedSubmissions >
-                0
-                ? Math.round(
-                    (stats.approvedSubmissions /
-                      (stats.pendingSubmissions +
-                        stats.approvedSubmissions +
-                        stats.rejectedSubmissions)) *
-                      100
-                  )
-                : 0}
-              %
-            </div>
-            <p className="text-xs text-indigo-600">Success rate</p>
+            <p className="text-xs text-purple-600">Need review</p>
           </CardContent>
         </Card>
       </motion.div>

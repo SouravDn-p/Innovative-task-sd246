@@ -218,6 +218,31 @@ export async function POST(req, { params }) {
         throw new Error("Failed to approve task - no changes made to database");
       }
 
+      // Update advertiser profile data
+      console.log(
+        "[APPROVE TASK] Updating advertiser profile data for:",
+        task.gmail
+      );
+      const advertiserUpdateResult = await db.collection("Users").updateOne(
+        { email: task.gmail, role: "advertiser" },
+        {
+          $inc: {
+            "advertiserProfile.totalTasks": 1,
+            "advertiserProfile.activeTasks": 1,
+          },
+          $set: {
+            updatedAt: new Date(),
+          },
+        },
+        { session }
+      );
+
+      console.log("[APPROVE TASK] Advertiser profile update result:", {
+        acknowledged: advertiserUpdateResult.acknowledged,
+        modifiedCount: advertiserUpdateResult.modifiedCount,
+        matchedCount: advertiserUpdateResult.matchedCount,
+      });
+
       // Log admin action within transaction
       await db.collection("adminActions").insertOne(
         {

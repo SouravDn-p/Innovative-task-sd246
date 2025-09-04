@@ -92,8 +92,8 @@ export default function AdvertiserAnalyticsPage() {
       animate="visible"
     >
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
+      <div className="block md:flex justify-between items-center ">
+        <div className="pb-4">
           <h1 className="text-2xl font-bold text-teal-900">
             Analytics Dashboard
           </h1>

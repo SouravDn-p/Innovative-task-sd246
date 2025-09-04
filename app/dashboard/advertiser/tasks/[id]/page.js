@@ -120,7 +120,10 @@ export default function AdvertiserTaskDetailsPage({ params }) {
               View detailed information about your campaign
             </p>
           </div>
-          <Button onClick={() => router.back()}>Back to Tasks</Button>
+          {/* Hidden on mobile as per navigation guidelines */}
+          <Button className="hidden sm:block" onClick={() => router.back()}>
+            Back to Tasks
+          </Button>
         </div>
       </header>
 

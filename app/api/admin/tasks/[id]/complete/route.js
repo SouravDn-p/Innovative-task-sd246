@@ -139,6 +139,32 @@ export async function POST(req, context) {
       );
     }
 
+    // Update advertiser profile data when task is completed
+    console.log(
+      "[COMPLETE TASK] Updating advertiser profile data for:",
+      task.gmail
+    );
+
+    // When task is completed, decrement activeTasks and increment completedTasks
+    const advertiserUpdateResult = await db.collection("Users").updateOne(
+      { email: task.gmail, role: "advertiser" },
+      {
+        $inc: {
+          "advertiserProfile.activeTasks": -1,
+          "advertiserProfile.completedTasks": 1,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    console.log("[COMPLETE TASK] Advertiser profile update result:", {
+      acknowledged: advertiserUpdateResult.acknowledged,
+      modifiedCount: advertiserUpdateResult.modifiedCount,
+      matchedCount: advertiserUpdateResult.matchedCount,
+    });
+
     // Update remaining active user tasks to completed
     await db.collection("userTasks").updateMany(
       {

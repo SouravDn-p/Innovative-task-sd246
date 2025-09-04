@@ -56,10 +56,10 @@ export async function GET(req) {
     const enrichedAdvertisers = await Promise.all(
       advertisers.map(async (advertiser) => {
         // Get task statistics
-        const tasksCollection = db.collection("Tasks");
+        const tasksCollection = db.collection("tasks");
         const advertiserTasks = await tasksCollection
           .find({
-            advertiserId: advertiser._id.toString(),
+            gmail: advertiser.email,
           })
           .toArray();
 
@@ -71,9 +71,11 @@ export async function GET(req) {
           (task) => task.status === "completed"
         ).length;
 
-        // Calculate total expenses (sum of task budgets)
+        // Calculate total expenses (sum of task advertiserCost)
         const totalExpense = advertiserTasks.reduce((sum, task) => {
-          return sum + (task.budget || 0);
+          return (
+            sum + (task.advertiserCost || task.totalCost || task.budget || 0)
+          );
         }, 0);
 
         return {

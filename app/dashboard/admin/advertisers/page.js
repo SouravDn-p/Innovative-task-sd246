@@ -58,7 +58,7 @@ export default function AdminAdvertisersPage() {
   // State management
   const [activeTab, setActiveTab] = useState("requests");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("pending");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [selectedRequest, setSelectedRequest] = useState(null);

@@ -295,6 +295,63 @@ export async function PUT(req, { params }) {
         );
       }
 
+      // Update advertiser profile data when task status changes
+      console.log(
+        "[STATUS UPDATE TASK] Updating advertiser profile data for:",
+        task.gmail
+      );
+
+      // Handle different status transitions
+      if (status === "approved" && task.status !== "approved") {
+        // When task is approved, increment totalTasks and activeTasks
+        const advertiserUpdateResult = await db.collection("Users").updateOne(
+          { email: task.gmail, role: "advertiser" },
+          {
+            $inc: {
+              "advertiserProfile.totalTasks": 1,
+              "advertiserProfile.activeTasks": 1,
+            },
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          { session }
+        );
+
+        console.log(
+          "[STATUS UPDATE TASK] Advertiser profile update result (approved):",
+          {
+            acknowledged: advertiserUpdateResult.acknowledged,
+            modifiedCount: advertiserUpdateResult.modifiedCount,
+            matchedCount: advertiserUpdateResult.matchedCount,
+          }
+        );
+      } else if (status === "completed" && task.status !== "completed") {
+        // When task is completed, decrement activeTasks and increment completedTasks
+        const advertiserUpdateResult = await db.collection("Users").updateOne(
+          { email: task.gmail, role: "advertiser" },
+          {
+            $inc: {
+              "advertiserProfile.activeTasks": -1,
+              "advertiserProfile.completedTasks": 1,
+            },
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          { session }
+        );
+
+        console.log(
+          "[STATUS UPDATE TASK] Advertiser profile update result (completed):",
+          {
+            acknowledged: advertiserUpdateResult.acknowledged,
+            modifiedCount: advertiserUpdateResult.modifiedCount,
+            matchedCount: advertiserUpdateResult.matchedCount,
+          }
+        );
+      }
+
       // Log admin action within transaction
       await db.collection("adminActions").insertOne(
         {

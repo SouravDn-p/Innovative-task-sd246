@@ -150,11 +150,6 @@ export default function ActiveTasksPage() {
               Manage your ongoing campaigns
             </p>
           </div>
-          <Button
-            onClick={() => router.push("/dashboard/advertiser/create-task")}
-          >
-            Create New Task
-          </Button>
         </div>
       </header>
 

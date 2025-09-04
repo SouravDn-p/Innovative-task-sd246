@@ -52,11 +52,24 @@ export function MobileNav({ activeTab, onTabChange }) {
               },
             ]
         : []),
-      {
-        title: "Completed",
-        icon: CheckCircle,
-        href: "/dashboard/user/task/completed",
-      },
+      // Conditionally show either "Become Advertiser" (for non-KYC verified) or "Completed" (for KYC verified)
+      ...(role === "user"
+        ? kycData?.status === "verified"
+          ? [
+              {
+                title: "Completed",
+                icon: CheckCircle,
+                href: "/dashboard/user/task/completed",
+              },
+            ]
+          : [
+              {
+                title: "Advertiser",
+                icon: TrendingUp,
+                href: "/dashboard/user/become-an-advertiser",
+              },
+            ]
+        : []),
       { title: "Referrals", icon: Users, href: "/dashboard/user/referrals" },
     ],
     advertiser: [

@@ -28,7 +28,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 20;
-    const status = searchParams.get("status") || "all";
+    const status = searchParams.get("status") || "pending";
     const search = searchParams.get("search") || "";
 
     // Build filter
@@ -36,6 +36,9 @@ export async function GET(req) {
 
     if (status && status !== "all") {
       filter.status = status;
+    } else if (!status) {
+      // Default to showing only pending requests
+      filter.status = "pending";
     }
 
     if (search) {

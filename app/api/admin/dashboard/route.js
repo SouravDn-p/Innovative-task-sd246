@@ -36,6 +36,7 @@ export async function GET(req) {
       taskSubmissionsResult,
       kycApplicationsResult,
       recentActivityResult,
+      pendingAdvertiserRequestsResult,
     ] = await Promise.all([
       // Total users count
       db.collection("Users").countDocuments({}),
@@ -146,6 +147,11 @@ export async function GET(req) {
           ])
           .toArray(),
       ]),
+
+      // Pending advertiser requests
+      db.collection("advertiser-requests").countDocuments({
+        status: "pending",
+      }),
     ]);
 
     // Calculate system health (simplified metric based on active vs total tasks)
@@ -208,6 +214,7 @@ export async function GET(req) {
         verifiedKyc: kycStats.verified || 0,
         pendingKyc: kycStats.pending || 0,
         rejectedKyc: kycStats.rejected || 0,
+        pendingAdvertiserRequests: pendingAdvertiserRequestsResult,
         totalKycApplications:
           (appKycStats.verified || 0) +
           (appKycStats.pending || 0) +
@@ -273,6 +280,15 @@ export async function GET(req) {
                 type: "info",
                 message: `${kycStats.pending} KYC applications awaiting review`,
                 count: kycStats.pending,
+              },
+            ]
+          : []),
+        ...(pendingAdvertiserRequestsResult > 5
+          ? [
+              {
+                type: "info",
+                message: `${pendingAdvertiserRequestsResult} advertiser requests awaiting review`,
+                count: pendingAdvertiserRequestsResult,
               },
             ]
           : []),

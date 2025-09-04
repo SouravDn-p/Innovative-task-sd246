@@ -428,6 +428,55 @@ export async function DELETE(req, { params }) {
 
     await db.collection("deletedTasks").insertOne(deletionRecord);
 
+    // Update advertiser profile data when task is deleted
+    console.log(
+      "[DELETE TASK] Updating advertiser profile data for:",
+      task.gmail
+    );
+
+    // When task is deleted, decrement totalTasks and activeTasks (if the task was active)
+    // We need to check the task status to determine which counters to decrement
+    let updateFields = {};
+
+    if (task.status === "approved" || task.status === "pending") {
+      // Task was active, decrement both totalTasks and activeTasks
+      updateFields = {
+        $inc: {
+          "advertiserProfile.totalTasks": -1,
+          "advertiserProfile.activeTasks": -1,
+        },
+      };
+    } else if (task.status === "completed") {
+      // Task was completed, decrement totalTasks only
+      updateFields = {
+        $inc: {
+          "advertiserProfile.totalTasks": -1,
+        },
+      };
+    } else {
+      // Task was in some other state (paused, cancelled, etc.), decrement totalTasks only
+      updateFields = {
+        $inc: {
+          "advertiserProfile.totalTasks": -1,
+        },
+      };
+    }
+
+    // Add updatedAt timestamp
+    updateFields.$set = {
+      updatedAt: new Date(),
+    };
+
+    const advertiserUpdateResult = await db
+      .collection("Users")
+      .updateOne({ email: task.gmail, role: "advertiser" }, updateFields);
+
+    console.log("[DELETE TASK] Advertiser profile update result:", {
+      acknowledged: advertiserUpdateResult.acknowledged,
+      modifiedCount: advertiserUpdateResult.modifiedCount,
+      matchedCount: advertiserUpdateResult.matchedCount,
+    });
+
     // Log admin action
     await db.collection("adminActions").insertOne({
       action: "delete_task",
