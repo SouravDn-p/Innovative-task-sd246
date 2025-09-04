@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ export default function DashboardSidebar({
   const [expandedItems, setExpandedItems] = useState([]);
   const isDesktopMobile = useIsMobile();
   const pathname = usePathname();
+  const router = useRouter();
   const roleMenus = getALLRoles();
   const menuItems = roleMenus[role] || roleMenus.user;
 
@@ -225,7 +226,8 @@ export default function DashboardSidebar({
                       if (hasSubItems) {
                         toggleExpanded(item.title);
                       } else if (item.href) {
-                        window.location.href = item.href;
+                        // Use router for navigation instead of window.location
+                        router.push(item.href);
                       }
                     }}
                   >

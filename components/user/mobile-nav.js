@@ -81,6 +81,11 @@ export function MobileNav({ activeTab, onTabChange }) {
         ],
       },
       {
+        title: "Profile",
+        icon: User,
+        href: "/dashboard/advertiser/profile",
+      },
+      {
         title: "Wallet",
         icon: DollarSign,
         href: "/dashboard/advertiser/wallet",
@@ -107,12 +112,14 @@ export function MobileNav({ activeTab, onTabChange }) {
   const navItems = simplifiedMenus[role] || simplifiedMenus.user;
 
   // Map to flattened items with id, label, icon, href
-  const flattenedNavItems = navItems.map((item) => ({
-    id: item.title.toLowerCase().replace(/\s+/g, "-"),
-    label: item.title,
-    icon: item.icon,
-    href: item.href,
-  }));
+  const flattenedNavItems = navItems
+    .filter((item) => item.href) // Only include items that have href
+    .map((item) => ({
+      id: item.title.toLowerCase().replace(/\s+/g, "-"),
+      label: item.title,
+      icon: item.icon,
+      href: item.href,
+    }));
 
   if (status === "loading") {
     return null; // Avoid rendering until session is loaded
@@ -128,7 +135,7 @@ export function MobileNav({ activeTab, onTabChange }) {
           return (
             <Link
               key={item.id}
-              href={item.href}
+              href={item.href || "#"}
               onClick={() => onTabChange(item.id)}
               className="flex-1 min-w-0"
             >
