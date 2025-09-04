@@ -26,7 +26,7 @@ import FileUploadZone from "./FileUploadZone";
 import {
   useGetKYCDataQuery,
   useUpdateKYCDataMutation,
-  useUploadDocumentMutation,
+  useUploadFileMutation, // Changed from useUploadDocumentMutation to useUploadFileMutation
 } from "@/redux/api/api"; // Added useUploadDocumentMutation
 import { useToast } from "@/components/ui/use-toast"; // Fixed import path
 
@@ -35,7 +35,7 @@ const KYCDashboard = ({ userEmail }) => {
   const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
   const [updateKYCData, { isLoading: isSubmitting }] =
     useUpdateKYCDataMutation();
-  const [uploadDocument] = useUploadDocumentMutation(); // New mutation for separate upload
+  const [uploadFile] = useUploadFileMutation(); // Changed from uploadDocument to uploadFile
 
   const [localKycData, setLocalKycData] = useState({
     status: "none",
@@ -130,7 +130,7 @@ const KYCDashboard = ({ userEmail }) => {
   const handleFileUpload = async (documentType, file) => {
     try {
       // First, upload the file to /api/upload
-      const uploadResult = await uploadDocument({
+      const uploadResult = await uploadFile({
         file,
         documentType,
       }).unwrap();

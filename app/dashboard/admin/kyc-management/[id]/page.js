@@ -38,6 +38,7 @@ import {
   useApproveKYCApplicationMutation,
 } from "@/redux/api/api";
 import { AdminKYCDetails } from "@/components/kyc/admin-kyc-details";
+import Image from "next/image";
 
 export default function AdminKYCDetailsPage() {
   const { toast } = useToast();
@@ -444,7 +445,9 @@ export default function AdminKYCDetailsPage() {
                   title="Document Preview"
                 />
               ) : (
-                <img
+                <Image
+                  width={300}
+                  height={300}
                   src={previewDocument.url}
                   alt="Document Preview"
                   className="max-h-full max-w-full object-contain"

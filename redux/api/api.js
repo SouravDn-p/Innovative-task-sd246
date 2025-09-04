@@ -663,6 +663,4 @@ export const {
   useGetAdminActiveAdvertisersQuery,
   // Add the missing export for advertiser analytics
   useGetAdvertiserAnalyticsQuery,
-
-  useUploadDocumentMutation,
 } = api;

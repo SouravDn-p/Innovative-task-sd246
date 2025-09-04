@@ -38,6 +38,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import Image from "next/image";
 
 export function AdminKYCDetails({
   application,
@@ -365,7 +366,9 @@ export function AdminKYCDetails({
                   title="Document Preview"
                 />
               ) : (
-                <img
+                <Image
+                  width={300}
+                  height={300}
                   src={previewDocument.url}
                   alt="Document Preview"
                   className="max-h-full max-w-full object-contain"

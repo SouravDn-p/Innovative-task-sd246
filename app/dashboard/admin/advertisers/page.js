@@ -719,7 +719,7 @@ export default function AdminAdvertisersPage() {
                 Reject Advertiser Request
               </CardTitle>
               <CardDescription>
-                Reject {selectedRequest.companyName}'s advertiser request
+                Reject {selectedRequest.companyName}&apos;s advertiser request
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
