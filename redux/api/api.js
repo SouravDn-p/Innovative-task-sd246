@@ -515,10 +515,10 @@ export const api = createApi({
       ],
     }),
     approveKYCApplication: builder.mutation({
-      query: ({ applicationId, notes }) => ({
-        url: `admin/kyc/${applicationId}/approve`,
+      query: ({ applicationId, action, rejectionReason, notes }) => ({
+        url: `admin/kyc/${applicationId}`,
         method: "POST",
-        body: { notes },
+        body: { action, rejectionReason, notes },
       }),
       invalidatesTags: ["KYC", "User", "AdminDashboard"],
     }),
@@ -577,6 +577,16 @@ export const api = createApi({
         return `admin/advertisers/active?${searchParams.toString()}`;
       },
       providesTags: ["User"],
+    }),
+    getAdminPayouts: builder.query({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach((key) => {
+          if (params[key]) searchParams.append(key, params[key]);
+        });
+        return `admin/payouts?${searchParams.toString()}`;
+      },
+      providesTags: ["Wallet"],
     }),
   }),
 });
@@ -655,6 +665,9 @@ export const {
 
   // Admin Dashboard
   useGetAdminDashboardStatsQuery,
+
+  // Admin Payouts
+  useGetAdminPayoutsQuery,
 
   // Advertiser Management
   useRegisterAdvertiserMutation,
