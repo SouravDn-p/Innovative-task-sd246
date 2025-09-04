@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
   Filter,
@@ -65,6 +65,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobiles";
 import {
@@ -89,7 +90,6 @@ import {
 export default function AdminUsersPage() {
   // State management
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [kycFilter, setKycFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState(new Set());
@@ -102,6 +102,7 @@ export default function AdminUsersPage() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const isMobile = useIsMobile();
 
   // API queries and mutations
@@ -109,7 +110,7 @@ export default function AdminUsersPage() {
     page: currentPage,
     limit: pageSize,
     search: searchTerm,
-    role: roleFilter !== "all" ? roleFilter : "",
+    role: "user", // Only fetch users, not advertisers or admins
     status: statusFilter !== "all" ? statusFilter : "",
     kycStatus: kycFilter !== "all" ? kycFilter : "",
   };
@@ -122,8 +123,8 @@ export default function AdminUsersPage() {
   } = useGetAdminUsersQuery(queryParams);
 
   const { data: userDetailsData, isLoading: userDetailsLoading } =
-    useGetAdminUserDetailsQuery(selectedUser?.id, {
-      skip: !selectedUser?.id,
+    useGetAdminUserDetailsQuery(selectedUser?._id, {
+      skip: !selectedUser?._id,
     });
 
   const [suspendUser, { isLoading: suspending }] = useSuspendUserMutation();
@@ -144,6 +145,24 @@ export default function AdminUsersPage() {
   const users = usersData?.users || [];
   const pagination = usersData?.pagination || {};
   const summary = usersData?.summary || {};
+
+  // Filter users based on active tab
+  const filteredUsers = users.filter((user) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "at-risk") {
+      // Show users who don't meet weekly requirements
+      return (
+        user.kycStatus === "verified" &&
+        !user.meetsWeeklyRequirements &&
+        !user.isSuspended
+      );
+    }
+    if (activeTab === "suspended") {
+      // Show suspended users
+      return user.isSuspended;
+    }
+    return true;
+  });
 
   // Utility functions
   const getRoleBadgeColor = (role) => {
@@ -179,6 +198,19 @@ export default function AdminUsersPage() {
     }
   };
 
+  const getWeeklyActivityBadgeColor = (user) => {
+    if (user.isSuspended) {
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    }
+    if (user.kycStatus !== "verified") {
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+    }
+    if (user.meetsWeeklyRequirements) {
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    }
+    return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+  };
+
   const handleSelectUser = (userId) => {
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
@@ -190,10 +222,10 @@ export default function AdminUsersPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.size === users.length) {
+    if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(users.map((user) => user._id)));
+      setSelectedUsers(new Set(filteredUsers.map((user) => user._id)));
     }
   };
 
@@ -207,10 +239,19 @@ export default function AdminUsersPage() {
     setShowSuspendModal(true);
   };
 
-  const handleReactivateUser = (user) => {
+  const handleReactivateUser = async (user) => {
     setSelectedUser(user);
     setShowReactivateModal(true);
   };
+
+  // Add this useEffect to refresh data after reactivation
+  useEffect(() => {
+    if (!reactivating && showReactivateModal) {
+      // Close modal and refresh data after successful reactivation
+      setShowReactivateModal(false);
+      refetch();
+    }
+  }, [reactivating, showReactivateModal, refetch]);
 
   const handleWalletAdjust = (user) => {
     setSelectedUser(user);
@@ -225,6 +266,21 @@ export default function AdminUsersPage() {
   const handleDeleteUser = (user) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
+  };
+
+  const handleBulkSuspend = async () => {
+    try {
+      const userIds = Array.from(selectedUsers);
+      await bulkSuspend({
+        userIds,
+        reason: "Failed to meet weekly activity requirements",
+        duration: "permanent",
+      }).unwrap();
+      setSelectedUsers(new Set());
+      refetch();
+    } catch (error) {
+      console.error("Bulk suspend error:", error);
+    }
   };
 
   if (isLoading) {
@@ -283,9 +339,7 @@ export default function AdminUsersPage() {
               User Management
             </h1>
             <p className="text-sm sm:text-base text-teal-600 mt-1">
-              {isMobile
-                ? "Manage users"
-                : "Manage all platform users and their permissions"}
+              Manage platform users and their activity
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -309,7 +363,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Improved mobile layout */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border-teal-200">
             <CardContent className="p-3 sm:p-4">
@@ -393,128 +447,128 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <Card className="border-teal-200">
-        <CardContent className="p-3 sm:p-4 md:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-400 h-4 w-4" />
-              <Input
-                placeholder={
-                  isMobile
-                    ? "Search users..."
-                    : "Search users by name, email, or phone..."
-                }
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-teal-200 focus:border-teal-500 text-sm sm:text-base"
-              />
-            </div>
+      {/* Tabs for User Management */}
+      <Tabs defaultValue="all" onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all">All Users</TabsTrigger>
+          <TabsTrigger value="at-risk">At Risk Users</TabsTrigger>
+          <TabsTrigger value="suspended">Suspended Users</TabsTrigger>
+        </TabsList>
 
-            {/* Filter Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="border-teal-200 text-sm">
-                  <SelectValue placeholder="Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="advertiser">Advertiser</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+        <TabsContent value="all">
+          <UserTableSection
+            users={filteredUsers}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            kycFilter={kycFilter}
+            setKycFilter={setKycFilter}
+            selectedUsers={selectedUsers}
+            handleSelectAll={handleSelectAll}
+            handleSelectUser={handleSelectUser}
+            handleViewDetails={handleViewDetails}
+            handleSuspendUser={handleSuspendUser}
+            handleReactivateUser={handleReactivateUser}
+            handleWalletAdjust={handleWalletAdjust}
+            handleSendNotification={handleSendNotification}
+            isMobile={isMobile}
+            selectedUsersCount={selectedUsers.size}
+            handleBulkSuspend={handleBulkSuspend}
+            bulkSuspending={bulkSuspending}
+          />
+        </TabsContent>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="border-teal-200 text-sm">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={kycFilter} onValueChange={setKycFilter}>
-                <SelectTrigger className="border-teal-200 text-sm">
-                  <SelectValue placeholder="KYC" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All KYC</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="none">Not Started</SelectItem>
-                </SelectContent>
-              </Select>
+        <TabsContent value="at-risk">
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+              <div>
+                <h3 className="font-medium text-yellow-800">At-Risk Users</h3>
+                <p className="text-sm text-yellow-700">
+                  These are KYC-verified users who have not met the weekly
+                  activity requirements:
+                  <br />• Earn ≥ Rs.1500 from tasks within 7 days, OR
+                  <br />• Complete ≥ 5 referrals per day (35 total in 7 days)
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Bulk Actions */}
-          {selectedUsers.size > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 sm:mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg"
-            >
-              <div className="space-y-3">
-                <p className="text-xs sm:text-sm text-teal-700">
-                  {selectedUsers.size} user{selectedUsers.size > 1 ? "s" : ""}{" "}
-                  selected
+          <UserTableSection
+            users={filteredUsers}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            kycFilter={kycFilter}
+            setKycFilter={setKycFilter}
+            selectedUsers={selectedUsers}
+            handleSelectAll={handleSelectAll}
+            handleSelectUser={handleSelectUser}
+            handleViewDetails={handleViewDetails}
+            handleSuspendUser={handleSuspendUser}
+            handleReactivateUser={handleReactivateUser}
+            handleWalletAdjust={handleWalletAdjust}
+            handleSendNotification={handleSendNotification}
+            isMobile={isMobile}
+            selectedUsersCount={selectedUsers.size}
+            handleBulkSuspend={handleBulkSuspend}
+            bulkSuspending={bulkSuspending}
+          />
+        </TabsContent>
+
+        <TabsContent value="suspended">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Ban className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+              <div>
+                <h3 className="font-medium text-red-800">Suspended Users</h3>
+                <p className="text-sm text-red-700">
+                  These users have been suspended from the platform. You can
+                  view the reason for suspension and reactivate accounts as
+                  needed.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      // Bulk suspend logic
-                    }}
-                    className="border-red-200 text-red-700 hover:bg-red-50 flex-1 sm:flex-initial text-xs sm:text-sm"
-                  >
-                    <Ban className="h-3 w-3 mr-1" />
-                    {isMobile ? "Suspend" : "Suspend Selected"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      // Bulk reactivate logic
-                    }}
-                    className="border-green-200 text-green-700 hover:bg-green-50 flex-1 sm:flex-initial text-xs sm:text-sm"
-                  >
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {isMobile ? "Reactivate" : "Reactivate Selected"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedUsers(new Set())}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50 flex-1 sm:flex-initial text-xs sm:text-sm"
-                  >
-                    Clear{isMobile ? "" : " Selection"}
-                  </Button>
-                </div>
               </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+          </div>
+
+          <UserTableSection
+            users={filteredUsers}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            kycFilter={kycFilter}
+            setKycFilter={setKycFilter}
+            selectedUsers={selectedUsers}
+            handleSelectAll={handleSelectAll}
+            handleSelectUser={handleSelectUser}
+            handleViewDetails={handleViewDetails}
+            handleSuspendUser={handleSuspendUser}
+            handleReactivateUser={handleReactivateUser}
+            handleWalletAdjust={handleWalletAdjust}
+            handleSendNotification={handleSendNotification}
+            isMobile={isMobile}
+            selectedUsersCount={selectedUsers.size}
+            handleBulkSuspend={handleBulkSuspend}
+            bulkSuspending={bulkSuspending}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Users Table */}
       <Card className="border-teal-200">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-sm sm:text-base md:text-lg text-teal-900">
-            Users ({pagination.totalUsers || 0})
+            Users ({filteredUsers.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isMobile ? (
             // Mobile Card View
             <div className="space-y-3 p-3">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <Card key={user._id} className="border-teal-100">
                   <CardContent className="p-3">
                     <div className="space-y-3">
@@ -636,6 +690,74 @@ export default function AdminUsersPage() {
                         </div>
                         <span>Last: {user.lastActive || "N/A"}</span>
                       </div>
+
+                      {/* Suspension Information for suspended users */}
+                      {user.isSuspended && (
+                        <div className="pt-1 border-t border-teal-100">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-red-600 font-medium">
+                              Suspended:
+                            </span>
+                            <Badge
+                              className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              size="sm"
+                            >
+                              Suspended
+                            </Badge>
+                          </div>
+                          {user.suspendedReason && (
+                            <p className="text-xs text-red-600 mt-1 truncate">
+                              Reason: {user.suspendedReason}
+                            </p>
+                          )}
+                          {user.suspensionAt && (
+                            <p className="text-xs text-red-600 mt-1">
+                              Date:{" "}
+                              {new Date(user.suspensionAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Weekly Activity for KYC verified users */}
+                      {user.kycStatus === "verified" && !user.isSuspended && (
+                        <div className="pt-1 border-t border-teal-100">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-teal-600">
+                              Weekly Activity:
+                            </span>
+                            <Badge
+                              className={getWeeklyActivityBadgeColor(user)}
+                              size="sm"
+                            >
+                              {user.isSuspended
+                                ? "Suspended"
+                                : user.meetsWeeklyRequirements
+                                ? "Meets Requirements"
+                                : "At Risk"}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                            <div className="text-teal-600">
+                              <span>
+                                Earnings: ₹
+                                {user.weeklyTaskEarnings?.toFixed(2) || "0.00"}
+                              </span>
+                              <span className="block text-teal-500">
+                                (Required: ≥₹1500)
+                              </span>
+                            </div>
+                            <div className="text-teal-600">
+                              <span>
+                                Referrals: {user.weeklyReferrals || 0}
+                              </span>
+                              <span className="block text-teal-500">
+                                (Required: ≥35)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -650,8 +772,8 @@ export default function AdminUsersPage() {
                     <TableHead className="w-12">
                       <Checkbox
                         checked={
-                          selectedUsers.size === users.length &&
-                          users.length > 0
+                          selectedUsers.size === filteredUsers.length &&
+                          filteredUsers.length > 0
                         }
                         onCheckedChange={handleSelectAll}
                       />
@@ -662,11 +784,12 @@ export default function AdminUsersPage() {
                     <TableHead>KYC</TableHead>
                     <TableHead>Wallet</TableHead>
                     <TableHead>Activity</TableHead>
+                    <TableHead>Weekly Activity</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <TableRow
                       key={user._id}
                       className="border-teal-100 hover:bg-teal-50"
@@ -724,6 +847,11 @@ export default function AdminUsersPage() {
                             {user.suspendedReason}
                           </p>
                         )}
+                        {user.suspensionAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(user.suspensionAt).toLocaleDateString()}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge className={getKycBadgeColor(user.kycStatus)}>
@@ -752,6 +880,32 @@ export default function AdminUsersPage() {
                             Last: {user.lastActive || "N/A"}
                           </p>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.kycStatus === "verified" ? (
+                          <div className="space-y-2">
+                            <Badge
+                              className={getWeeklyActivityBadgeColor(user)}
+                            >
+                              {user.isSuspended
+                                ? "Suspended"
+                                : user.meetsWeeklyRequirements
+                                ? "Meets Requirements"
+                                : "At Risk"}
+                            </Badge>
+                            <div className="text-xs text-teal-600">
+                              <p>
+                                Earnings: ₹
+                                {user.weeklyTaskEarnings?.toFixed(2) || "0.00"}
+                              </p>
+                              <p>Referrals: {user.weeklyReferrals || 0}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                            Not Applicable
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -892,5 +1046,119 @@ export default function AdminUsersPage() {
   );
 }
 
-// Modal Components would be added here but keeping file under 600 lines
-// The modals can be implemented in separate component files for better maintainability
+// User Table Section Component
+function UserTableSection({
+  users,
+  searchTerm,
+  setSearchTerm,
+  statusFilter,
+  setStatusFilter,
+  kycFilter,
+  setKycFilter,
+  selectedUsers,
+  handleSelectAll,
+  handleSelectUser,
+  handleViewDetails,
+  handleSuspendUser,
+  handleReactivateUser,
+  handleWalletAdjust,
+  handleSendNotification,
+  isMobile,
+  selectedUsersCount,
+  handleBulkSuspend,
+  bulkSuspending,
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Filters and Search */}
+      <Card className="border-teal-200">
+        <CardContent className="p-3 sm:p-4 md:p-6">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-400 h-4 w-4" />
+              <Input
+                placeholder={
+                  isMobile
+                    ? "Search users..."
+                    : "Search users by name, email, or phone..."
+                }
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-teal-200 focus:border-teal-500 text-sm sm:text-base"
+              />
+            </div>
+
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="border-teal-200 text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={kycFilter} onValueChange={setKycFilter}>
+                <SelectTrigger className="border-teal-200 text-sm">
+                  <SelectValue placeholder="KYC" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All KYC</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="none">Not Started</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Bulk Actions */}
+          {selectedUsersCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3 sm:mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg"
+            >
+              <div className="space-y-3">
+                <p className="text-xs sm:text-sm text-teal-700">
+                  {selectedUsersCount} user{selectedUsersCount > 1 ? "s" : ""}{" "}
+                  selected
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleBulkSuspend}
+                    disabled={bulkSuspending}
+                    className="border-red-200 text-red-700 hover:bg-red-50 flex-1 sm:flex-initial text-xs sm:text-sm"
+                  >
+                    <Ban className="h-3 w-3 mr-1" />
+                    {bulkSuspending
+                      ? "Suspending..."
+                      : isMobile
+                      ? "Suspend"
+                      : "Suspend Selected"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedUsers(new Set())}
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50 flex-1 sm:flex-initial text-xs sm:text-sm"
+                  >
+                    Clear{isMobile ? "" : " Selection"}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

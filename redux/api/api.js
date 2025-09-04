@@ -535,7 +535,7 @@ export const api = createApi({
     // ADMIN DASHBOARD (ACTIVE)
     // ==========================================
     getAdminDashboardStats: builder.query({
-      query: () => "admin/dashboard/stats",
+      query: () => "admin/dashboard",
       providesTags: ["AdminDashboard"],
     }),
 

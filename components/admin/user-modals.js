@@ -215,6 +215,112 @@ export function UserDetailsModal({ open, onClose, user, loading }) {
                 </Card>
               </div>
             </TabsContent>
+
+            <TabsContent value="history" className="space-y-4">
+              <div className="space-y-4">
+                {/* Suspension History */}
+                {user.suspensionHistory && user.suspensionHistory.length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">
+                        Suspension History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {user.suspensionHistory.map((suspension, index) => (
+                          <div
+                            key={index}
+                            className="border-l-4 border-red-500 pl-4 py-2"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div>
+                                <p className="font-medium text-red-900">
+                                  {suspension.reason}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Suspended by: {suspension.suspendedBy}
+                                </p>
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {suspension.date &&
+                                  new Date(suspension.date).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                Duration: {suspension.duration}
+                              </Badge>
+                              {suspension.endDate && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Ends:{" "}
+                                  {new Date(
+                                    suspension.endDate
+                                  ).toLocaleDateString()}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <p className="text-gray-500">
+                        No suspension history found for this user.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* KYC History */}
+                {user.kycInfo && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">KYC History</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Status:</span>
+                          <Badge>{user.kycInfo.status || "none"}</Badge>
+                        </div>
+                        {user.kycInfo.submittedAt && (
+                          <div className="flex justify-between">
+                            <span>Submitted:</span>
+                            <span>
+                              {new Date(
+                                user.kycInfo.submittedAt
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        {user.kycInfo.reviewedAt && (
+                          <div className="flex justify-between">
+                            <span>Reviewed:</span>
+                            <span>
+                              {new Date(
+                                user.kycInfo.reviewedAt
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        {user.kycInfo.rejectionReason && (
+                          <div className="flex justify-between">
+                            <span>Rejection Reason:</span>
+                            <span className="text-red-600">
+                              {user.kycInfo.rejectionReason}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
         )}
       </DialogContent>
@@ -294,6 +400,7 @@ export function SuspendUserModal({ open, onClose, user, onSuspend, loading }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="1">1 Day</SelectItem>
                 <SelectItem value="7">7 Days</SelectItem>
                 <SelectItem value="30">30 Days</SelectItem>
                 <SelectItem value="90">90 Days</SelectItem>
@@ -338,6 +445,7 @@ export function ReactivateUserModal({
         paymentReference,
         note,
       }).unwrap();
+      // Close the modal and trigger a refresh
       onClose();
     } catch (error) {
       console.error("Reactivate failed:", error);

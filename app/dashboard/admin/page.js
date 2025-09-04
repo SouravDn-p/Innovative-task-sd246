@@ -116,6 +116,11 @@ export default function AdminDashboard() {
     alerts: [],
   };
 
+  // Safely access nested properties
+  const stats = data.stats || {};
+  const recentActivity = data.recentActivity || [];
+  const alerts = data.alerts || [];
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -177,10 +182,10 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.totalUsers?.toLocaleString() || 0}
+              {stats.totalUsers?.toLocaleString() || 0}
             </div>
             <p className="text-xs text-teal-600">
-              +{data.stats.newUsersThisWeek || 0} this week
+              +{stats.newUsersThisWeek || 0} this week
             </p>
           </CardContent>
         </Card>
@@ -195,10 +200,10 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.activeTasks || 0}
+              {stats.activeTasks || 0}
             </div>
             <p className="text-xs text-teal-600">
-              {data.stats.completedTasksThisMonth || 0} completed this month
+              {stats.completedTasksThisMonth || 0} completed this month
             </p>
           </CardContent>
         </Card>
@@ -213,10 +218,10 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              ₹{(data.stats.totalRevenue || 0).toLocaleString()}
+              ₹{(stats.totalRevenue || 0).toLocaleString()}
             </div>
             <p className="text-xs text-teal-600">
-              {data.stats.pendingSubmissions || 0} pending submissions
+              {stats.pendingSubmissions || 0} pending submissions
             </p>
           </CardContent>
         </Card>
@@ -231,12 +236,12 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-2xl font-bold text-teal-900">
-              {data.stats.systemHealth || 0}%
+              {stats.systemHealth || 0}%
             </div>
             <p className="text-xs text-teal-600">
-              {data.stats.systemHealth >= 95
+              {stats.systemHealth >= 95
                 ? "All systems operational"
-                : data.stats.systemHealth >= 80
+                : stats.systemHealth >= 80
                 ? "Minor issues detected"
                 : "Attention required"}
             </p>
@@ -258,10 +263,10 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-900">
-              {data.stats.pendingKyc || 0}
+              {stats.pendingKyc || 0}
             </div>
             <p className="text-xs text-blue-600">
-              {data.stats.verifiedKyc || 0} verified
+              {stats.verifiedKyc || 0} verified
             </p>
           </CardContent>
         </Card>
@@ -275,7 +280,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">
-              {data.stats.approvedSubmissions || 0}
+              {stats.approvedSubmissions || 0}
             </div>
             <p className="text-xs text-green-600">Submissions</p>
           </CardContent>
@@ -290,7 +295,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-900">
-              {data.stats.rejectedSubmissions || 0}
+              {stats.rejectedSubmissions || 0}
             </div>
             <p className="text-xs text-red-600">Submissions</p>
           </CardContent>
@@ -305,7 +310,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-900">
-              {data.stats.pendingSubmissions || 0}
+              {stats.pendingSubmissions || 0}
             </div>
             <p className="text-xs text-yellow-600">Need attention</p>
           </CardContent>
@@ -320,11 +325,9 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">
-              {data.stats.newUsersThisWeek && data.stats.totalUsers
+              {stats.newUsersThisWeek && stats.totalUsers
                 ? Math.round(
-                    (data.stats.newUsersThisWeek / data.stats.totalUsers) *
-                      100 *
-                      52
+                    (stats.newUsersThisWeek / stats.totalUsers) * 100 * 52
                   )
                 : 0}
               %
@@ -342,16 +345,16 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-indigo-900">
-              {data.stats.approvedSubmissions &&
-              data.stats.pendingSubmissions +
-                data.stats.approvedSubmissions +
-                data.stats.rejectedSubmissions >
+              {stats.approvedSubmissions &&
+              stats.pendingSubmissions +
+                stats.approvedSubmissions +
+                stats.rejectedSubmissions >
                 0
                 ? Math.round(
-                    (data.stats.approvedSubmissions /
-                      (data.stats.pendingSubmissions +
-                        data.stats.approvedSubmissions +
-                        data.stats.rejectedSubmissions)) *
+                    (stats.approvedSubmissions /
+                      (stats.pendingSubmissions +
+                        stats.approvedSubmissions +
+                        stats.rejectedSubmissions)) *
                       100
                   )
                 : 0}
@@ -363,10 +366,10 @@ export default function AdminDashboard() {
       </motion.div>
 
       {/* Alerts Section */}
-      {data.alerts && data.alerts.length > 0 && (
+      {alerts && alerts.length > 0 && (
         <motion.div variants={itemVariants}>
           <div className="space-y-3">
-            {data.alerts.map((alert, index) => (
+            {alerts.map((alert, index) => (
               <Alert
                 key={index}
                 variant={alert.type === "error" ? "destructive" : "default"}
@@ -397,8 +400,8 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="space-y-4">
-              {data.recentActivity && data.recentActivity.length > 0 ? (
-                data.recentActivity.map((activity, index) => (
+              {recentActivity && recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 border border-teal-100 rounded-lg bg-white/50"

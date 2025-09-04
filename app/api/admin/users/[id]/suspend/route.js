@@ -76,24 +76,22 @@ export async function POST(req, context) {
     };
 
     // Update user document
-    const updateFields = {
-      isSuspended: true,
-      suspendedReason: suspensionReason,
-      suspensionAt: suspensionDate,
-      suspensionEndDate: suspensionEndDate,
-      lastSuspensionCount: (user.lastSuspensionCount || 0) + 1,
-      updatedAt: new Date(),
-      $push: {
-        suspensionHistory: suspensionRecord,
-      },
-    };
-
-    const result = await db
-      .collection("Users")
-      .updateOne(
-        { email: user.email },
-        { $set: updateFields, $push: { suspensionHistory: suspensionRecord } }
-      );
+    const result = await db.collection("Users").updateOne(
+      { email: user.email },
+      {
+        $set: {
+          isSuspended: true,
+          suspendedReason: suspensionReason,
+          suspensionAt: suspensionDate,
+          suspensionEndDate: suspensionEndDate,
+          lastSuspensionCount: (user.lastSuspensionCount || 0) + 1,
+          updatedAt: new Date(),
+        },
+        $push: {
+          suspensionHistory: suspensionRecord,
+        },
+      }
+    );
 
     if (result.modifiedCount === 0) {
       return NextResponse.json(
