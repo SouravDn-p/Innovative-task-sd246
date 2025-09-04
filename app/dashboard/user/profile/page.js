@@ -592,12 +592,17 @@ function UserProfilePage() {
                   </Label>
                   <Input
                     id="fullName"
-                    value={isEditing ? editData.name || user.name : user.name}
+                    value={
+                      isEditing
+                        ? editData.name || user.name || ""
+                        : user.name || ""
+                    }
                     onChange={(e) =>
                       setEditData({ ...editData, name: e.target.value })
                     }
                     disabled={!isEditing}
                     className="border-teal-200 focus:border-teal-500 w-full"
+                    placeholder="Enter your full name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -637,15 +642,20 @@ function UserProfilePage() {
                     <Input
                       id="phone"
                       value={
-                        isEditing ? editData.phone || user.phone : user.phone
+                        isEditing
+                          ? editData.phone || user.phone || ""
+                          : user.phone || ""
                       }
                       onChange={(e) =>
                         setEditData({ ...editData, phone: e.target.value })
                       }
                       disabled={!isEditing}
                       className="border-teal-200 focus:border-teal-500 w-full"
+                      placeholder="Enter your phone number"
                     />
-                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    {user.phone && (
+                      <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -769,7 +779,16 @@ function UserProfilePage() {
                     Complete KYC to unlock withdrawals
                   </p>
                 </div>
-                <Badge className={getKYCStatusColor(user.kycStatus)}>
+                <Badge
+                  className={
+                    getKYCStatusColor(user.kycStatus) +
+                    (user.kycStatus !== "none" ? " cursor-pointer" : "")
+                  }
+                  onClick={() =>
+                    user.kycStatus !== "none" &&
+                    router.push("/dashboard/user/kyc-verification")
+                  }
+                >
                   {getKYCStatusText(user.kycStatus)}
                 </Badge>
               </div>
@@ -789,6 +808,9 @@ function UserProfilePage() {
                     <Button
                       size="sm"
                       className="bg-teal-600 hover:bg-teal-700 whitespace-nowrap mt-2 sm:mt-0"
+                      onClick={() =>
+                        router.push("/dashboard/user/kyc-verification")
+                      }
                     >
                       Pay ₹99 & Verify
                     </Button>

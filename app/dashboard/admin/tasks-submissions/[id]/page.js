@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,10 +44,12 @@ import {
   useGetAdminTaskSubmissionDetailsQuery,
   useReviewTaskSubmissionMutation,
 } from "@/redux/api/api";
+import { useIsMobile } from "@/hooks/use-mobiles";
 
-export default function TaskSubmissionDetailsPage({ params }) {
+export default function TaskSubmissionDetailsPage() {
   const router = useRouter();
-  const { id } = params;
+  const { id } = useParams();
+  const isMobile = useIsMobile();
 
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewAction, setReviewAction] = useState("");
@@ -121,6 +123,25 @@ export default function TaskSubmissionDetailsPage({ params }) {
     });
   };
 
+  // Check if image is a valid URL string or a File/Blob object
+  const isValidImageUrl = (image) => {
+    if (typeof image === "string") {
+      return image.startsWith("http") || image.startsWith("/");
+    }
+    return image instanceof Blob || image instanceof File;
+  };
+
+  // Get image URL safely
+  const getImageUrl = (image) => {
+    if (typeof image === "string") {
+      return image;
+    }
+    if (image instanceof Blob || image instanceof File) {
+      return URL.createObjectURL(image);
+    }
+    return "/placeholder.svg"; // fallback
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -180,14 +201,16 @@ export default function TaskSubmissionDetailsPage({ params }) {
     >
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="text-teal-700 hover:bg-teal-100"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="text-teal-700 hover:bg-teal-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-bold text-teal-900">
             Task Submission Review
@@ -250,7 +273,7 @@ export default function TaskSubmissionDetailsPage({ params }) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-teal-600" />
                   <div>
@@ -339,21 +362,23 @@ export default function TaskSubmissionDetailsPage({ params }) {
                     <h4 className="font-medium text-teal-900 mb-2">
                       Images ({submission.proofData.images.length})
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {submission.proofData.images.map((image, index) => (
                         <div key={index} className="relative group">
                           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                            <Image
-                              src={
-                                typeof image === "string"
-                                  ? image
-                                  : URL.createObjectURL(image)
-                              }
-                              alt={`Proof image ${index + 1}`}
-                              width={200}
-                              height={200}
-                              className="w-full h-full object-cover"
-                            />
+                            {isValidImageUrl(image) ? (
+                              <Image
+                                src={getImageUrl(image)}
+                                alt={`Proof image ${index + 1}`}
+                                width={200}
+                                height={200}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                <FileImage className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
                           </div>
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                             <Button
@@ -362,12 +387,13 @@ export default function TaskSubmissionDetailsPage({ params }) {
                               className="opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-gray-100"
                               onClick={() =>
                                 window.open(
-                                  typeof image === "string"
-                                    ? image
-                                    : URL.createObjectURL(image),
+                                  isValidImageUrl(image)
+                                    ? getImageUrl(image)
+                                    : "#",
                                   "_blank"
                                 )
                               }
+                              disabled={!isValidImageUrl(image)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -432,7 +458,7 @@ export default function TaskSubmissionDetailsPage({ params }) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-teal-600">Reviewed By</p>
                     <p className="font-semibold text-teal-900">
@@ -474,7 +500,7 @@ export default function TaskSubmissionDetailsPage({ params }) {
           )}
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Stack on mobile */}
         <div className="space-y-6">
           {/* User Information */}
           <Card className="border-teal-200">
@@ -691,6 +717,22 @@ export default function TaskSubmissionDetailsPage({ params }) {
           </Card>
         </div>
       </div>
+
+      {/* Approve button at the bottom for all users when status is pending */}
+      {submission.status === "pending" && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg md:bottom-4 md:left-1/2 md:right-auto md:w-80 md:transform md:-translate-x-1/2 md:rounded-lg md:border">
+          <Button
+            onClick={() => {
+              setReviewAction("approve");
+              setShowReviewModal(true);
+            }}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Approve Submission
+          </Button>
+        </div>
+      )}
 
       {/* Review Modal */}
       <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
