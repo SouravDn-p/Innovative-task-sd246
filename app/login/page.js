@@ -1,3 +1,5 @@
+// pages/login.tsx (or app/login/page.tsx) - Changed callbackUrl to "/after-login" for Google sign-in
+
 "use client";
 import { FcGoogle } from "react-icons/fc";
 import { useState, Suspense, useEffect, useCallback } from "react";
@@ -149,7 +151,7 @@ function LoginPage() {
   };
 
   const handleSocialSignIn = useCallback((provider) => {
-    signIn(provider, { callbackUrl: "/dashboard" });
+    signIn(provider, { callbackUrl: "/after-login" });
   }, []);
 
   if (session) {
@@ -162,7 +164,7 @@ function LoginPage() {
           <Image
             src={
               session?.user?.image ||
-mania              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
                 session?.user?.name || "User"
               )}&background=14b8a6&color=fff`
             }

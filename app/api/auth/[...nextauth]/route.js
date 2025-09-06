@@ -1,3 +1,5 @@
+// app/api/auth/[...nextauth]/route.js (or pages/api/auth/[...nextauth].js) - Modified to set role: null for new Google users
+
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -84,7 +86,7 @@ export const authOptions = {
               name,
               email,
               image,
-              role: "user",
+              role: null,  // Set to null for new Google users
               kycStatus: "none",
               kycPaidAt: null,
               kycReferenceId: null,
@@ -103,7 +105,7 @@ export const authOptions = {
               updatedAt: new Date(),
             });
             token.id = insertedId.toString();
-            token.role = "user";
+            token.role = null;
           } else {
             token.id = existingUser._id.toString();
             token.role = existingUser.role || "user";
