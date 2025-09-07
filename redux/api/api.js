@@ -542,14 +542,6 @@ export const api = createApi({
     // ==========================================
     // ADVERTISER MANAGEMENT
     // ==========================================
-    registerAdvertiser: builder.mutation({
-      query: (advertiserData) => ({
-        url: "advertiser/register",
-        method: "POST",
-        body: advertiserData,
-      }),
-      invalidatesTags: ["User", "AdminDashboard"],
-    }),
     getAdminAdvertiserRequests: builder.query({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
@@ -670,7 +662,6 @@ export const {
   useGetAdminPayoutsQuery,
 
   // Advertiser Management
-  useRegisterAdvertiserMutation,
   useGetAdminAdvertiserRequestsQuery,
   useUpdateAdminAdvertiserRequestMutation,
   useGetAdminActiveAdvertisersQuery,

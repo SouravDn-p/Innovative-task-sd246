@@ -149,9 +149,7 @@ export async function GET(req) {
       ]),
 
       // Pending advertiser requests
-      db.collection("advertiser-requests").countDocuments({
-        status: "pending",
-      }),
+      // Removed advertiser request functionality
     ]);
 
     // Calculate system health (simplified metric based on active vs total tasks)
