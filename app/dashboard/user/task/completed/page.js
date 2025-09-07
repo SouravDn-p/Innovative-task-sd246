@@ -104,7 +104,7 @@ export default function CompletedTasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-teal-200 p-2 sm:p-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -113,7 +113,7 @@ export default function CompletedTasksPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.back()}
-              className="text-teal-700 hover:bg-teal-100 p-1"
+              className="text-teal-700 hover:bg-teal-100 p-1 hidden sm:flex"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -121,7 +121,7 @@ export default function CompletedTasksPage() {
               <h1 className="text-lg font-bold text-teal-900">
                 Completed Tasks
               </h1>
-              <p className="text-xs text-teal-600 truncate max-w-[200px]">
+              <p className="text-xs text-teal-600 truncate max-w-[200px] hidden sm:block">
                 {userEmail ? `${userEmail}` : "Login to see your tasks"}
               </p>
             </div>

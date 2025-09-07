@@ -448,12 +448,6 @@ export default function UserReferralsPage() {
                     <Share2 className="h-4 w-4 mr-2" />
                     Share Link
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-100"
-                  >
-                    Generate QR Code
-                  </Button>
                 </div>
 
                 <div className="bg-teal-50 p-4 rounded-lg">
