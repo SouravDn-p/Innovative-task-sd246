@@ -4,8 +4,9 @@
 "use client";
 
 import { FcGoogle } from "react-icons/fc";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
   EyeOff,
   Sparkles,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
@@ -80,14 +82,31 @@ function strengthLabel(score) {
   }
 }
 
-export default function RegisterPage() {
+export default function RegisterPage({ referrerId: propReferrerId }) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [apiError, setApiError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [agree, setAgree] = useState(false);
-  const [cardTransform, setCardTransform] = useState("rotateX(0deg) rotateY(0deg)");
+  const [cardTransform, setCardTransform] = useState(
+    "rotateX(0deg) rotateY(0deg)"
+  );
+  const [referrerInfo, setReferrerInfo] = useState(null);
   const submittingRef = useRef(false);
+
+  // Get referrerId from query params or props
+  const queryReferrerId = searchParams.get("referrerId");
+  const referrerId = propReferrerId || queryReferrerId;
+
+  // Log referrerId for debugging and store in localStorage
+  useEffect(() => {
+    if (referrerId) {
+      console.log("Referrer ID found:", referrerId);
+      // Store referrerId in localStorage
+      localStorage.setItem("referrerId", referrerId);
+    }
+  }, [referrerId]);
 
   const {
     register,
@@ -103,6 +122,26 @@ export default function RegisterPage() {
       role: "user",
     },
   });
+
+  // Fetch referrer information if referrerId is provided
+  useEffect(() => {
+    if (referrerId) {
+      fetchReferrerInfo(referrerId);
+    }
+  }, [referrerId]);
+
+  const fetchReferrerInfo = async (id) => {
+    try {
+      // This would be an API endpoint to get referrer details
+      // For now, we'll just set a placeholder
+      setReferrerInfo({
+        id: id,
+        name: "Your Referrer",
+      });
+    } catch (error) {
+      console.error("Failed to fetch referrer info:", error);
+    }
+  };
 
   const onMouseMove = useCallback((e) => {
     const card = e.currentTarget;
@@ -135,11 +174,14 @@ export default function RegisterPage() {
     dispatch(loginStart());
 
     try {
+      // Include referrerId in the registration data if it exists
+      const registrationData = referrerId ? { ...data, referrerId } : data;
+
       // 1) Register user in DB
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(registrationData),
       });
 
       const result = await res.json();
@@ -167,15 +209,20 @@ export default function RegisterPage() {
           loginSuccess({ user: { email: data.email, role: data.role } })
         );
 
+        // Show success message with referral info if applicable
+        const successMessage = referrerId
+          ? "Account created successfully! You've been added to your referrer's network. 🎉"
+          : "Account created successfully 🎉";
+
         await Swal.fire({
           icon: "success",
           title: "Welcome!",
-          text: "Account created successfully 🎉",
+          text: successMessage,
           confirmButtonColor: "#14b8a6",
         });
 
-        // 3) Send to role-based dashboard instantly
-        router.push(getDashboardRoute(data.role));
+        // 3) Send to after-login page to select role and handle referral
+        router.push("/after-login");
       } else {
         dispatch(loginFailure(loginRes?.error || "Auto login failed"));
         Swal.fire({
@@ -197,6 +244,32 @@ export default function RegisterPage() {
       });
     } finally {
       submittingRef.current = false;
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    if (!agree) {
+      Swal.fire({
+        icon: "info",
+        title: "Please confirm",
+        text: "You must agree to the Terms & Privacy to continue.",
+        confirmButtonColor: "#14b8a6",
+      });
+      return;
+    }
+
+    // Pass referrerId in the state parameter for Google OAuth
+    const state = referrerId ? { referrerId } : {};
+    console.log("Google OAuth state:", state);
+
+    try {
+      await signIn("google", {
+        callbackUrl: "/after-login",
+        state: JSON.stringify(state),
+      });
+    } catch (err) {
+      setApiError("Google registration failed");
+      console.error(err);
     }
   };
 
@@ -235,7 +308,9 @@ export default function RegisterPage() {
           <h2 className="text-4xl md:text-5xl tracking-tight font-serif font-bold bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-200 bg-clip-text text-transparent drop-shadow-sm">
             Innovative Task Earn
           </h2>
-          <p className="mt-3 text-teal-100/80">Start your earning journey today</p>
+          <p className="mt-3 text-teal-100/80">
+            Start your earning journey today
+          </p>
           <p className="mt-2 text-sm text-teal-200/70">
             Already have an account?{" "}
             <Link
@@ -272,10 +347,12 @@ export default function RegisterPage() {
 
             <CardHeader className="text-center relative">
               <CardTitle className="text-white text-3xl font-bold drop-shadow">
-                Create your account
+                {referrerId ? "Join Through Referral" : "Create your account"}
               </CardTitle>
               <CardDescription className="text-teal-100/80">
-                Join us and start earning
+                {referrerId
+                  ? "You're joining through a referral"
+                  : "Join us and start earning"}
               </CardDescription>
             </CardHeader>
 
@@ -287,19 +364,40 @@ export default function RegisterPage() {
                 </Alert>
               )}
 
+              {/* Referral Info Box */}
+              {referrerId && (
+                <div className="p-4 bg-teal-500/10 border border-teal-400/30 rounded-lg">
+                  <div className="flex items-center">
+                    <Users className="h-5 w-5 text-teal-300 mr-2" />
+                    <h3 className="font-medium text-teal-100">Referral Join</h3>
+                  </div>
+                  <p className="text-sm text-teal-200/90 mt-2">
+                    You&apos;re joining through a referral from a friend. After
+                    registration, you&apos;ll be automatically connected to
+                    their network.
+                  </p>
+                  <div className="mt-3 flex items-center text-xs">
+                    <span className="text-teal-300 font-medium">
+                      Referrer ID:
+                    </span>
+                    <span className="ml-2 font-mono bg-teal-900/50 px-2 py-1 rounded text-teal-100">
+                      {referrerId}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Social auth */}
               <div className="grid grid-cols-1 gap-3">
                 <Button
                   type="button"
-                  onClick={() =>
-                    signIn("google", { callbackUrl: "/after-login" })
-                  }
+                  onClick={handleGoogleRegister}
                   className="w-full group bg-white text-gray-900 hover:bg-gray-100 border border-white/30 transition-all duration-200"
                 >
                   <FcGoogle className="mr-2" />
                   Continue with Google
                   <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    → 
+                    →
                   </span>
                 </Button>
               </div>
@@ -311,7 +409,13 @@ export default function RegisterPage() {
                 </span>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit(onSubmit)(e);
+                }}
+                className="space-y-5"
+              >
                 {/* Name */}
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-teal-100">
@@ -330,7 +434,9 @@ export default function RegisterPage() {
                     />
                   </div>
                   {errors.name && (
-                    <p className="text-sm text-red-300">{errors.name.message}</p>
+                    <p className="text-sm text-red-300">
+                      {errors.name.message}
+                    </p>
                   )}
                 </div>
 
@@ -366,7 +472,10 @@ export default function RegisterPage() {
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-teal-100 flex items-center gap-2">
+                  <Label
+                    htmlFor="password"
+                    className="text-teal-100 flex items-center gap-2"
+                  >
                     Password <ShieldCheck className="h-4 w-4 text-teal-300" />
                   </Label>
                   <div className="relative">
@@ -388,11 +497,17 @@ export default function RegisterPage() {
                     />
                     <button
                       type="button"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onClick={() => setShowPassword((s) => !s)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-200/80 hover:text-teal-100 transition"
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
@@ -406,7 +521,9 @@ export default function RegisterPage() {
                     <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${
-                          pw ? strengthColors[Math.max(0, pwScore - 1)] : "bg-transparent"
+                          pw
+                            ? strengthColors[Math.max(0, pwScore - 1)]
+                            : "bg-transparent"
                         }`}
                         style={{
                           width: `${(pwScore / 5) * 100}%`,
@@ -414,7 +531,9 @@ export default function RegisterPage() {
                       />
                     </div>
                     <p className="mt-1 text-xs text-teal-200/80">
-                      {pw ? strengthLabel(pwScore) : "Use 10+ chars with numbers & symbols"}
+                      {pw
+                        ? strengthLabel(pwScore)
+                        : "Use 10+ chars with numbers & symbols"}
                     </p>
                   </div>
                 </div>
@@ -430,8 +549,12 @@ export default function RegisterPage() {
                     defaultValue="user"
                     className="w-full rounded-md bg-white/5 border border-white/20 text-white placeholder:text-teal-200/60 focus:border-teal-400 focus:ring-teal-400/30 p-2"
                   >
-                    <option value="user" className="bg-slate-900">User</option>
-                    <option value="advertiser" className="bg-slate-900">Advertiser</option>
+                    <option value="user" className="bg-slate-900">
+                      User
+                    </option>
+                    <option value="advertiser" className="bg-slate-900">
+                      Advertiser
+                    </option>
                   </select>
                 </div>
 
@@ -483,7 +606,11 @@ export default function RegisterPage() {
                   className="w-full group bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-medium py-2.5 transition-all duration-200 border border-white/20 disabled:opacity-70"
                   size="lg"
                 >
-                  {isSubmitting ? "Registering..." : "Create account"}
+                  {isSubmitting
+                    ? "Registering..."
+                    : referrerId
+                    ? "Join with Referral"
+                    : "Create account"}
                   <span className="ml-2 transition-transform group-hover:translate-x-0.5">
                     →
                   </span>

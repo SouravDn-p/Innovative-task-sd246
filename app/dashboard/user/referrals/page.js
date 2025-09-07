@@ -111,7 +111,7 @@ export default function UserReferralsPage() {
     // Set referral link only on client side
     if (userReferralId && typeof window !== "undefined") {
       setReferralLink(
-        `${window.location.origin}/dashboard/user/referrals?ref=${userReferralId}`
+        `${window.location.origin}/register?referrerId=${userReferralId}`
       );
     }
   }, [userReferralId]);
