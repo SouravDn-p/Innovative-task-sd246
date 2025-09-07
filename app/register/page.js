@@ -1,8 +1,6 @@
-// pages/register.tsx (or app/register/page.tsx) - Minimal changes, already has callbackUrl: "/after-login"
-// The provided code remains the same, but ensure getDashboardRoute is defined.
-
 "use client";
 
+import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
@@ -82,7 +80,8 @@ function strengthLabel(score) {
   }
 }
 
-export default function RegisterPage({ referrerId: propReferrerId }) {
+// Separate component to handle client-side only logic
+function RegisterContent({ referrerId: propReferrerId }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -285,7 +284,7 @@ export default function RegisterPage({ referrerId: propReferrerId }) {
   ];
 
   return (
-    <div className="relative">
+    <>
       <Header />
 
       {/* Background: teal gradient, grid mesh, floating blobs */}
@@ -651,6 +650,15 @@ export default function RegisterPage({ referrerId: propReferrerId }) {
       </div>
 
       <Footer />
-    </div>
+    </>
+  );
+}
+
+// Main component that handles the Suspense boundary
+export default function RegisterPage({ referrerId: propReferrerId }) {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <RegisterContent referrerId={propReferrerId} />
+    </React.Suspense>
   );
 }

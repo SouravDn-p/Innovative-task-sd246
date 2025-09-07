@@ -24,11 +24,13 @@ import {
   XCircle,
   Loader2,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
 import { useGetAdminDashboardStatsQuery } from "@/redux/api/api";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -133,6 +135,37 @@ export default function AdminDashboard() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
+  };
+
+  const handleMigrateTasks = async () => {
+    try {
+      const response = await fetch("/api/admin/migrate-tasks", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Migration Successful",
+          description: data.message,
+        });
+        // Refresh dashboard stats
+        refetch();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Migration Failed",
+          description: error.error || "Unknown error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Migration Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -342,6 +375,39 @@ export default function AdminDashboard() {
         </motion.div>
       )}
 
+      {/* Migration Section */}
+      <section className="py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <Card className="border-amber-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-amber-700">
+                <AlertTriangle className="mr-2 h-5 w-5" />
+                System Migration
+              </CardTitle>
+              <CardDescription>
+                Run migration for existing tasks to work with the new approval
+                system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                This will update all existing tasks to be compatible with the
+                new template-based task creation and approval system. This
+                operation should only be run once.
+              </p>
+              <Button
+                variant="outline"
+                className="border-amber-500 text-amber-700 hover:bg-amber-50"
+                onClick={handleMigrateTasks}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Run Task Migration
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       <motion.div variants={itemVariants}>
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
           <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
@@ -399,9 +465,9 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <Button
-                className="bg-teal-600 hover:bg-teal-700"
+                className="bg-teal-600 hover:bg-teal-700 transition-all duration-300 transform hover:-translate-y-1 shadow-md hover:shadow-lg"
                 onClick={() => router.push("/dashboard/admin/tasks")}
               >
                 <Target className="h-4 w-4 mr-2" />
@@ -409,11 +475,19 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="outline"
-                className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                className="border-teal-200 text-teal-700 hover:bg-teal-50 transition-all duration-300 transform hover:-translate-y-1 shadow-md hover:shadow-lg"
                 onClick={() => router.push("/dashboard/admin/users")}
               >
                 <Users className="h-4 w-4 mr-2" />
                 Manage Users
+              </Button>
+              <Button
+                variant="outline"
+                className="border-teal-200 text-teal-700 hover:bg-teal-50 transition-all duration-300 transform hover:-translate-y-1 shadow-md hover:shadow-lg"
+                onClick={() => router.push("/dashboard/admin/task-templates")}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Task Templates
               </Button>
             </div>
           </CardContent>

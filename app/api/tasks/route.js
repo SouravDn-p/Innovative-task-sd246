@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 import {
   safeNumber,
-  formatCurrency,
+  formatCurrencyINR,
   sanitizeInput,
   validateEmail,
   isValidObjectId,
@@ -118,6 +118,8 @@ export async function GET(req) {
 // 📌 Create a new task (requires auth)
 export async function POST(req) {
   try {
+    console.log("Creating new task...");
+
     // ✅ Extract JWT token
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
@@ -128,6 +130,28 @@ export async function POST(req) {
     }
 
     const taskData = await req.json();
+    console.log("Task data received:", {
+      ...taskData,
+      userEmail: token.email,
+      userRole: token.role,
+    });
+
+    // ✅ For advertisers, ensure they're using a template
+    if (token.role?.toLowerCase() !== "admin") {
+      // Advertisers must use a template
+      if (!taskData.templateId) {
+        return new Response(
+          JSON.stringify({
+            message: "Advertisers must create tasks from templates",
+            error: "TEMPLATE_REQUIRED",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     // ✅ Validate required fields
     const requiredFields = [
@@ -196,8 +220,96 @@ export async function POST(req) {
       );
     }
 
+    // ✅ Validate that end date is not more than 1 year in the future
+    const maxEndDate = new Date();
+    maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
+    if (new Date(taskData.endAt) > maxEndDate) {
+      return new Response(
+        JSON.stringify({
+          message: "End date cannot be more than 1 year in the future",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db("TaskEarnDB");
+
+    // ✅ For template-based tasks, validate against template constraints
+    if (taskData.templateId && token.role?.toLowerCase() !== "admin") {
+      console.log("Validating template constraints for task creation...");
+
+      // Fetch the template
+      const template = await db
+        .collection("taskTemplates")
+        .findOne({ _id: new ObjectId(taskData.templateId) });
+
+      if (!template) {
+        return new Response(
+          JSON.stringify({
+            message: "Invalid template ID",
+            error: "INVALID_TEMPLATE",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Validate rate is within template constraints
+      const rateToUser = parseFloat(taskData.rateToUser);
+      if (
+        rateToUser < template.minRateToUser ||
+        rateToUser > template.maxRateToUser
+      ) {
+        return new Response(
+          JSON.stringify({
+            message: `Reward must be between ₹${template.minRateToUser} and ₹${template.maxRateToUser}`,
+            error: "INVALID_RATE",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Validate limit is within template constraints
+      const limitCount = parseInt(taskData.limitCount);
+      if (
+        limitCount < template.minLimitCount ||
+        limitCount > template.maxLimitCount
+      ) {
+        return new Response(
+          JSON.stringify({
+            message: `Limit must be between ${template.minLimitCount} and ${template.maxLimitCount}`,
+            error: "INVALID_LIMIT",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Validate task type matches template
+      if (taskData.type !== template.type) {
+        return new Response(
+          JSON.stringify({
+            message: "Task type must match template type",
+            error: "TYPE_MISMATCH",
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     // Calculate total cost for the task using safe number handling
     const rateToUser = safeNumber(taskData.rateToUser);
@@ -234,9 +346,9 @@ export async function POST(req) {
     let paymentMethod = taskData.paymentMethod || "wallet";
 
     if (token.role?.toLowerCase() !== "admin") {
-      // Check if payment is required
+      // For advertisers, payment is always required and processed immediately
+      // Check if payment is required (default to true unless explicitly false)
       if (taskData.requirePayment !== false) {
-        // Default to true unless explicitly false
         if (paymentMethod === "wallet") {
           // Get user's current wallet balance
           const user = await db
@@ -245,15 +357,20 @@ export async function POST(req) {
           const currentBalance = safeNumber(user?.walletBalance);
 
           console.log(
-            `[TASK CREATION] Payment validation - Required: ${formatCurrency(
+            `[TASK CREATION] Payment validation - Required: ${formatCurrencyINR(
               totalCost
-            )}, Available: ${formatCurrency(currentBalance)}, PayNow: ${
-              taskData.payNow
+            )}, Available: ${formatCurrencyINR(currentBalance)}, User Role: ${
+              token.role
             }`
           );
 
-          // If payNow is true, require immediate payment
-          if (taskData.payNow === true) {
+          // For advertisers, always process payment immediately
+          // For admins, only process if payNow is true
+          const shouldProcessPaymentImmediately =
+            token.role?.toLowerCase() === "advertiser" ||
+            taskData.payNow === true;
+
+          if (shouldProcessPaymentImmediately) {
             if (currentBalance < totalCost) {
               return new Response(
                 JSON.stringify({
@@ -308,70 +425,62 @@ export async function POST(req) {
 
             paymentDone = true;
             console.log(
-              `[TASK CREATION] Payment processed immediately. New balance: ${formatCurrency(
+              `[TASK CREATION] Payment processed immediately. New balance: ${formatCurrencyINR(
                 newBalance
               )}`
             );
-          } else {
-            // Payment will be processed during approval
-            console.log(`[TASK CREATION] Payment deferred to approval stage`);
-            paymentDone = false;
           }
-        } else if (paymentMethod === "external") {
-          // For external payment methods (stripe, razorpay, etc.)
-          // This would integrate with payment gateway
-          // For now, mark as pending payment
-          paymentDone = taskData.paymentConfirmed === true;
         }
-      } else {
-        // No payment required (free task creation)
-        paymentDone = true;
       }
-    } else {
-      // Admin created tasks are automatically paid
-      paymentDone = true;
     }
 
-    const task = {
-      ...taskData,
-      rateToUser,
-      advertiserCost,
-      totalCost,
+    // Create the task document
+    const taskDoc = {
+      title: taskData.title,
+      type: taskData.type,
+      description: taskData.description,
+      proofRequirements: taskData.proofRequirements,
+      rateToUser: rateToUser,
       limitCount: limitCount,
-      completedCount: 0,
-      status: token.role?.toLowerCase() === "admin" ? "approved" : "pending",
-      createdBy: token.role?.toLowerCase() || "advertiser",
-      gmail: token.email || "unknown@gmail.com",
-      name: token.name || "Unknown",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      paymentDone,
-      paymentMethod,
-      paymentAmount: totalCost,
+      startAt: new Date(taskData.startAt),
+      endAt: new Date(taskData.endAt),
+      requireKyc: taskData.requireKyc ?? false,
+      status: taskData.status || "pending", // Default to pending for admin approval
+      createdBy: token.email,
+      gmail: token.email, // For advertiser association
+      templateId: taskData.templateId || null,
+      paymentDone: paymentDone,
+      totalCost: totalCost,
+      advertiserCost: advertiserCost,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    const result = await db.collection("tasks").insertOne(task);
+    // Insert the task into the database
+    const result = await db.collection("tasks").insertOne(taskDoc);
+    console.log("Task created successfully:", result.insertedId);
 
-    // Format response with extended JSON _id
-    const createdTask = {
-      ...task,
-      _id: { $oid: result.insertedId.toString() },
-    };
-
+    // Return success response
     return new Response(
       JSON.stringify({
         message: "Task created successfully",
-        task: createdTask,
+        task: {
+          ...taskDoc,
+          _id: result.insertedId.toString(),
+        },
       }),
       {
         status: 201,
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (err) {
-    console.error("POST Error:", err);
+  } catch (error) {
+    console.error("Task creation error:", error);
     return new Response(
-      JSON.stringify({ message: "Server error", error: err.message }),
+      JSON.stringify({
+        message: "Failed to create task",
+        error: error.message,
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },

@@ -95,10 +95,16 @@ export async function GET(req) {
     if (dateFrom || dateTo) {
       transactionFilter.createdAt = {};
       if (dateFrom) {
-        transactionFilter.createdAt.$gte = new Date(dateFrom);
+        const fromDate = new Date(dateFrom);
+        if (!isNaN(fromDate)) {
+          transactionFilter.createdAt.$gte = fromDate;
+        }
       }
       if (dateTo) {
-        transactionFilter.createdAt.$lte = new Date(dateTo + "T23:59:59.999Z");
+        const toDate = new Date(dateTo + "T23:59:59.999Z");
+        if (!isNaN(toDate)) {
+          transactionFilter.createdAt.$lte = toDate;
+        }
       }
     }
 
@@ -195,6 +201,11 @@ export async function GET(req) {
             : transactionType === "kyc_payment" && transaction.amount === 99
             ? referrerCut
             : 0,
+        // Ensure createdAt is a valid date string
+        createdAt:
+          transaction.createdAt && !isNaN(new Date(transaction.createdAt))
+            ? transaction.createdAt
+            : new Date().toISOString(),
       };
     });
 
@@ -229,7 +240,7 @@ export async function GET(req) {
         startDate = new Date(now.setDate(diff));
       }
 
-      return startDate;
+      return startDate && !isNaN(startDate) ? startDate : new Date(0);
     };
 
     const periodStartDate = getPeriodFilter(revenuePeriod);
@@ -237,7 +248,7 @@ export async function GET(req) {
     // Filter transactions for the selected period
     const periodTransactions = allTransactions.filter((transaction) => {
       const transactionDate = new Date(transaction.createdAt);
-      return transactionDate >= periodStartDate;
+      return !isNaN(transactionDate) && transactionDate >= periodStartDate;
     });
 
     // Calculate revenue for all time

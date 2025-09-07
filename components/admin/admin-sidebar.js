@@ -86,6 +86,11 @@ export function AdminSidebar({ userRole, activeSection, onSectionChange }) {
           roles: ["super_admin", "manager", "task_manager"],
         },
         {
+          id: "tasks-templates",
+          label: "Task Templates",
+          roles: ["super_admin", "manager", "task_manager"],
+        },
+        {
           id: "tasks-audit",
           label: "Audit System",
           roles: ["super_admin", "task_manager"],

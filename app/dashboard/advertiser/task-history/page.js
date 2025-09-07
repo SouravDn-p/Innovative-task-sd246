@@ -160,7 +160,9 @@ export default function TaskHistoryPage() {
             </p>
           </div>
           <Button
-            onClick={() => router.push("/dashboard/advertiser/create-task")}
+            onClick={() =>
+              router.push("/dashboard/advertiser/create-from-template")
+            }
           >
             Create New Task
           </Button>
@@ -374,7 +376,9 @@ export default function TaskHistoryPage() {
                     </p>
                     <Button
                       onClick={() =>
-                        router.push("/dashboard/advertiser/create-task")
+                        router.push(
+                          "/dashboard/advertiser/create-from-template"
+                        )
                       }
                     >
                       Create Your First Task

@@ -69,7 +69,7 @@ export function MobileNav({ activeTab, onTabChange }) {
       {
         title: "Create",
         icon: Plus,
-        href: "/dashboard/advertiser/create-task",
+        href: "/dashboard/advertiser/create-from-template",
       },
       {
         title: "Tasks",

@@ -1,0 +1,182 @@
+[
+  {
+    "_id": "template-video-watch",
+    "title": "Video Viewing Task",
+    "type": "video",
+    "description": "Watch a promotional video and provide feedback",
+    "proofRequirements": {
+      "type": "text",
+      "details": "Provide a brief summary of the video content and your opinion (minimum 50 words)"
+    },
+    "minRateToUser": 2.5,
+    "maxRateToUser": 10.0,
+    "minLimitCount": 50,
+    "maxLimitCount": 500,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-app-install",
+    "title": "Mobile App Installation",
+    "type": "install",
+    "description": "Download and install our mobile application",
+    "proofRequirements": {
+      "type": "link",
+      "details": "Provide a screenshot of the installed app on your device"
+    },
+    "minRateToUser": 5.0,
+    "maxRateToUser": 15.0,
+    "minLimitCount": 20,
+    "maxLimitCount": 200,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-social-share",
+    "title": "Social Media Sharing",
+    "type": "share",
+    "description": "Share our content on your social media platforms",
+    "proofRequirements": {
+      "type": "link",
+      "details": "Provide links to your social media posts or screenshots"
+    },
+    "minRateToUser": 1.0,
+    "maxRateToUser": 5.0,
+    "minLimitCount": 100,
+    "maxLimitCount": 1000,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-product-review",
+    "title": "Product Review Task",
+    "type": "review",
+    "description": "Write a detailed review of our product or service",
+    "proofRequirements": {
+      "type": "text",
+      "details": "Write a comprehensive review of at least 200 words including pros, cons, and recommendations"
+    },
+    "minRateToUser": 10.0,
+    "maxRateToUser": 30.0,
+    "minLimitCount": 10,
+    "maxLimitCount": 100,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-follow-social",
+    "title": "Social Media Follow",
+    "type": "social",
+    "description": "Follow our social media accounts",
+    "proofRequirements": {
+      "type": "link",
+      "details": "Provide screenshots showing you've followed our accounts"
+    },
+    "minRateToUser": 0.5,
+    "maxRateToUser": 2.0,
+    "minLimitCount": 200,
+    "maxLimitCount": 2000,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-video-upload",
+    "title": "User-Generated Video Content",
+    "type": "video",
+    "description": "Create and upload a video featuring our product",
+    "proofRequirements": {
+      "type": "link",
+      "details": "Upload your video to a platform and provide the link, or upload directly to our platform"
+    },
+    "minRateToUser": 20.0,
+    "maxRateToUser": 100.0,
+    "minLimitCount": 5,
+    "maxLimitCount": 50,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-website-visit",
+    "title": "Website Visit and Feedback",
+    "type": "custom",
+    "description": "Visit our website and provide feedback on user experience",
+    "proofRequirements": {
+      "type": "text",
+      "details": "Provide detailed feedback on website navigation, design, and user experience (minimum 100 words)"
+    },
+    "minRateToUser": 3.0,
+    "maxRateToUser": 8.0,
+    "minLimitCount": 30,
+    "maxLimitCount": 300,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-survey-completion",
+    "title": "Survey Completion",
+    "type": "custom",
+    "description": "Complete a detailed survey about our products/services",
+    "proofRequirements": {
+      "type": "text",
+      "details": "Submit survey completion confirmation code or screenshot"
+    },
+    "minRateToUser": 5.0,
+    "maxRateToUser": 15.0,
+    "minLimitCount": 25,
+    "maxLimitCount": 250,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-content-like",
+    "title": "Content Like/Upvote",
+    "type": "social",
+    "description": "Like or upvote our content on various platforms",
+    "proofRequirements": {
+      "type": "link",
+      "details": "Provide screenshots of your likes/upvotes on our content"
+    },
+    "minRateToUser": 0.25,
+    "maxRateToUser": 1.0,
+    "minLimitCount": 500,
+    "maxLimitCount": 5000,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  },
+  {
+    "_id": "template-referral-task",
+    "title": "Referral Program",
+    "type": "custom",
+    "description": "Refer friends to our platform",
+    "proofRequirements": {
+      "type": "text",
+      "details": "Provide the email addresses or user IDs of referred users who have completed registration"
+    },
+    "minRateToUser": 15.0,
+    "maxRateToUser": 50.0,
+    "minLimitCount": 1,
+    "maxLimitCount": 20,
+    "isActive": true,
+    "createdAt": "2025-09-08T10:00:00Z",
+    "updatedAt": "2025-09-08T10:00:00Z",
+    "createdBy": "admin"
+  }
+]

@@ -46,7 +46,7 @@ const getRoleSpecificLinks = (role) => {
       return [
         {
           name: "Create Task",
-          href: "/dashboard/advertiser/create-task",
+          href: "/dashboard/advertiser/create-from-template",
           icon: Briefcase,
         },
         { name: "Active Tasks", href: "/dashboard/advertiser", icon: Users },
@@ -154,8 +154,14 @@ export function Header() {
   // Animation variants for mobile sidebar
   const sidebarVariants = {
     hidden: { x: "100%" },
-    visible: { x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
-    exit: { x: "100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+    visible: {
+      x: 0,
+      transition: { type: "spring", stiffness: 300, damping: 30 },
+    },
+    exit: {
+      x: "100%",
+      transition: { type: "spring", stiffness: 300, damping: 30 },
+    },
   };
 
   const containerVariants = {
@@ -396,7 +402,9 @@ export function Header() {
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-white">TaskEarn</h2>
-                      <p className="text-xs text-teal-100">Smart task matching</p>
+                      <p className="text-xs text-teal-100">
+                        Smart task matching
+                      </p>
                     </div>
                   </div>
                 )}
@@ -473,7 +481,9 @@ export function Header() {
                               className="flex items-center gap-3 px-4 py-3 rounded-lg text-teal-700 hover:bg-teal-500 hover:text-white cursor-pointer transition-colors duration-200 shadow-sm"
                             >
                               <Icon className="h-5 w-5 text-teal-600" />
-                              <span className="text-sm font-medium">{link.name}</span>
+                              <span className="text-sm font-medium">
+                                {link.name}
+                              </span>
                             </Link>
                           </motion.li>
                         );

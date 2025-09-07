@@ -112,29 +112,57 @@ export async function GET(req) {
               else: {
                 $cond: {
                   if: {
-                    $and: [
+                    $gte: [
                       {
-                        $gt: [
+                        $ifNull: [
                           { $arrayElemAt: ["$creator.walletBalance", 0] },
                           0,
                         ],
                       },
-                      {
-                        $lt: [
-                          { $arrayElemAt: ["$creator.walletBalance", 0] },
+                      { $multiply: ["$advertiserCost", "$limitCount"] },
+                    ],
+                  },
+                  then: "paid",
+                  else: {
+                    $cond: {
+                      if: {
+                        $and: [
                           {
-                            $multiply: ["$advertiserCost", "$limitCount"],
+                            $gt: [
+                              {
+                                $ifNull: [
+                                  {
+                                    $arrayElemAt: ["$creator.walletBalance", 0],
+                                  },
+                                  0,
+                                ],
+                              },
+                              0,
+                            ],
+                          },
+                          {
+                            $lt: [
+                              {
+                                $ifNull: [
+                                  {
+                                    $arrayElemAt: ["$creator.walletBalance", 0],
+                                  },
+                                  0,
+                                ],
+                              },
+                              { $multiply: ["$advertiserCost", "$limitCount"] },
+                            ],
                           },
                         ],
                       },
-                    ],
-                  },
-                  then: "partial",
-                  else: {
-                    $cond: {
-                      if: { $eq: ["$status", "cancelled"] },
-                      then: "refunded",
-                      else: "unpaid",
+                      then: "partial",
+                      else: {
+                        $cond: {
+                          if: { $eq: ["$status", "cancelled"] },
+                          then: "refunded",
+                          else: "unpaid",
+                        },
+                      },
                     },
                   },
                 },

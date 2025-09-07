@@ -580,6 +580,69 @@ export const api = createApi({
       },
       providesTags: ["Wallet"],
     }),
+
+    // ==========================================
+    // ADVERTISER TASK TEMPLATES
+    // ==========================================
+    getAdvertiserTaskTemplates: builder.query({
+      query: () => "advertiser/task-templates",
+      providesTags: ["Task"],
+      transformErrorResponse: (response, meta, arg) => {
+        console.error("Error fetching advertiser task templates:", response);
+        return response.data || { error: "Failed to fetch templates" };
+      },
+    }),
+    getAdvertiserTaskTemplate: builder.query({
+      query: (templateId) => `advertiser/task-templates/${templateId}`,
+      providesTags: (result, error, templateId) => [
+        { type: "Task", id: templateId },
+      ],
+      transformErrorResponse: (response, meta, arg) => {
+        console.error(
+          "Error fetching advertiser task template:",
+          response,
+          arg
+        );
+        return response.data || { error: "Failed to fetch template" };
+      },
+    }),
+
+    // ==========================================
+    // ADMIN TASK TEMPLATES
+    // ==========================================
+    getAdminTaskTemplates: builder.query({
+      query: () => "admin/task-templates",
+      providesTags: ["Task"],
+    }),
+    getAdminTaskTemplate: builder.query({
+      query: (templateId) => `admin/task-templates/${templateId}`,
+      providesTags: (result, error, templateId) => [
+        { type: "Task", id: templateId },
+      ],
+    }),
+    createAdminTaskTemplate: builder.mutation({
+      query: (templateData) => ({
+        url: "admin/task-templates",
+        method: "POST",
+        body: templateData,
+      }),
+      invalidatesTags: ["Task"],
+    }),
+    updateAdminTaskTemplate: builder.mutation({
+      query: ({ templateId, templateData }) => ({
+        url: `admin/task-templates/${templateId}`,
+        method: "PUT",
+        body: templateData,
+      }),
+      invalidatesTags: ["Task"],
+    }),
+    deleteAdminTaskTemplate: builder.mutation({
+      query: (templateId) => ({
+        url: `admin/task-templates/${templateId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Task"],
+    }),
   }),
 });
 
@@ -667,4 +730,15 @@ export const {
   useGetAdminActiveAdvertisersQuery,
   // Add the missing export for advertiser analytics
   useGetAdvertiserAnalyticsQuery,
+
+  // Admin Task Templates
+  useGetAdminTaskTemplatesQuery,
+  useGetAdminTaskTemplateQuery,
+  useCreateAdminTaskTemplateMutation,
+  useUpdateAdminTaskTemplateMutation,
+  useDeleteAdminTaskTemplateMutation,
+
+  // Advertiser Task Templates
+  useGetAdvertiserTaskTemplatesQuery,
+  useGetAdvertiserTaskTemplateQuery,
 } = api;

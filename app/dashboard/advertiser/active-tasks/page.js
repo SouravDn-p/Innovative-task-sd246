@@ -378,7 +378,7 @@ export default function ActiveTasksPage() {
                   </p>
                   <Button
                     onClick={() =>
-                      router.push("/dashboard/advertiser/create-task")
+                      router.push("/dashboard/advertiser/create-from-template")
                     }
                   >
                     Create Your First Task

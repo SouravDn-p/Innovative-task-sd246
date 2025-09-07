@@ -62,13 +62,13 @@ export default function AdminPayoutsPage() {
     kycRevenue: 0,
     reactivationRevenue: 0,
     taskPlatformFees: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
   });
   const [periodRevenue, setPeriodRevenue] = useState({
     kycRevenue: 0,
     reactivationRevenue: 0,
     taskPlatformFees: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
   });
   const [revenuePeriod, setRevenuePeriod] = useState("all");
 
@@ -101,7 +101,7 @@ export default function AdminPayoutsPage() {
         search: searchTerm,
         dateFrom,
         dateTo,
-        revenuePeriod
+        revenuePeriod,
       });
 
       const response = await fetch(`/api/admin/payouts?${params.toString()}`);
@@ -131,7 +131,15 @@ export default function AdminPayoutsPage() {
     if (session?.user?.role === "admin") {
       fetchTransactions();
     }
-  }, [session, filterType, filterCategory, searchTerm, dateFrom, dateTo, revenuePeriod]);
+  }, [
+    session,
+    filterType,
+    filterCategory,
+    searchTerm,
+    dateFrom,
+    dateTo,
+    revenuePeriod,
+  ]);
 
   // Handle pagination
   const handlePageChange = (newPage) => {
@@ -154,7 +162,26 @@ export default function AdminPayoutsPage() {
 
   // Format date
   const formatDate = (dateString) => {
-    return format(new Date(dateString), "dd MMM yyyy, h:mm a");
+    // Handle invalid or null dates
+    if (
+      !dateString ||
+      dateString === "Invalid Date" ||
+      isNaN(new Date(dateString))
+    ) {
+      return "Invalid Date";
+    }
+
+    try {
+      return format(new Date(dateString), "dd MMM yyyy, h:mm a");
+    } catch (error) {
+      console.error(
+        "Date formatting error:",
+        error,
+        "Date string:",
+        dateString
+      );
+      return "Invalid Date";
+    }
   };
 
   // Get transaction type display
@@ -363,7 +390,9 @@ export default function AdminPayoutsPage() {
             <div className="text-2xl font-bold text-indigo-900">
               {formatCurrency(revenue.kycRevenue)}
             </div>
-            <p className="text-xs text-indigo-600">Rs.50 per KYC (or full amount if no referrer)</p>
+            <p className="text-xs text-indigo-600">
+              Rs.50 per KYC (or full amount if no referrer)
+            </p>
           </CardContent>
         </Card>
 
@@ -401,7 +430,12 @@ export default function AdminPayoutsPage() {
         <Card className="border-violet-200 bg-violet-50/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-violet-800">
-              {revenuePeriod === 'monthly' ? 'Monthly' : revenuePeriod === 'weekly' ? 'Weekly' : 'Period'} Revenue
+              {revenuePeriod === "monthly"
+                ? "Monthly"
+                : revenuePeriod === "weekly"
+                ? "Weekly"
+                : "Period"}{" "}
+              Revenue
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -433,7 +467,9 @@ export default function AdminPayoutsPage() {
             <div className="text-2xl font-bold text-fuchsia-900">
               {formatCurrency(periodRevenue.kycRevenue)}
             </div>
-            <p className="text-xs text-fuchsia-600">Rs.50 per KYC (or full amount if no referrer)</p>
+            <p className="text-xs text-fuchsia-600">
+              Rs.50 per KYC (or full amount if no referrer)
+            </p>
           </CardContent>
         </Card>
 
@@ -666,7 +702,9 @@ export default function AdminPayoutsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-gray-500">
-                          {formatDate(transaction.createdAt)}
+                          {transaction.createdAt
+                            ? formatDate(transaction.createdAt)
+                            : "N/A"}
                         </div>
                       </TableCell>
                       <TableCell>

@@ -119,7 +119,9 @@ export function AdvertiserDashboard() {
             </Button>
             <Button
               className="bg-primary hover:bg-primary/90"
-              onClick={() => router.push("/dashboard/advertiser/create-task")}
+              onClick={() =>
+                router.push("/dashboard/advertiser/create-from-template")
+              }
             >
               <Plus className="h-4 w-4 mr-2" />
               Create Campaign
@@ -243,10 +245,22 @@ export function AdvertiserDashboard() {
               <Button
                 variant="outline"
                 className="h-auto flex flex-col items-center justify-center p-4"
-                onClick={() => router.push("/dashboard/advertiser/create-task")}
+                onClick={() =>
+                  router.push("/dashboard/advertiser/create-from-template")
+                }
               >
                 <Plus className="h-6 w-6 mb-2" />
                 <span>Create Campaign</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto flex flex-col items-center justify-center p-4"
+                onClick={() =>
+                  router.push("/dashboard/advertiser/create-from-template")
+                }
+              >
+                <Eye className="h-6 w-6 mb-2" />
+                <span>Create From Template</span>
               </Button>
               <Button
                 variant="outline"

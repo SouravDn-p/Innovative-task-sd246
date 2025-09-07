@@ -24,6 +24,8 @@ import {
   History,
   PieChart,
   Loader2,
+  FileText,
+  PenTool,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -138,16 +140,16 @@ export default function AdvertiserDashboard() {
         variants={itemVariants}
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
-        <Link href="/dashboard/advertiser/create-task">
+        <Link href="/dashboard/advertiser/create-from-template">
           <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-all cursor-pointer h-full">
             <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
             <CardContent className="relative flex flex-col items-center justify-center p-6 text-center h-full">
-              <Plus className="h-8 w-8 text-teal-600 mb-2" />
+              <FileText className="h-8 w-8 text-teal-600 mb-2" />
               <CardTitle className="text-teal-800 text-lg">
                 Create Task
               </CardTitle>
               <p className="text-xs text-teal-600 mt-1">
-                Launch a new campaign
+                Launch from templates
               </p>
             </CardContent>
           </Card>
@@ -345,6 +347,69 @@ export default function AdvertiserDashboard() {
           </motion.div>
         </>
       )}
+
+      {/* Updated Task Creation Section */}
+      <section className="py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-8 text-teal-800">
+            Create New Tasks
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-teal-200 hover:border-teal-400 transition-all duration-300 hover:shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center text-teal-700">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Template-Based Creation
+                </CardTitle>
+                <CardDescription>
+                  Create tasks using predefined templates with set limits
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Select from admin-approved templates with predefined reward
+                  ranges and limits. All tasks require admin approval before
+                  going live.
+                </p>
+                <Button
+                  className="w-full bg-teal-600 hover:bg-teal-700"
+                  onClick={() =>
+                    router.push("/dashboard/advertiser/create-from-template")
+                  }
+                >
+                  Create from Template
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-teal-200 hover:border-teal-400 transition-all duration-300 hover:shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center text-teal-700">
+                  <PenTool className="mr-2 h-5 w-5" />
+                  Custom Task Creation
+                </CardTitle>
+                <CardDescription>
+                  Create custom tasks (requires admin approval)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Create custom tasks with your own specifications. Tasks will
+                  be reviewed and approved by admin before going live.
+                </p>
+                <Button
+                  className="w-full bg-teal-600 hover:bg-teal-700"
+                  onClick={() =>
+                    router.push("/dashboard/advertiser/create-from-template")
+                  }
+                >
+                  Create Custom Task
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </motion.div>
   );
 }
