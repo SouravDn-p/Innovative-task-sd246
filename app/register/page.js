@@ -287,8 +287,8 @@ function RegisterContent({ referrerId: propReferrerId }) {
     <>
       <Header />
 
-      {/* Background: teal gradient, grid mesh, floating blobs */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
+      {/* Background and Blobs */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(40%_30%_at_50%_0%,rgba(45,212,191,0.25),transparent),radial-gradient(30%_40%_at_10%_80%,rgba(20,184,166,0.15),transparent),radial-gradient(30%_40%_at_90%_20%,rgba(16,185,129,0.15),transparent)]" />
         <div className="absolute inset-0 bg-gradient-to-br from-teal-900 via-slate-900 to-teal-950 opacity-90" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:36px_36px] opacity-20" />
@@ -297,32 +297,11 @@ function RegisterContent({ referrerId: propReferrerId }) {
         <div className="absolute bottom-10 right-10 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl animate-pulse" />
       </div>
 
-      <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
-        {/* Header Area */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur border border-white/10 shadow-lg">
-            <Sparkles className="h-6 w-6 text-teal-300" />
-          </div>
+      {/* Main Content Wrapper - Centering and Layout */}
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-md space-y-8 text-center">
 
-          <h2 className="text-4xl md:text-5xl tracking-tight font-serif font-bold bg-gradient-to-r from-teal-300 via-teal-200 to-emerald-200 bg-clip-text text-transparent drop-shadow-sm">
-            Innovative Task Earn
-          </h2>
-          <p className="mt-3 text-teal-100/80">
-            Start your earning journey today
-          </p>
-          <p className="mt-2 text-sm text-teal-200/70">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-teal-300 hover:text-teal-200 transition-colors underline underline-offset-4"
-            >
-              Sign in here
-            </Link>
-          </p>
-        </div>
-
-        {/* Card */}
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
+          {/* Card */}
           <Card
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
@@ -368,7 +347,9 @@ function RegisterContent({ referrerId: propReferrerId }) {
                 <div className="p-4 bg-teal-500/10 border border-teal-400/30 rounded-lg">
                   <div className="flex items-center">
                     <Users className="h-5 w-5 text-teal-300 mr-2" />
-                    <h3 className="font-medium text-teal-100">Referral Join</h3>
+                    <h3 className="font-medium text-teal-100">
+                      Referral Join
+                    </h3>
                   </div>
                   <p className="text-sm text-teal-200/90 mt-2">
                     You&apos;re joining through a referral from a friend. After
@@ -475,7 +456,8 @@ function RegisterContent({ referrerId: propReferrerId }) {
                     htmlFor="password"
                     className="text-teal-100 flex items-center gap-2"
                   >
-                    Password <ShieldCheck className="h-4 w-4 text-teal-300" />
+                    Password{" "}
+                    <ShieldCheck className="h-4 w-4 text-teal-300" />
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-200/70 h-5 w-5" />
@@ -629,23 +611,6 @@ function RegisterContent({ referrerId: propReferrerId }) {
               </p>
             </CardFooter>
           </Card>
-
-          {/* Bottom helper chips */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { title: "Secure by design", desc: "OAuth & session safety" },
-              { title: "Fast onboarding", desc: "Under a minute setup" },
-              { title: "Role-based access", desc: "Tailored dashboards" },
-            ].map((i, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-3 text-center text-teal-100/90"
-              >
-                <p className="text-sm font-semibold">{i.title}</p>
-                <p className="text-xs text-teal-200/70">{i.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -654,7 +619,7 @@ function RegisterContent({ referrerId: propReferrerId }) {
   );
 }
 
-// Main component that handles the Suspense boundary
+// Main component
 export default function RegisterPage({ referrerId: propReferrerId }) {
   return (
     <React.Suspense fallback={<div>Loading...</div>}>

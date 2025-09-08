@@ -1,3 +1,5 @@
+// api/user/kyc-verification route handler
+
 import { getToken } from "next-auth/jwt";
 import client from "@/lib/mongoClient";
 import { v2 as cloudinary } from "cloudinary";
@@ -301,65 +303,94 @@ export async function POST(req) {
             { status: 400 }
           );
         }
-        updateFields.kycPaymentStatus = paymentStatus;
+        if (user.kycPaymentStatus === "paid") {
+          // Already paid, skip debit/credit
+        } else {
+          updateFields.kycPaymentStatus = paymentStatus;
 
-        // Create wallet transaction for KYC payment
-        // Check if user has a referrer to determine how to split the payment
-        let kycPaymentAmount = 99; // Default KYC fee
-        let websiteCredit = 99; // Default to full amount to website
-        let referrerCredit = 0; // Default to no referrer credit
+          // Create wallet transaction for KYC payment
+          // Check if user has a referrer to determine how to split the payment
+          let kycPaymentAmount = 99; // Default KYC fee
+          let websiteCredit = 99; // Default to full amount to website
+          let referrerCredit = 0; // Default to no referrer credit
 
-        if (user.referrerId) {
-          // If user has a referrer, split the payment
-          websiteCredit = 50; // Rs.50 to website
-          referrerCredit = 49; // Rs.49 to referrer
-        }
-        // If no referrer, full amount (Rs.99) goes to website
+          if (user.referrerId) {
+            // If user has a referrer, split the payment
+            websiteCredit = 50; // Rs.50 to website
+            referrerCredit = 49; // Rs.49 to referrer
+          }
+          // If no referrer, full amount (Rs.99) goes to website
 
-        // Create wallet transaction for KYC payment to website
-        await db.collection("walletTransactions").insertOne(
-          {
-            userEmail: token.email,
-            userId: user._id,
-            type: "debit",
-            amount: kycPaymentAmount,
-            description: "KYC verification fee",
-            reference: `KYC_PAYMENT_${Date.now()}`,
-            balanceBefore: user.walletBalance || 0,
-            balanceAfter: (user.walletBalance || 0) - kycPaymentAmount,
-            adminAction: false,
-            createdAt: new Date(),
-          },
-          { session }
-        );
+          // Check sufficient balance
+          if ((user.walletBalance || 0) < kycPaymentAmount) {
+            throw new Error("Insufficient wallet balance for KYC payment");
+          }
 
-        // If user has a referrer, create transaction for referrer reward
-        if (user.referrerId && referrerCredit > 0) {
-          // Find referrer
-          const referrer = await usersCollection.findOne(
-            { _id: new ObjectId(user.referrerId) },
+          // Debit user's wallet
+          await usersCollection.updateOne(
+            { _id: user._id },
+            { $inc: { walletBalance: -kycPaymentAmount } },
             { session }
           );
 
-          if (referrer) {
-            // Create wallet transaction for referrer reward
-            await db.collection("walletTransactions").insertOne(
-              {
-                userEmail: referrer.email,
-                userId: referrer._id,
-                type: "credit",
-                amount: referrerCredit,
-                description: `Referral reward for ${
-                  user.name || user.email
-                } KYC verification`,
-                reference: `REFERRAL_REWARD_${Date.now()}`,
-                balanceBefore: referrer.walletBalance || 0,
-                balanceAfter: (referrer.walletBalance || 0) + referrerCredit,
-                adminAction: false,
-                createdAt: new Date(),
-              },
+          // Create wallet transaction for KYC payment to website
+          await db.collection("walletTransactions").insertOne(
+            {
+              userEmail: token.email,
+              userId: user._id,
+              type: "debit",
+              amount: kycPaymentAmount,
+              description: "KYC verification fee",
+              reference: `KYC_PAYMENT_${Date.now()}`,
+              balanceBefore: user.walletBalance || 0,
+              balanceAfter: (user.walletBalance || 0) - kycPaymentAmount,
+              adminAction: false,
+              createdAt: new Date(),
+            },
+            { session }
+          );
+
+          // Update local user balance
+          user.walletBalance = (user.walletBalance || 0) - kycPaymentAmount;
+
+          // If user has a referrer, create transaction for referrer reward
+          if (user.referrerId && referrerCredit > 0) {
+            // Find referrer
+            const referrer = await usersCollection.findOne(
+              { _id: new ObjectId(user.referrerId) },
               { session }
             );
+
+            if (referrer) {
+              // Credit referrer's wallet
+              await usersCollection.updateOne(
+                { _id: referrer._id },
+                { $inc: { walletBalance: referrerCredit } },
+                { session }
+              );
+
+              // Create wallet transaction for referrer reward
+              await db.collection("walletTransactions").insertOne(
+                {
+                  userEmail: referrer.email,
+                  userId: referrer._id,
+                  type: "credit",
+                  amount: referrerCredit,
+                  description: `Referral reward for ${
+                    user.name || user.email
+                  } KYC verification`,
+                  reference: `REFERRAL_REWARD_${Date.now()}`,
+                  balanceBefore: referrer.walletBalance || 0,
+                  balanceAfter: (referrer.walletBalance || 0) + referrerCredit,
+                  adminAction: false,
+                  createdAt: new Date(),
+                },
+                { session }
+              );
+
+              // Update local referrer balance
+              referrer.walletBalance = (referrer.walletBalance || 0) + referrerCredit;
+            }
           }
         }
       }
@@ -435,7 +466,7 @@ export async function POST(req) {
           { session }
         );
 
-        // Check if user was referred and award Rs.49 to referrer upon KYC completion
+        // Check if user was referred and award Rs.49 to referrer upon KYC submission
         if (user.referrerId) {
           const referrer = await usersCollection.findOne(
             { _id: new ObjectId(user.referrerId) },
@@ -461,9 +492,9 @@ export async function POST(req) {
               const updatedReferrals = [...referrer.Recent_Referrals];
               updatedReferrals[existingReferralIndex] = {
                 ...updatedReferrals[existingReferralIndex],
-                kycStatus: "Verified",
+                kycStatus: "Submitted",
                 earned: `₹${referralReward}`,
-                referralDate: new Date().toISOString(), // This will be the verified date
+                referralDate: new Date().toISOString(), // This will be the submitted date
                 status: user.isSuspended ? "Suspended" : "Active",
               };
 
@@ -491,7 +522,7 @@ export async function POST(req) {
                 joinDate: user.createdAt || new Date().toISOString(),
                 referralDate: new Date().toISOString(),
                 status: user.isSuspended ? "Suspended" : "Active",
-                kycStatus: "Verified",
+                kycStatus: "Submitted",
                 earned: `₹${referralReward}`,
                 referredUserId: user._id.toString(), // Store the referred user's ID
               };
@@ -520,11 +551,16 @@ export async function POST(req) {
             // Add transaction to wallet history
             await db.collection("walletTransactions").insertOne(
               {
+                userEmail: referrer.email,
                 userId: new ObjectId(user.referrerId),
                 type: "credit",
                 amount: referralReward,
-                description: `Referral reward for ${user.name || user.email}`,
-                timestamp: new Date(),
+                description: `Referral reward for ${user.name || user.email} KYC submission`,
+                reference: `REFERRAL_REWARD_${Date.now()}`,
+                balanceBefore: referrer.walletBalance || 0,
+                balanceAfter: (referrer.walletBalance || 0) + referralReward,
+                adminAction: false,
+                createdAt: new Date(),
               },
               { session }
             );

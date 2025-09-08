@@ -1,4 +1,5 @@
-// Modified KYCDashboard component
+// KYCDashboard component
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -10,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertCircle } from "../ui/alert";
+import { Alert, AlertDescription } from "../ui/alert";
 import {
   UserCheck,
   CreditCard,
@@ -26,16 +27,17 @@ import FileUploadZone from "./FileUploadZone";
 import {
   useGetKYCDataQuery,
   useUpdateKYCDataMutation,
-  useUploadFileMutation, // Changed from useUploadDocumentMutation to useUploadFileMutation
-} from "@/redux/api/api"; // Added useUploadDocumentMutation
-import { useToast } from "@/components/ui/use-toast"; // Fixed import path
+  useUploadFileMutation,
+} from "@/redux/api/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const KYCDashboard = ({ userEmail }) => {
   const { toast } = useToast();
   const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
   const [updateKYCData, { isLoading: isSubmitting }] =
     useUpdateKYCDataMutation();
-  const [uploadFile] = useUploadFileMutation(); // Changed from uploadDocument to uploadFile
+  const [uploadFile] = useUploadFileMutation();
+  const [showSubmissionAlert, setShowSubmissionAlert] = useState(false); // New state for submission alert
 
   const [localKycData, setLocalKycData] = useState({
     status: "none",
@@ -124,6 +126,10 @@ const KYCDashboard = ({ userEmail }) => {
         submittedAt: kycData.submittedAt ? new Date(kycData.submittedAt) : null,
         rejectionReason: kycData.rejectionReason || null,
       });
+      // Reset submission alert if status is not pending or under_review
+      if (kycData.status !== "pending" && kycData.status !== "under_review") {
+        setShowSubmissionAlert(false);
+      }
     }
   }, [kycData]);
 
@@ -163,7 +169,6 @@ const KYCDashboard = ({ userEmail }) => {
       });
     } catch (err) {
       console.error("Upload error:", err);
-      // Fix the error handling to ensure we're passing strings to toast
       let errorMessage = "Please try again.";
       if (err?.data?.message && typeof err.data.message === "string") {
         errorMessage = err.data.message;
@@ -252,17 +257,18 @@ const KYCDashboard = ({ userEmail }) => {
           ...prev,
           status: result.kycApplication.status,
         }));
+        setShowSubmissionAlert(true); // Show the submission alert
       }
 
       refetch();
       toast({
-        title: "KYC submitted successfully",
+        title: "KYC Submitted Successfully",
         description:
-          "Your documents are now under review. We'll notify you within 24-48 hours.",
+          "Your KYC application has been submitted and is now under review. Please wait for admin approval, which typically takes 24-48 hours.",
       });
     } catch (error) {
       toast({
-        title: "Submission failed",
+        title: "Submission Failed",
         description:
           error?.data?.message || "Please try again or contact support.",
         variant: "destructive",
@@ -418,8 +424,20 @@ const KYCDashboard = ({ userEmail }) => {
           </CardContent>
         </Card>
 
+        {/* Submission Success Alert */}
+        {showSubmissionAlert && isUnderReview && (
+          <Alert className="border-warning/20 bg-warning-light">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              <strong>KYC Application Submitted!</strong> Your documents are now
+              under review. Please wait for admin approval, which typically takes
+              24-48 hours. You will be notified once the review is complete.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Alerts */}
-        {localKycData.status === "none" && (
+        {localKycData.status === "none" && !showSubmissionAlert && (
           <Alert className="border-info/20 bg-info-light">
             <Shield className="h-4 w-4" />
             <AlertDescription>
@@ -451,7 +469,7 @@ const KYCDashboard = ({ userEmail }) => {
           </Alert>
         )}
 
-        {isUnderReview && (
+        {isUnderReview && !showSubmissionAlert && (
           <Alert className="border-warning/20 bg-warning-light">
             <Clock className="h-4 w-4" />
             <AlertDescription>
@@ -499,7 +517,7 @@ const KYCDashboard = ({ userEmail }) => {
                 documentType="bankStatement"
                 onFileUpload={(file) => handleFileUpload("bankStatement", file)}
                 existingFile={localKycData.documents.bankStatement}
-                required // Made required for 100% progress
+                required
                 disabled={!canUploadDocuments}
               />
 
