@@ -74,6 +74,27 @@ export const authOptions = {
     async jwt({ token, user, account, profile, trigger, session }) {
       const db = client.db("TaskEarnDB");
 
+      // Validate user exists in database on each JWT callback
+      // This prevents deleted users from still having valid sessions
+      if (token?.email) {
+        const existingUser = await db.collection("Users").findOne({
+          email: token.email,
+        });
+
+        // If user doesn't exist in DB, invalidate the token
+        if (!existingUser) {
+          throw new Error("User no longer exists");
+        }
+
+        // Ensure token role matches database role
+        // This prevents role manipulation attacks where a user might change their role in the token
+        token.id = existingUser._id.toString();
+        token.role = existingUser.role || null;
+        token.name = existingUser.name;
+        token.email = existingUser.email;
+        token.picture = existingUser.image || token.picture;
+      }
+
       // Handle first-time OAuth users
       if (account?.provider === "google") {
         const email = user?.email || token.email;
@@ -186,11 +207,35 @@ export const authOptions = {
     },
 
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.name = token.name;
-      session.user.email = token.email;
-      session.user.image = token.picture;
+      // Validate user exists in database on each session callback as well
+      const db = client.db("TaskEarnDB");
+
+      if (token?.email) {
+        const existingUser = await db.collection("Users").findOne({
+          email: token.email,
+        });
+
+        // If user doesn't exist in DB, invalidate the session
+        if (!existingUser) {
+          throw new Error("User no longer exists");
+        }
+
+        // Ensure session role matches database role
+        // This prevents role manipulation attacks where a user might change their role in the token
+        session.user.id = existingUser._id.toString();
+        session.user.role = existingUser.role || null;
+        session.user.name = existingUser.name;
+        session.user.email = existingUser.email;
+        session.user.image = existingUser.image || token.picture;
+      } else {
+        // Fallback to token data if no email in token (shouldn't happen in normal flow)
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+      }
+
       return session;
     },
   },

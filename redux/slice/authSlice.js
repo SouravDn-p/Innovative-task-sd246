@@ -13,26 +13,11 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Hydrate from localStorage after client-side mount
+    // Hydrate from NextAuth session after client-side mount
     hydrate(state) {
-      if (typeof window !== "undefined") {
-        const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
-        
-        if (storedUser && storedToken) {
-          try {
-            state.user = JSON.parse(storedUser);
-            state.token = storedToken;
-            state.isLoggedIn = true;
-          } catch (error) {
-            console.error("Error parsing stored user data:", error);
-            // Clear corrupted data
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-          }
-        }
-        state.isHydrated = true;
-      }
+      // With NextAuth, we don't hydrate from localStorage
+      // Session state is managed by NextAuth
+      state.isHydrated = true;
     },
     loginStart(state) {
       state.loading = true;
@@ -44,17 +29,16 @@ const authSlice = createSlice({
       state.isLoggedIn = true;
       state.loading = false;
       state.error = null;
-      
-      // Persist to localStorage on client side
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-        localStorage.setItem("token", action.payload.token);
-      }
+
+      // With NextAuth, we don't persist to localStorage
+      // Session persistence is handled by NextAuth
     },
     loginFailure(state, action) {
       state.error = action.payload;
       state.loading = false;
       state.isLoggedIn = false;
+      state.user = null;
+      state.token = null;
     },
     logout(state) {
       state.user = null;
@@ -62,12 +46,9 @@ const authSlice = createSlice({
       state.isLoggedIn = false;
       state.loading = false;
       state.error = null;
-      
-      // Clear localStorage on client side
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-      }
+
+      // With NextAuth, we don't need to clear localStorage
+      // Session cleanup is handled by NextAuth
     },
     // Sync with NextAuth session
     syncWithSession(state, action) {
@@ -85,6 +66,7 @@ const authSlice = createSlice({
         state.error = null;
       } else {
         state.user = null;
+        state.token = null;
         state.isLoggedIn = false;
       }
     },
@@ -94,14 +76,14 @@ const authSlice = createSlice({
   },
 });
 
-export const { 
-  hydrate, 
-  loginStart, 
-  loginSuccess, 
-  loginFailure, 
-  logout, 
+export const {
+  hydrate,
+  loginStart,
+  loginSuccess,
+  loginFailure,
+  logout,
   syncWithSession,
-  clearError 
+  clearError,
 } = authSlice.actions;
 
 export default authSlice.reducer;
