@@ -113,20 +113,20 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-teal-900">
       <Header />
 
       {/* Enhanced Banner Section */}
       <section
         ref={bannerRef}
-        className="relative overflow-hidden bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 p-8 md:p-12 lg:p-16 text-center text-white shadow-2xl mx-4 mt-8 rounded-2xl"
+        className="relative overflow-hidden bg-gradient-to-r from-teal-600 to-teal-500 p-8 md:p-12 lg:p-16 text-center text-white shadow-2xl mx-4 mt-8 rounded-2xl backdrop-blur-md border border-teal-500/30"
       >
         <div className="relative space-y-6">
           <div className="space-y-2">
-            <h1 className="text-3xl md:text-4xl lg:text-6xl font-extrabold tracking-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-6xl font-extrabold tracking-tight text-teal-100">
               Discover Amazing Tasks
             </h1>
-            <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-teal-100 max-w-3xl mx-auto leading-relaxed">
               Join thousands of users earning money by completing admin-approved
               tasks. Your skills, your success, your rewards.
             </p>
@@ -134,29 +134,29 @@ export default function TasksPage() {
 
           {/* Stats Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 max-w-4xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold">
+            <div className="bg-teal-900/30 backdrop-blur-sm rounded-lg p-4 border border-teal-500/50">
+              <div className="text-2xl md:text-3xl font-bold text-teal-300">
                 {stats.total}
               </div>
-              <div className="text-sm text-white/80">Total Tasks</div>
+              <div className="text-sm text-teal-400">Total Tasks</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold">
+            <div className="bg-teal-900/30 backdrop-blur-sm rounded-lg p-4 border border-teal-500/50">
+              <div className="text-2xl md:text-3xl font-bold text-teal-300">
                 {stats.available}
               </div>
-              <div className="text-sm text-white/80">Available</div>
+              <div className="text-sm text-teal-400">Available</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold">
+            <div className="bg-teal-900/30 backdrop-blur-sm rounded-lg p-4 border border-teal-500/50">
+              <div className="text-2xl md:text-3xl font-bold text-teal-300">
                 ₹{stats.totalReward.toLocaleString()}
               </div>
-              <div className="text-sm text-white/80">Total Rewards</div>
+              <div className="text-sm text-teal-400">Total Rewards</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold">
+            <div className="bg-teal-900/30 backdrop-blur-sm rounded-lg p-4 border border-teal-500/50">
+              <div className="text-2xl md:text-3xl font-bold text-teal-300">
                 {stats.categories}
               </div>
-              <div className="text-sm text-white/80">Categories</div>
+              <div className="text-sm text-teal-400">Categories</div>
             </div>
           </div>
         </div>
@@ -164,17 +164,17 @@ export default function TasksPage() {
 
       {/* Enhanced Filter Section */}
       <section className="py-8 mx-4">
-        <Card className="border-teal-200 shadow-lg">
+        <Card className="border-teal-500/50 bg-teal-900/20 shadow-lg backdrop-blur-md">
           <CardContent className="p-6">
             <div className="space-y-4">
               {/* Search Bar */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-teal-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-teal-400" />
                 <Input
                   placeholder="Search tasks by title, description, or category..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 text-base border-teal-200 focus:border-teal-500 bg-white"
+                  className="pl-12 h-12 text-base border-teal-500/50 bg-teal-900/30 text-teal-300 focus:border-teal-400 backdrop-blur-sm placeholder-teal-400"
                 />
               </div>
 
@@ -185,8 +185,8 @@ export default function TasksPage() {
                     value={categoryFilter}
                     onValueChange={setCategoryFilter}
                   >
-                    <SelectTrigger className="w-full sm:w-48 bg-white border-teal-200">
-                      <Filter className="mr-2 h-4 w-4 text-teal-600" />
+                    <SelectTrigger className="w-full sm:w-48 bg-teal-900/30 border-teal-500/50 text-teal-300 backdrop-blur-sm">
+                      <Filter className="mr-2 h-4 w-4 text-teal-400" />
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -199,8 +199,8 @@ export default function TasksPage() {
                   </Select>
 
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full sm:w-48 bg-white border-teal-200">
-                      <ArrowUpDown className="mr-2 h-4 w-4 text-teal-600" />
+                    <SelectTrigger className="w-full sm:w-48 bg-teal-900/30 border-teal-500/50 text-teal-300 backdrop-blur-sm">
+                      <ArrowUpDown className="mr-2 h-4 w-4 text-teal-400" />
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -223,7 +223,7 @@ export default function TasksPage() {
                     size="sm"
                     onClick={() => refetch()}
                     disabled={isLoading}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    className="border-teal-500/50 text-teal-300 hover:bg-teal-600/30 bg-teal-900/30 backdrop-blur-sm"
                   >
                     <RefreshCw
                       className={`h-4 w-4 mr-2 ${
@@ -239,11 +239,11 @@ export default function TasksPage() {
                       id="available-only"
                       checked={showAvailableOnly}
                       onChange={(e) => setShowAvailableOnly(e.target.checked)}
-                      className="w-4 h-4 text-teal-600 border-teal-300 rounded focus:ring-teal-500"
+                      className="w-4 h-4 text-teal-400 border-teal-500/50 rounded focus:ring-teal-400"
                     />
                     <label
                       htmlFor="available-only"
-                      className="text-sm text-teal-700"
+                      className="text-sm text-teal-300"
                     >
                       {session?.user ? "Available for me" : "Available only"}
                     </label>
@@ -251,7 +251,7 @@ export default function TasksPage() {
 
                   <Badge
                     variant="outline"
-                    className="border-teal-200 text-teal-700"
+                    className="border-teal-500/50 text-teal-300 bg-teal-900/30 backdrop-blur-sm"
                   >
                     {filteredTasks.length} task
                     {filteredTasks.length !== 1 ? "s" : ""}
@@ -267,29 +267,29 @@ export default function TasksPage() {
       <section className="pb-12 mx-4">
         {isLoading ? (
           <div className="text-center py-20">
-            <Target className="h-16 w-16 text-teal-500 mx-auto mb-6 animate-spin" />
-            <h3 className="text-xl font-semibold text-teal-900 mb-2">
+            <Target className="h-16 w-16 text-teal-400 mx-auto mb-6 animate-spin" />
+            <h3 className="text-xl font-semibold text-teal-300 mb-2">
               Loading Amazing Tasks...
             </h3>
-            <p className="text-teal-600">
+            <p className="text-teal-400">
               Please wait while we fetch the latest opportunities for you.
             </p>
           </div>
         ) : error ? (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-500/50 bg-red-900/20 backdrop-blur-md">
             <CardContent className="p-8 text-center">
-              <Target className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-red-900 mb-2">
+              <Target className="h-16 w-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-red-300 mb-2">
                 Failed to Load Tasks
               </h3>
-              <p className="text-red-700 mb-4">
+              <p className="text-red-400 mb-4">
                 {error?.data?.message ||
                   error?.message ||
                   "Something went wrong while loading tasks"}
               </p>
               <button
                 onClick={() => refetch()}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors backdrop-blur-sm border border-red-500/30"
               >
                 Try Again
               </button>
@@ -337,12 +337,12 @@ export default function TasksPage() {
                 <div key={enhancedTask.taskId} className="group">
                   <TaskCard
                     {...enhancedTask}
-                    className="border border-teal-100 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-teal-200 group-hover:scale-105"
+                    className="border border-teal-500/50 bg-teal-900/20 shadow-sm transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-teal-400 group-hover:scale-105 backdrop-blur-md"
                   />
 
                   {/* Additional task info overlay */}
                   <div className="mt-2 px-2">
-                    <div className="flex items-center justify-between text-xs text-teal-600">
+                    <div className="flex items-center justify-between text-xs text-teal-400">
                       <div className="flex items-center gap-2">
                         <Users className="h-3 w-3" />
                         <span>
@@ -369,15 +369,15 @@ export default function TasksPage() {
             })}
           </div>
         ) : (
-          <Card className="border-teal-200">
+          <Card className="border-teal-500/50 bg-teal-900/20 backdrop-blur-md">
             <CardContent className="p-12 text-center">
               <Target className="h-16 w-16 text-teal-400 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-teal-900 mb-2">
+              <h3 className="text-xl font-semibold text-teal-300 mb-2">
                 {searchTerm || categoryFilter !== "all"
                   ? "No matching tasks found"
                   : "No tasks available"}
               </h3>
-              <p className="text-teal-600 mb-6">
+              <p className="text-teal-400 mb-6">
                 {searchTerm || categoryFilter !== "all"
                   ? "Try adjusting your search criteria or filters to find more tasks."
                   : "Check back later for new task opportunities."}
@@ -388,7 +388,7 @@ export default function TasksPage() {
                     setSearchTerm("");
                     setCategoryFilter("all");
                   }}
-                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors backdrop-blur-sm border border-teal-500/30"
                 >
                   Clear Filters
                 </button>
