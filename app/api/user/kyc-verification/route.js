@@ -323,7 +323,11 @@ export async function POST(req) {
 
           // Check sufficient balance
           if ((user.walletBalance || 0) < kycPaymentAmount) {
-            throw new Error("Insufficient wallet balance for KYC payment");
+            throw new Error(
+              `Insufficient wallet balance for KYC payment. You need ₹${kycPaymentAmount} but you only have ₹${
+                user.walletBalance || 0
+              }. Please add funds to your wallet.`
+            );
           }
 
           // Debit user's wallet
@@ -389,7 +393,8 @@ export async function POST(req) {
               );
 
               // Update local referrer balance
-              referrer.walletBalance = (referrer.walletBalance || 0) + referrerCredit;
+              referrer.walletBalance =
+                (referrer.walletBalance || 0) + referrerCredit;
             }
           }
         }
@@ -555,7 +560,9 @@ export async function POST(req) {
                 userId: new ObjectId(user.referrerId),
                 type: "credit",
                 amount: referralReward,
-                description: `Referral reward for ${user.name || user.email} KYC submission`,
+                description: `Referral reward for ${
+                  user.name || user.email
+                } KYC submission`,
                 reference: `REFERRAL_REWARD_${Date.now()}`,
                 balanceBefore: referrer.walletBalance || 0,
                 balanceAfter: (referrer.walletBalance || 0) + referralReward,
@@ -613,13 +620,8 @@ export async function POST(req) {
       const errorMessage =
         error.message ||
         "Internal server error occurred while processing your request.";
-      return new Response(
-        JSON.stringify({
-          message: errorMessage,
-        }),
-        { status: 500 }
-      );
-    } finally {
+
+      // End session before returning error response
       if (session) {
         try {
           await session.endSession();
@@ -627,7 +629,16 @@ export async function POST(req) {
           console.error("Error ending session:", sessionError);
         }
       }
-      break;
+
+      return new Response(
+        JSON.stringify({
+          message: errorMessage,
+          error: errorMessage,
+        }),
+        { status: 500 }
+      );
+    } finally {
+      // Session is already ended in the catch block, so we don't need to end it again
     }
   }
 }

@@ -159,6 +159,12 @@ export const api = createApi({
         },
       }),
       invalidatesTags: ["KYC", "AdminDashboard"],
+      // Transform error response to ensure proper error handling
+      transformErrorResponse: (response, meta, arg) => {
+        console.log("KYC update error response:", response);
+        // Return the error data as-is so it can be handled by the component
+        return response;
+      },
     }),
     uploadFile: builder.mutation({
       query: ({ file, documentType }) => {

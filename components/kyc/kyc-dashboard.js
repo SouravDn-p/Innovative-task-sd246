@@ -30,8 +30,11 @@ import {
   useUploadFileMutation,
 } from "@/redux/api/api";
 import { useToast } from "@/components/ui/use-toast";
+import Swal from "sweetalert2";
+import { useIsMobile } from "@/components/ui/use-mobile"; // Import mobile detection hook
 
 const KYCDashboard = ({ userEmail }) => {
+  const isMobile = useIsMobile(); // Use mobile detection
   const { toast } = useToast();
   const { data: kycData, isLoading, error, refetch } = useGetKYCDataQuery();
   const [updateKYCData, { isLoading: isSubmitting }] =
@@ -163,23 +166,46 @@ const KYCDashboard = ({ userEmail }) => {
       }
 
       refetch();
-      toast({
+      Swal.fire({
         title: "Document uploaded",
-        description: `${documentType} has been uploaded successfully.`,
+        text: `${documentType} has been uploaded successfully.`,
+        icon: "success",
+        confirmButtonText: "OK",
       });
     } catch (err) {
       console.error("Upload error:", err);
       let errorMessage = "Please try again.";
+      // Check for specific error messages from the API
       if (err?.data?.message && typeof err.data.message === "string") {
         errorMessage = err.data.message;
       } else if (err?.message && typeof err.message === "string") {
         errorMessage = err.message;
+      } else if (err?.data?.error && typeof err.data.error === "string") {
+        errorMessage = err.data.error;
       }
-      toast({
-        title: "Upload failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+
+      // Check if it's an insufficient balance error
+      if (errorMessage.includes("Insufficient wallet balance")) {
+        Swal.fire({
+          title: "Insufficient Balance",
+          text: errorMessage,
+          icon: "error",
+          showCancelButton: true,
+          confirmButtonText: "Go to Wallet",
+          cancelButtonText: "Cancel",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/dashboard/user/wallet";
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Upload failed",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     }
   };
 
@@ -197,27 +223,50 @@ const KYCDashboard = ({ userEmail }) => {
       }
 
       refetch();
-      toast({
+      Swal.fire({
         title: "Payment successful",
-        description:
-          "KYC verification fee has been paid. You can now submit your application.",
+        text: "KYC verification fee has been paid. You can now submit your application.",
+        icon: "success",
+        confirmButtonText: "OK",
       });
     } catch (error) {
+      console.error("Payment error:", error);
       let errorMessage = "Please try again or contact support.";
-      if (error?.data?.message) {
+      // Check for specific error messages from the API
+      if (error?.data?.message && typeof error.data.message === "string") {
         errorMessage = error.data.message;
-      } else if (error?.message) {
+      } else if (error?.message && typeof error.message === "string") {
         errorMessage = error.message;
+      } else if (error?.data?.error && typeof error.data.error === "string") {
+        errorMessage = error.data.error;
       } else if (error?.status) {
         errorMessage = `HTTP ${error.status}: ${
           error.statusText || "Request failed"
         }`;
       }
-      toast({
-        title: "Payment failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+
+      // Check if it's an insufficient balance error
+      if (errorMessage.includes("Insufficient wallet balance")) {
+        Swal.fire({
+          title: "Insufficient Balance",
+          text: errorMessage,
+          icon: "error",
+          showCancelButton: true,
+          confirmButtonText: "Go to Wallet",
+          cancelButtonText: "Cancel",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/dashboard/user/wallet";
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Payment failed",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     }
   };
 
@@ -230,19 +279,27 @@ const KYCDashboard = ({ userEmail }) => {
     );
 
     if (missingDocs.length > 0) {
-      toast({
+      Swal.fire({
         title: "Missing documents",
-        description: `Please upload: ${missingDocs.join(", ")}`,
-        variant: "destructive",
+        text: `Please upload: ${missingDocs.join(", ")}`,
+        icon: "error",
+        confirmButtonText: "OK",
       });
       return;
     }
 
     if (localKycData.paymentStatus !== "paid") {
-      toast({
+      Swal.fire({
         title: "Payment required",
-        description: "Please complete the KYC verification fee payment first.",
-        variant: "destructive",
+        text: "Please complete the KYC verification fee payment first.",
+        icon: "error",
+        showCancelButton: true,
+        confirmButtonText: "Go to Wallet",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/dashboard/user/wallet";
+        }
       });
       return;
     }
@@ -261,18 +318,46 @@ const KYCDashboard = ({ userEmail }) => {
       }
 
       refetch();
-      toast({
+      Swal.fire({
         title: "KYC Submitted Successfully",
-        description:
-          "Your KYC application has been submitted and is now under review. Please wait for admin approval, which typically takes 24-48 hours.",
+        text: "Your KYC application has been submitted and is now under review. Please wait for admin approval, which typically takes 24-48 hours.",
+        icon: "success",
+        confirmButtonText: "OK",
       });
     } catch (error) {
-      toast({
-        title: "Submission Failed",
-        description:
-          error?.data?.message || "Please try again or contact support.",
-        variant: "destructive",
-      });
+      console.error("Submission error:", error);
+      let errorMessage = "Please try again or contact support.";
+      // Check for specific error messages from the API
+      if (error?.data?.message && typeof error.data.message === "string") {
+        errorMessage = error.data.message;
+      } else if (error?.message && typeof error.message === "string") {
+        errorMessage = error.message;
+      } else if (error?.data?.error && typeof error.data.error === "string") {
+        errorMessage = error.data.error;
+      }
+
+      // Check if it's an insufficient balance error
+      if (errorMessage.includes("Insufficient wallet balance")) {
+        Swal.fire({
+          title: "Insufficient Balance",
+          text: errorMessage,
+          icon: "error",
+          showCancelButton: true,
+          confirmButtonText: "Go to Wallet",
+          cancelButtonText: "Cancel",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/dashboard/user/wallet";
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Submission Failed",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     }
   };
 
@@ -337,12 +422,47 @@ const KYCDashboard = ({ userEmail }) => {
   }
 
   if (error) {
+    console.error("KYC data loading error:", error);
+    let errorMessage = "Error loading KYC data. Please try again.";
+    // Check for specific error messages from the API
+    if (error?.data?.message && typeof error.data.message === "string") {
+      errorMessage = error.data.message;
+    } else if (error?.message && typeof error.message === "string") {
+      errorMessage = error.message;
+    } else if (error?.status) {
+      errorMessage = `HTTP ${error.status}: ${
+        error.statusText || "Request failed"
+      }`;
+    }
+
+    // Show error with SweetAlert
+    if (errorMessage.includes("Insufficient wallet balance")) {
+      Swal.fire({
+        title: "Insufficient Balance",
+        text: errorMessage,
+        icon: "error",
+        showCancelButton: true,
+        confirmButtonText: "Go to Wallet",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/dashboard/user/wallet";
+        }
+      });
+    } else {
+      Swal.fire({
+        title: "Error",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+
+    // Also render the error in the UI as fallback
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Alert variant="destructive">
-          <AlertDescription>
-            Error loading KYC data. Please try again.
-          </AlertDescription>
+          <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>
       </div>
     );
@@ -350,26 +470,28 @@ const KYCDashboard = ({ userEmail }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">KYC Verification</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">KYC Verification</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Complete your identity verification to unlock all features
           </p>
         </div>
 
         {/* Status Overview */}
         <Card className={`border-2 ${getStatusColor(localKycData.status)}`}>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-background rounded-full shadow-sm">
-                  <UserCheck className="h-8 w-8 text-primary" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="p-2 md:p-3 bg-background rounded-full shadow-sm">
+                  <UserCheck className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">Verification Status</h2>
-                  <p className="text-sm opacity-90">
+                  <h2 className="text-xl md:text-2xl font-bold">
+                    Verification Status
+                  </h2>
+                  <p className="text-xs md:text-sm opacity-90">
                     {isVerified
                       ? "Your identity has been verified successfully"
                       : isUnderReview
@@ -397,9 +519,11 @@ const KYCDashboard = ({ userEmail }) => {
                     }
                   })()}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2">
                     {getStatusIcon(localKycData.status)}
-                    {localKycData.status.replace("_", " ").toUpperCase()}
+                    <span className="text-xs md:text-sm">
+                      {localKycData.status.replace("_", " ").toUpperCase()}
+                    </span>
                   </div>
                 </Badge>
                 {localKycData.submittedAt && (
@@ -411,14 +535,14 @@ const KYCDashboard = ({ userEmail }) => {
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-6">
-              <div className="flex justify-between text-sm mb-2">
+            <div className="mt-4 md:mt-6">
+              <div className="flex justify-between text-xs md:text-sm mb-1 md:mb-2">
                 <span>Completion Progress</span>
                 <span>{localKycData.completionPercentage}%</span>
               </div>
               <Progress
                 value={localKycData.completionPercentage}
-                className="h-3"
+                className="h-2 md:h-3"
               />
             </div>
           </CardContent>
@@ -428,10 +552,11 @@ const KYCDashboard = ({ userEmail }) => {
         {showSubmissionAlert && isUnderReview && (
           <Alert className="border-warning/20 bg-warning-light">
             <Clock className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">
               <strong>KYC Application Submitted!</strong> Your documents are now
-              under review. Please wait for admin approval, which typically takes
-              24-48 hours. You will be notified once the review is complete.
+              under review. Please wait for admin approval, which typically
+              takes 24-48 hours. You will be notified once the review is
+              complete.
             </AlertDescription>
           </Alert>
         )}
@@ -440,7 +565,7 @@ const KYCDashboard = ({ userEmail }) => {
         {localKycData.status === "none" && !showSubmissionAlert && (
           <Alert className="border-info/20 bg-info-light">
             <Shield className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">
               Complete KYC verification to unlock withdrawal features and
               increase your task limits.
               <strong> Verification fee: ₹{localKycData.paymentAmount}</strong>
@@ -451,7 +576,7 @@ const KYCDashboard = ({ userEmail }) => {
         {localKycData.status === "rejected" && localKycData.rejectionReason && (
           <Alert variant="destructive">
             <X className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">
               <strong>KYC Rejected:</strong> {localKycData.rejectionReason}
               <br />
               Please resubmit your documents with the required corrections.
@@ -462,7 +587,7 @@ const KYCDashboard = ({ userEmail }) => {
         {localKycData.status === "verified" && (
           <Alert className="border-success/20 bg-success-light">
             <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">
               <strong>Congratulations!</strong> Your KYC verification is
               complete. You can now withdraw funds and access premium features.
             </AlertDescription>
@@ -472,7 +597,7 @@ const KYCDashboard = ({ userEmail }) => {
         {isUnderReview && !showSubmissionAlert && (
           <Alert className="border-warning/20 bg-warning-light">
             <Clock className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs md:text-sm">
               Your KYC documents are under review. We&apos;ll notify you once
               verification is complete (usually within 24-48 hours).
             </AlertDescription>
@@ -485,13 +610,13 @@ const KYCDashboard = ({ userEmail }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Document Upload
+                <span className="text-lg">Document Upload</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 Upload all required documents for identity verification
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
+            <CardContent className="space-y-6">
               <FileUploadZone
                 documentType="aadhar"
                 onFileUpload={(file) => handleFileUpload("aadhar", file)}
@@ -525,7 +650,7 @@ const KYCDashboard = ({ userEmail }) => {
               {allDocsUploaded && localKycData.paymentStatus !== "paid" && (
                 <Alert className="border-success/20 bg-success-light">
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription className="text-xs md:text-sm">
                     <strong>All documents uploaded!</strong> Now you can proceed
                     with payment.
                   </AlertDescription>
@@ -538,17 +663,17 @@ const KYCDashboard = ({ userEmail }) => {
         {/* Payment Section - shown when all documents are uploaded */}
         {canPay && (
           <Card className="border-warning/20 bg-warning-light">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-background rounded-full">
-                    <CreditCard className="h-6 w-6 text-warning" />
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="p-2 md:p-3 bg-background rounded-full">
+                    <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-warning" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-warning-foreground">
+                    <h3 className="font-semibold text-warning-foreground text-sm md:text-base">
                       KYC Verification Fee
                     </h3>
-                    <p className="text-sm text-warning-foreground/80">
+                    <p className="text-xs text-warning-foreground/80">
                       One-time payment of ₹{localKycData.paymentAmount} to
                       complete verification
                     </p>
@@ -557,7 +682,8 @@ const KYCDashboard = ({ userEmail }) => {
                 <Button
                   onClick={handlePayment}
                   disabled={isSubmitting}
-                  className="bg-warning hover:bg-warning/90 text-warning-foreground"
+                  className="bg-teal-600 hover:bg-teal-700 text-white w-full sm:w-auto"
+                  size="sm"
                 >
                   {isSubmitting
                     ? "Processing..."
@@ -573,34 +699,46 @@ const KYCDashboard = ({ userEmail }) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Banknote className="h-5 w-5" />
-              Verification Benefits
+              <span className="text-lg">Verification Benefits</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Unlock withdrawal features</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Unlock withdrawal features
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Higher task earning limits</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Higher task earning limits
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Priority customer support</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Priority customer support
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Enhanced account security</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Enhanced account security
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Access to premium tasks</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Access to premium tasks
+                </span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-success" />
-                <span className="text-sm">Faster payment processing</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Faster payment processing
+                </span>
               </div>
             </div>
           </CardContent>
@@ -609,17 +747,17 @@ const KYCDashboard = ({ userEmail }) => {
         {/* Submit Application Section - shown at the bottom after payment and when all documents are uploaded */}
         {canSubmitApplication && (
           <Card className="border-success/20 bg-success-light">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-background rounded-full">
-                    <CheckCircle className="h-6 w-6 text-success" />
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="p-2 md:p-3 bg-background rounded-full">
+                    <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-success" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-success-foreground">
+                    <h3 className="font-semibold text-success-foreground text-sm md:text-base">
                       Ready to Submit
                     </h3>
-                    <p className="text-sm text-success-foreground/80">
+                    <p className="text-xs text-success-foreground/80">
                       All documents uploaded and payment completed. Submit for
                       review.
                     </p>
@@ -628,13 +766,27 @@ const KYCDashboard = ({ userEmail }) => {
                 <Button
                   onClick={handleSubmitKYC}
                   disabled={isSubmitting}
-                  className="bg-success hover:bg-success/90 text-success-foreground"
+                  className="bg-success hover:bg-success/90 text-success-foreground w-full sm:w-auto"
+                  size="sm"
                 >
                   {isSubmitting ? "Submitting..." : "Submit for Review"}
                 </Button>
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Mobile Fixed Submit Button - shown at the bottom for mobile users when application can be submitted */}
+        {isMobile && canSubmitApplication && (
+          <div className="fixed bottom-20 left-0 right-0 p-4 bg-background border-t">
+            <Button
+              onClick={handleSubmitKYC}
+              disabled={isSubmitting}
+              className="bg-success hover:bg-success/90 text-success-foreground w-full"
+            >
+              {isSubmitting ? "Submitting..." : "Submit for Review"}
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -30,7 +30,7 @@ export function Header() {
   const { data: session } = useSession();
   const links = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/tasks", label: "Tasks", icon: ListTodo },
+    { href: "/dashboard/user/task", label: "Tasks", icon: ListTodo },
     { href: "/about", label: "About", icon: Info },
   ];
 

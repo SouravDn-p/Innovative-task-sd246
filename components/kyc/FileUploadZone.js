@@ -72,7 +72,6 @@ const FileUploadZone = ({
     accept: {
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
-      "application/pdf": [".pdf"],
     },
     maxFiles: 1,
     disabled: disabled,
@@ -101,7 +100,7 @@ const FileUploadZone = ({
             {required && <Badge variant="outline">Required</Badge>}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Upload a valid {title} in JPEG, PNG, or PDF format
+            Upload a valid {title} in JPEG or PNG format
           </p>
         </div>
       </div>
@@ -140,7 +139,7 @@ const FileUploadZone = ({
                           : "Drag & drop your file here, or click to browse"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        JPEG, PNG, PDF • Max 5MB
+                        JPEG, PNG • Max 5MB
                       </p>
                     </div>
                   </>

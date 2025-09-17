@@ -500,7 +500,7 @@ function TasksPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-teal-200 p-2 sm:p-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
