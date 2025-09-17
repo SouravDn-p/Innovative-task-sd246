@@ -158,7 +158,7 @@ export default function SelectRole() {
   return (
     <div className="relative min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-teal-950 via-teal-900 to-teal-800">
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ">
         <Card className="w-full max-w-md bg-white/10 backdrop-blur-2xl border-white/20 shadow-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold text-white">

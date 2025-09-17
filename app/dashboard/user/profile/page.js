@@ -468,7 +468,7 @@ function UserProfilePage() {
     <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Profile Header Card */}
       <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
         <CardContent className="p-4 sm:p-6 relative">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="relative">
@@ -498,7 +498,7 @@ function UserProfilePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(!isEditing)}
-                  className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50 whitespace-nowrap"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   <span className="hidden xs:inline">Edit Profile</span>
@@ -577,7 +577,7 @@ function UserProfilePage() {
         {/* Personal Information Tab */}
         <TabsContent value="personal" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <User className="h-5 w-5" />
@@ -742,14 +742,14 @@ function UserProfilePage() {
                 <div className="flex flex-col sm:flex-row gap-2 pt-4">
                   <Button
                     onClick={handleSave}
-                    className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto"
+                    className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
                   >
                     Save Changes
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(false)}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-50 w-full sm:w-auto"
+                    className="border-gray-200 text-gray-700 hover:bg-gray-100 w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
@@ -762,7 +762,7 @@ function UserProfilePage() {
         {/* KYC Information Tab */}
         <TabsContent value="kyc" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <Shield className="h-5 w-5" />
@@ -807,7 +807,7 @@ function UserProfilePage() {
                     </div>
                     <Button
                       size="sm"
-                      className="bg-teal-600 hover:bg-teal-700 whitespace-nowrap mt-2 sm:mt-0"
+                      className="bg-blue-500 hover:bg-blue-600 whitespace-nowrap mt-2 sm:mt-0"
                       onClick={() =>
                         router.push("/dashboard/user/kyc-verification")
                       }
@@ -866,7 +866,7 @@ function UserProfilePage() {
         {/* Wallet & Earnings Tab */}
         <TabsContent value="wallet" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="text-lg text-teal-800">
                 Current Balance
@@ -883,7 +883,7 @@ function UserProfilePage() {
           </Card>
 
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="text-lg text-teal-800">
                 Total Earnings
@@ -900,7 +900,7 @@ function UserProfilePage() {
           </Card>
 
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <TrendingUp className="h-5 w-5" />
@@ -929,7 +929,7 @@ function UserProfilePage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <Button
-                  className="bg-teal-600 hover:bg-teal-700 w-full"
+                  className="bg-blue-500 hover:bg-blue-600 w-full"
                   disabled={user.kycStatus !== "verified"}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -937,7 +937,7 @@ function UserProfilePage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-teal-200 text-teal-700 hover:bg-teal-50 w-full"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-100 w-full"
                   onClick={() => router.push("/wallet")}
                 >
                   View History
@@ -948,7 +948,7 @@ function UserProfilePage() {
 
           {/* Referral Information */}
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <Users className="h-5 w-5" />
@@ -968,7 +968,7 @@ function UserProfilePage() {
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(user.referralCode)}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
+                    className="border-gray-200 text-gray-700 hover:bg-gray-100 whitespace-nowrap"
                   >
                     <Copy className="h-4 w-4 mr-1" />
                     <span className="hidden xs:inline">Copy</span>
@@ -988,7 +988,7 @@ function UserProfilePage() {
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(generateReferralLink())}
-                    className="border-teal-200 text-teal-700 hover:bg-teal-100 whitespace-nowrap"
+                    className="border-gray-200 text-gray-700 hover:bg-gray-100 whitespace-nowrap"
                   >
                     <Copy className="h-4 w-4 mr-1" />
                     <span className="hidden xs:inline">Copy</span>
@@ -1026,7 +1026,7 @@ function UserProfilePage() {
 
               <Button
                 variant="outline"
-                className="w-full border-teal-200 text-teal-700 hover:bg-teal-100"
+                className="w-full border-gray-200 text-gray-700 hover:bg-gray-100"
                 onClick={() => router.push("/dashboard/user/referrals")}
               >
                 View Referral Dashboard
@@ -1038,7 +1038,7 @@ function UserProfilePage() {
         {/* Activity & Stats Tab */}
         <TabsContent value="activity" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <Activity className="h-5 w-5" />
@@ -1109,7 +1109,7 @@ function UserProfilePage() {
         {/* Settings & Security Tab */}
         <TabsContent value="settings" className="space-y-4 p-4 sm:p-6">
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <Key className="h-5 w-5" />
@@ -1132,7 +1132,7 @@ function UserProfilePage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-600 hover:text-teal-700 hover:bg-teal-100"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -1146,21 +1146,21 @@ function UserProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                  className="justify-start border-gray-200 text-gray-700 hover:bg-gray-100 w-full"
                 >
                   <Key className="h-4 w-4 mr-2" />
                   Change Password
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                  className="justify-start border-gray-200 text-gray-700 hover:bg-gray-100 w-full"
                 >
                   <Shield className="h-4 w-4 mr-2" />
                   <span className="truncate">Enable 2FA (Coming Soon)</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full sm:col-span-2"
+                  className="justify-start border-gray-200 text-gray-700 hover:bg-gray-100 w-full sm:col-span-2"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Active Sessions
@@ -1170,7 +1170,7 @@ function UserProfilePage() {
           </Card>
 
           <Card className="relative overflow-hidden border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
             <CardHeader className="relative">
               <CardTitle className="flex items-center gap-2 text-teal-800">
                 <Bell className="h-5 w-5" />
@@ -1207,21 +1207,21 @@ function UserProfilePage() {
               <div className="grid grid-cols-1 gap-3">
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                  className="justify-start border-gray-200 text-gray-700 hover:bg-gray-100 w-full"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Contact Support (WhatsApp)
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start border-teal-200 text-teal-700 hover:bg-teal-100 w-full"
+                  className="justify-start border-gray-200 text-gray-700 hover:bg-gray-100 w-full"
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
                   Help & FAQ
                 </Button>
               </div>
 
-              <div className="pt-4 border-t border-teal-200">
+              <div className="pt-4 border-t border-gray-200">
                 <Button variant="destructive" className="w-full">
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout

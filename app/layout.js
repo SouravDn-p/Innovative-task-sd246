@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/components/ReduxProvider";
 import SessionWrapper from "@/components/SessionWrapper";
+import PlasmaBackground from "@/components/PlasmaBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ export const metadata = {
   title: "Innovative Task Earn - Task & Referral Platform",
   description: "Professional task and referral earning platform",
   icons: {
-    icon: "/logos/logo.png"
+    icon: "/logos/logo.png",
   },
 };
 
@@ -27,10 +28,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <PlasmaBackground />
         <ReduxProvider>
-          <SessionWrapper>
-            {children}
-          </SessionWrapper>
+          <SessionWrapper>{children}</SessionWrapper>
         </ReduxProvider>
       </body>
     </html>

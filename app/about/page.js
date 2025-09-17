@@ -75,9 +75,9 @@ export default function AboutPage() {
   const yBlob2 = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-teal-900 text-teal-300">
+    <div className="min-h-screen relative">
       {/* Background ornaments */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-10">
         {/* soft grid */}
         <div className="[mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)] absolute inset-0 bg-[linear-gradient(to_right,rgba(13,148,136,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,148,136,0.1)_1px,transparent_1px)] bg-[size:24px_24px] md:bg-[size:32px_32px]" />
         {/* animated blobs with parallax */}

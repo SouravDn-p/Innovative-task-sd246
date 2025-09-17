@@ -8,6 +8,9 @@ import TaskEarnerHub from "@/components/TaskEarnerHub";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Plasma from "@/components/plasma";
+import { TaskEarnHero } from "@/components/home/TaskEarnHero";
+import { HowItWorks } from "@/components/home/HowItWorks";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -39,13 +42,16 @@ export default function HomePage() {
   // Only show home page content to unauthenticated users
   if (!session) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <Hero />
-        {/* <TaskEarnerHub /> */}
-        <EarnTaskFeatures />
-        <Footer />
-      </div>
+      <section>
+        <div className="min-h-screen  relative ">
+          <Header />
+          <TaskEarnHero />
+          <HowItWorks />
+          {/* <TaskEarnerHub /> */}
+          <EarnTaskFeatures />
+          <Footer />
+        </div>
+      </section>
     );
   }
 

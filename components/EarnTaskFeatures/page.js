@@ -78,7 +78,7 @@ export default function EarnTaskFeatures() {
   return (
     <div className="">
       {/* Features Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-teal-900">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 ">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-3xl lg:text-4xl font-serif font-extrabold text-teal-300 mb-3">
@@ -152,7 +152,7 @@ export default function EarnTaskFeatures() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-teal-800">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 ">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2
             initial={{ opacity: 0, y: 8 }}

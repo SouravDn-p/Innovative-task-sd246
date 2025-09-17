@@ -207,7 +207,7 @@ export default function AdminDashboard() {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Total Users
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Active Tasks
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Total Revenue
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               System Health
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
         variants={itemVariants}
         className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4"
       >
-        <Card className="border-blue-200 bg-blue-50/30">
+        <Card className="border-blue-200 bg-blue-50/100">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-blue-800">
               Pending KYC
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50/30">
+        <Card className="border-green-200 bg-green-50/100">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-800">
               Approved
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-red-200 bg-red-50/30">
+        <Card className="border-red-200 bg-red-50/100">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-red-800">
               Rejected
@@ -335,7 +335,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50/30">
+        <Card className="border-purple-200 bg-purple-50/100">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-purple-800">
               Pending Advertiser Requests
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
 
       <motion.div variants={itemVariants}>
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
           <CardHeader className="relative">
             <CardTitle className="text-teal-800">Platform Activity</CardTitle>
             <CardDescription className="text-teal-600">

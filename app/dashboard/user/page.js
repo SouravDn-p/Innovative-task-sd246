@@ -148,7 +148,7 @@ export default function UserDashboard() {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
       >
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Total Earned
@@ -168,7 +168,7 @@ export default function UserDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Tasks Completed
@@ -188,7 +188,7 @@ export default function UserDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Active Referrals
@@ -208,7 +208,7 @@ export default function UserDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Current Streak
@@ -226,7 +226,7 @@ export default function UserDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-teal-800">
               Wallet Balance
@@ -253,7 +253,7 @@ export default function UserDashboard() {
         className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
           <CardHeader className="relative">
             <CardTitle className="text-teal-800">Recent Tasks</CardTitle>
             <CardDescription className="text-teal-600">
@@ -319,7 +319,7 @@ export default function UserDashboard() {
         </Card>
 
         <Card className="relative overflow-hidden border-teal-200 shadow-md">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
           <CardHeader className="relative">
             <CardTitle className="text-teal-800">Achievements</CardTitle>
             <CardDescription className="text-teal-600">

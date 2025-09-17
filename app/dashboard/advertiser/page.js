@@ -142,7 +142,7 @@ export default function AdvertiserDashboard() {
       >
         <Link href="/dashboard/advertiser/create-from-template">
           <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-all cursor-pointer h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
             <CardContent className="relative flex flex-col items-center justify-center p-6 text-center h-full">
               <FileText className="h-8 w-8 text-teal-600 mb-2" />
               <CardTitle className="text-teal-800 text-lg">
@@ -157,7 +157,7 @@ export default function AdvertiserDashboard() {
 
         <Link href="/dashboard/advertiser/active-tasks">
           <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-all cursor-pointer h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
             <CardContent className="relative flex flex-col items-center justify-center p-6 text-center h-full">
               <BarChart3 className="h-8 w-8 text-teal-600 mb-2" />
               <CardTitle className="text-teal-800 text-lg">
@@ -172,7 +172,7 @@ export default function AdvertiserDashboard() {
 
         <Link href="/dashboard/advertiser/task-history">
           <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-all cursor-pointer h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
             <CardContent className="relative flex flex-col items-center justify-center p-6 text-center h-full">
               <History className="h-8 w-8 text-teal-600 mb-2" />
               <CardTitle className="text-teal-800 text-lg">
@@ -185,7 +185,7 @@ export default function AdvertiserDashboard() {
 
         <Link href="/dashboard/advertiser/analytics">
           <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-all cursor-pointer h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
             <CardContent className="relative flex flex-col items-center justify-center p-6 text-center h-full">
               <PieChart className="h-8 w-8 text-teal-600 mb-2" />
               <CardTitle className="text-teal-800 text-lg">Analytics</CardTitle>
@@ -207,7 +207,7 @@ export default function AdvertiserDashboard() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Total Spent
@@ -223,7 +223,7 @@ export default function AdvertiserDashboard() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Active Campaigns
@@ -241,7 +241,7 @@ export default function AdvertiserDashboard() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Total Tasks
@@ -259,7 +259,7 @@ export default function AdvertiserDashboard() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Wallet Balance
@@ -277,7 +277,7 @@ export default function AdvertiserDashboard() {
 
           <motion.div variants={itemVariants}>
             <Card className="relative overflow-hidden border-teal-200 shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
               <CardHeader className="relative">
                 <CardTitle className="text-teal-800">
                   Campaign Performance

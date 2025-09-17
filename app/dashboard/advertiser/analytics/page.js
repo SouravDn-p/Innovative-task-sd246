@@ -161,7 +161,7 @@ export default function AdvertiserAnalyticsPage() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
           >
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Impressions
@@ -178,7 +178,7 @@ export default function AdvertiserAnalyticsPage() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Clicks
@@ -194,7 +194,7 @@ export default function AdvertiserAnalyticsPage() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   Conversions
@@ -210,7 +210,7 @@ export default function AdvertiserAnalyticsPage() {
             </Card>
 
             <Card className="relative overflow-hidden group border-teal-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100 transition-opacity"></div>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                 <CardTitle className="text-sm font-medium text-teal-800">
                   ROAS
@@ -229,7 +229,7 @@ export default function AdvertiserAnalyticsPage() {
           {/* Performance Chart */}
           <motion.div variants={itemVariants}>
             <Card className="relative overflow-hidden border-teal-200 shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
               <CardHeader className="relative">
                 <CardTitle className="text-teal-800">
                   Performance Overview
@@ -260,7 +260,7 @@ export default function AdvertiserAnalyticsPage() {
           {/* Campaign Performance */}
           <motion.div variants={itemVariants}>
             <Card className="relative overflow-hidden border-teal-200 shadow-md">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-30"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-cyan-50 opacity-100"></div>
               <CardHeader className="relative">
                 <CardTitle className="text-teal-800">
                   Campaign Performance
