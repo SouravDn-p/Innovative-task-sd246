@@ -140,7 +140,10 @@ export default function AdminKYCManagementPage() {
 
   // Utility functions
   const getStatusBadgeColor = (status) => {
-    switch (status) {
+    // Normalize the status to lowercase for comparison
+    const normalizedStatus = status?.toLowerCase();
+
+    switch (normalizedStatus) {
       case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "verified":
@@ -685,7 +688,9 @@ export default function AdminKYCManagementPage() {
                             >
                               View Details
                             </Button>
-                            {application.kycStatus === "pending" && (
+                            {application.kycStatus?.toLowerCase() ===
+                              "pending" ||
+                            application.paymentStatus === "paid" ? (
                               <>
                                 <Button
                                   size="sm"
@@ -696,6 +701,7 @@ export default function AdminKYCManagementPage() {
                                     setShowApprovalModal(true);
                                   }}
                                 >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
                                   Approve
                                 </Button>
                                 <Button
@@ -707,10 +713,11 @@ export default function AdminKYCManagementPage() {
                                     setShowRejectModal(true);
                                   }}
                                 >
+                                  <XCircle className="h-4 w-4 mr-1" />
                                   Reject
                                 </Button>
                               </>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                       </CardContent>
@@ -806,7 +813,9 @@ export default function AdminKYCManagementPage() {
                               <ExternalLink className="h-4 w-4 mr-1" />
                               View Page
                             </Button>
-                            {application.kycStatus === "pending" && (
+                            {application.kycStatus?.toLowerCase() ===
+                              "pending" ||
+                            application.paymentStatus === "paid" ? (
                               <>
                                 <Button
                                   size="sm"
@@ -833,7 +842,7 @@ export default function AdminKYCManagementPage() {
                                   Reject
                                 </Button>
                               </>
-                            )}
+                            ) : null}
                           </div>
                         </TableCell>
                       </TableRow>

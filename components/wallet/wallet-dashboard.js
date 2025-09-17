@@ -17,10 +17,16 @@ import {
   ArrowDownLeft,
   Clock,
   Plus,
+  Upload,
 } from "lucide-react";
 import { useGetWalletQuery, useGetTransactionsQuery } from "@/redux/api/api";
 
-export function WalletDashboard({ userType = "user" }) {
+export function WalletDashboard({
+  userType = "user",
+  onAddFunds,
+  onWithdraw,
+  onViewHistory,
+}) {
   const { data: walletData = {}, isLoading: walletLoading } =
     useGetWalletQuery("current-user-id");
   const { data: transactions = [], isLoading: transactionsLoading } =
@@ -81,31 +87,33 @@ export function WalletDashboard({ userType = "user" }) {
             <div>
               <p className="text-sm opacity-90">Available Balance</p>
               <p className="text-4xl font-bold">
-                ₹{walletData.balance.toFixed(2)}
+                ₹{(walletData?.balance || 0).toFixed(2)}
               </p>
-              {walletData.pendingEarnings > 0 && (
+              {(walletData?.pendingEarnings || 0) > 0 && (
                 <p className="text-sm opacity-75 mt-1">
-                  + ₹{walletData.pendingEarnings.toFixed(2)} pending
+                  + ₹{(walletData?.pendingEarnings || 0).toFixed(2)} pending
                 </p>
               )}
             </div>
             <Wallet className="h-12 w-12 opacity-80" />
           </div>
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button
               size="sm"
               variant="secondary"
               className="bg-white/20 hover:bg-white/30 text-white border-white/30"
               disabled={!canWithdraw}
+              onClick={onWithdraw}
             >
               <ArrowUpRight className="h-4 w-4 mr-2" />
               Withdraw
             </Button>
-            {userType === "advertiser" && (
+            {(userType === "advertiser" || userType === "user") && (
               <Button
                 size="sm"
                 variant="secondary"
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                onClick={onAddFunds}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Funds
@@ -115,8 +123,18 @@ export function WalletDashboard({ userType = "user" }) {
               size="sm"
               variant="secondary"
               className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              onClick={onViewHistory}
             >
               Transaction History
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              onClick={() => onAddFunds && onAddFunds("request")}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Submit Request
             </Button>
           </div>
         </CardContent>
@@ -133,13 +151,14 @@ export function WalletDashboard({ userType = "user" }) {
                   Withdrawal Requirements
                 </p>
                 <div className="mt-2 space-y-1 text-xs text-yellow-700 dark:text-yellow-300">
-                  {walletData.balance < walletData.minWithdrawal && (
+                  {(walletData?.balance || 0) <
+                    (walletData?.minWithdrawal || 0) && (
                     <p>
-                      • Minimum balance: ₹{walletData.minWithdrawal} (Current: ₹
-                      {walletData.balance.toFixed(2)})
+                      • Minimum balance: ₹{walletData?.minWithdrawal || 0}{" "}
+                      (Current: ₹{(walletData?.balance || 0).toFixed(2)})
                     </p>
                   )}
-                  {!walletData.kycStatus && <p>• Complete KYC verification</p>}
+                  {!walletData?.kycStatus && <p>• Complete KYC verification</p>}
                 </div>
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
@@ -147,7 +166,9 @@ export function WalletDashboard({ userType = "user" }) {
                     <span>
                       {Math.min(
                         100,
-                        (walletData.balance / walletData.minWithdrawal) * 100
+                        ((walletData?.balance || 0) /
+                          (walletData?.minWithdrawal || 1)) *
+                          100
                       ).toFixed(0)}
                       %
                     </span>
@@ -155,7 +176,9 @@ export function WalletDashboard({ userType = "user" }) {
                   <Progress
                     value={Math.min(
                       100,
-                      (walletData.balance / walletData.minWithdrawal) * 100
+                      ((walletData?.balance || 0) /
+                        (walletData?.minWithdrawal || 1)) *
+                        100
                     )}
                     className="h-2"
                   />
@@ -174,7 +197,7 @@ export function WalletDashboard({ userType = "user" }) {
               <div>
                 <p className="text-sm text-muted-foreground">Total Earnings</p>
                 <p className="text-2xl font-bold">
-                  ₹{walletData.totalEarnings.toFixed(2)}
+                  ₹{(walletData?.totalEarnings || 0).toFixed(2)}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
@@ -194,7 +217,7 @@ export function WalletDashboard({ userType = "user" }) {
                   Total Withdrawals
                 </p>
                 <p className="text-2xl font-bold">
-                  ₹{walletData.totalWithdrawals.toFixed(2)}
+                  ₹{(walletData?.totalWithdrawals || 0).toFixed(2)}
                 </p>
               </div>
               <TrendingDown className="h-8 w-8 text-blue-500" />
@@ -215,7 +238,7 @@ export function WalletDashboard({ userType = "user" }) {
                   Pending Earnings
                 </p>
                 <p className="text-2xl font-bold">
-                  ₹{walletData.pendingEarnings.toFixed(2)}
+                  ₹{(walletData?.pendingEarnings || 0).toFixed(2)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500" />
@@ -272,7 +295,7 @@ export function WalletDashboard({ userType = "user" }) {
                     }`}
                   >
                     {transaction.type === "credit" ? "+" : "-"}₹
-                    {transaction.amount.toFixed(2)}
+                    {(transaction.amount || 0).toFixed(2)}
                   </p>
                   <Badge className={getStatusColor(transaction.status)}>
                     {transaction.status}
@@ -282,7 +305,9 @@ export function WalletDashboard({ userType = "user" }) {
             ))}
           </div>
           <div className="mt-4 text-center">
-            <Button variant="outline">View All Transactions</Button>
+            <Button variant="outline" onClick={onViewHistory}>
+              View All Transactions
+            </Button>
           </div>
         </CardContent>
       </Card>

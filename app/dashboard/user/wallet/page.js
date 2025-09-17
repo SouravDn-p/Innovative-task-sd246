@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Wallet,
   ArrowUpRight,
@@ -50,8 +51,14 @@ import {
   ArrowLeft,
   X,
   Eye,
+  Plus,
+  Upload,
+  AlertTriangle,
+  CheckCircle as CheckCircleIcon,
 } from "lucide-react";
 import { useGetWalletQuery } from "@/redux/api/api";
+import { useToast } from "@/components/ui/use-toast";
+import Swal from "sweetalert2";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -70,6 +77,7 @@ const stagger = {
 export default function UserWalletPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
   // State management
   const [walletData, setWalletData] = useState(null);
@@ -81,6 +89,16 @@ export default function UserWalletPage() {
     hasNext: false,
     hasPrev: false,
   });
+
+  // Wallet request form state
+  const [showWalletRequestForm, setShowWalletRequestForm] = useState(false);
+  const [requestData, setRequestData] = useState({
+    amount: "",
+    description: "",
+    proofImage: null,
+  });
+  const [preview, setPreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -120,6 +138,124 @@ export default function UserWalletPage() {
   // Handle filter changes
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  // Handle wallet request input changes
+  const handleRequestInputChange = (field, value) => {
+    setRequestData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle file change for proof image
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setRequestData((prev) => ({ ...prev, proofImage: file }));
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Validate wallet request form
+  const isValidRequestForm = () => {
+    const minAmount = 100;
+    const maxAmount = 100000;
+    const amount = Number.parseFloat(requestData.amount) || 0;
+
+    return (
+      requestData.amount &&
+      amount >= minAmount &&
+      amount <= maxAmount &&
+      requestData.description.trim() &&
+      requestData.proofImage
+    );
+  };
+
+  // Submit wallet request
+  const submitWalletRequest = async (e) => {
+    e.preventDefault();
+
+    if (!isValidRequestForm()) {
+      toast({
+        title: "Invalid form",
+        description: "Please fill all required fields correctly",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("amount", requestData.amount);
+      formData.append("description", requestData.description);
+      formData.append("proofImage", requestData.proofImage);
+      formData.append("userType", "user");
+
+      const response = await fetch("/api/wallet/request", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Request Submitted",
+          text: "Your wallet funding request has been submitted successfully and is pending admin approval.",
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then(() => {
+          // Reset form and hide it
+          setRequestData({
+            amount: "",
+            description: "",
+            proofImage: null,
+          });
+          setPreview(null);
+          setShowWalletRequestForm(false);
+
+          // Refresh wallet data
+          refetch();
+        });
+      } else {
+        throw new Error(result.error || "Failed to submit request");
+      }
+    } catch (error) {
+      console.error("Error submitting wallet request:", error);
+      toast({
+        title: "Submission failed",
+        description: error.message || "Failed to submit wallet request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Apply search and date filters
@@ -337,9 +473,161 @@ export default function UserWalletPage() {
                 <p className="text-base sm:text-lg font-semibold">₹0.00</p>
               </div>
             </div>
+            {/* Add Balance Button */}
+            <div className="mt-4 sm:mt-6">
+              <Button
+                className="w-full sm:w-auto bg-white text-teal-600 hover:bg-white/90"
+                onClick={() => setShowWalletRequestForm(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Balance
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Wallet Request Form */}
+      {showWalletRequestForm && (
+        <motion.div variants={fadeInUp}>
+          <Card className="w-full">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-base sm:text-lg">
+                    Add Balance Request
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Submit a request with payment proof to add funds to your
+                    wallet
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowWalletRequestForm(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              <form onSubmit={submitWalletRequest} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Amount to Add (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                        ₹
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder="5000"
+                        value={requestData.amount}
+                        onChange={(e) =>
+                          handleRequestInputChange("amount", e.target.value)
+                        }
+                        className="pl-8"
+                        min="100"
+                        max="100000"
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Min: ₹100</span>
+                      <span>Max: ₹100,000</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Description *</label>
+                    <Input
+                      placeholder="Describe the source of funds..."
+                      value={requestData.description}
+                      onChange={(e) =>
+                        handleRequestInputChange("description", e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Proof of Payment *
+                  </label>
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="proofImage"
+                    />
+                    <label htmlFor="proofImage" className="cursor-pointer">
+                      {preview ? (
+                        <div className="flex flex-col items-center">
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            className="max-h-32 rounded-md mb-2 mx-auto"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Click to change image
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                          <p className="text-muted-foreground">
+                            Click to upload proof image
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPEG, PNG up to 5MB
+                          </p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                  {requestData.proofImage && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircleIcon className="h-4 w-4" />
+                      <span>{requestData.proofImage.name} selected</span>
+                    </div>
+                  )}
+                </div>
+
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="text-yellow-800">Important</AlertTitle>
+                  <AlertDescription className="text-yellow-700">
+                    Your request will be reviewed by an admin. Funds will be
+                    added to your wallet after approval. This process typically
+                    takes 24-48 hours.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowWalletRequestForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !isValidRequestForm()}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Request"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Filters */}
       <motion.div variants={fadeInUp}>

@@ -39,13 +39,19 @@ import {
   Download,
   AlertTriangle,
   Loader2,
+  Wallet,
+  CheckCircle,
+  XCircle,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
+import Swal from "sweetalert2";
 
 export default function AdminPayoutsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [transactions, setTransactions] = useState([]);
+  const [walletRequests, setWalletRequests] = useState([]); // New state for wallet requests
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -78,6 +84,14 @@ export default function AdminPayoutsPage() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  // Wallet request states
+  const [walletRequestsLoading, setWalletRequestsLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [approvalData, setApprovalData] = useState({
+    amount: "",
+    notes: "",
+  });
 
   // Redirect if not admin
   useEffect(() => {
@@ -126,10 +140,145 @@ export default function AdminPayoutsPage() {
     }
   };
 
+  // Fetch wallet requests
+  const fetchWalletRequests = async () => {
+    try {
+      setWalletRequestsLoading(true);
+      const response = await fetch("/api/admin/wallet-requests");
+      const data = await response.json();
+
+      if (response.ok) {
+        setWalletRequests(data.requests);
+      } else {
+        throw new Error(data.error || "Failed to fetch wallet requests");
+      }
+    } catch (err) {
+      console.error("Error fetching wallet requests:", err);
+    } finally {
+      setWalletRequestsLoading(false);
+    }
+  };
+
+  // Handle approval of wallet request
+  const handleApproveRequest = async (requestId) => {
+    if (!approvalData.amount || parseFloat(approvalData.amount) <= 0) {
+      Swal.fire({
+        title: "Invalid Amount",
+        text: "Please enter a valid amount",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/wallet-requests/${requestId}/approve`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: parseFloat(approvalData.amount),
+            notes: approvalData.notes,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Request Approved",
+          text: "Wallet funding request has been approved and funds added to user's wallet.",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+        fetchWalletRequests(); // Refresh requests
+        setSelectedRequest(null);
+        setApprovalData({ amount: "", notes: "" });
+      } else {
+        throw new Error(data.error || "Failed to approve request");
+      }
+    } catch (error) {
+      console.error("Error approving request:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "Failed to approve request",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  // Handle rejection of wallet request
+  const handleRejectRequest = async (requestId) => {
+    const { value: notes } = await Swal.fire({
+      title: "Reject Request",
+      text: "Please provide a reason for rejecting this request",
+      input: "textarea",
+      inputPlaceholder: "Enter rejection reason...",
+      showCancelButton: true,
+      confirmButtonText: "Reject",
+      cancelButtonText: "Cancel",
+    });
+
+    if (notes === undefined) return; // User cancelled
+
+    try {
+      const response = await fetch(
+        `/api/admin/wallet-requests/${requestId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ notes }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Request Rejected",
+          text: "Wallet funding request has been rejected.",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+        fetchWalletRequests(); // Refresh requests
+      } else {
+        throw new Error(data.error || "Failed to reject request");
+      }
+    } catch (error) {
+      console.error("Error rejecting request:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "Failed to reject request",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  // Get status badge for wallet requests
+  const getRequestStatusBadge = (status) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+    }
+  };
+
   // Initial fetch
   useEffect(() => {
     if (session?.user?.role === "admin") {
       fetchTransactions();
+      fetchWalletRequests(); // Fetch wallet requests on initial load
     }
   }, [
     session,
@@ -440,7 +589,7 @@ export default function AdminPayoutsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-violet-900">
-              {formatCurrency(periodRevenue.totalRevenue)}
+              {formatCurrency(revenue.totalRevenue)}
             </div>
             <div className="flex items-center mt-2">
               <Select value={revenuePeriod} onValueChange={setRevenuePeriod}>
@@ -501,6 +650,338 @@ export default function AdminPayoutsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Wallet Requests Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-teal-800">
+                <Wallet className="h-5 w-5" />
+                Wallet Funding Requests
+              </CardTitle>
+              <CardDescription>
+                Review and manage user wallet funding requests
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchWalletRequests}
+              disabled={walletRequestsLoading}
+            >
+              {walletRequestsLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Refresh"
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {walletRequestsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>Loading wallet requests...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : walletRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      No wallet requests found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  walletRequests.map((request) => (
+                    <TableRow key={request._id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{request.userName}</div>
+                          <div className="text-sm text-gray-500">
+                            {request.userEmail}
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className="mt-1 capitalize"
+                          >
+                            {request.userType}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ₹{request.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate">
+                          {request.description}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-500">
+                          {formatDate(request.createdAt)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getRequestStatusBadge(request.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {request.status === "pending" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedRequest(request);
+                                  setApprovalData({
+                                    amount: request.amount.toString(),
+                                    notes: "",
+                                  });
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => {
+                                  setSelectedRequest(request);
+                                  setApprovalData({
+                                    amount: request.amount.toString(),
+                                    notes: "",
+                                  });
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleRejectRequest(request._id)}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setApprovalData({
+                                  amount: request.amount.toString(),
+                                  notes:
+                                    request.adminNotes ||
+                                    request.rejectionReason ||
+                                    "",
+                                });
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Wallet Request Detail Modal */}
+      {selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">
+                  Wallet Request Details
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedRequest(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      User
+                    </label>
+                    <p className="font-medium">{selectedRequest.userName}</p>
+                    <p className="text-sm text-gray-500">
+                      {selectedRequest.userEmail}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      User Type
+                    </label>
+                    <Badge variant="secondary" className="capitalize">
+                      {selectedRequest.userType}
+                    </Badge>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      Amount Requested
+                    </label>
+                    <p className="font-medium">
+                      ₹{selectedRequest.amount.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      Status
+                    </label>
+                    <div className="mt-1">
+                      {getRequestStatusBadge(selectedRequest.status)}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Description
+                  </label>
+                  <p className="mt-1">{selectedRequest.description}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Proof of Payment
+                  </label>
+                  <div className="mt-2 border rounded-lg p-2">
+                    <img
+                      src={selectedRequest.proofImageUrl}
+                      alt="Proof"
+                      className="w-full h-auto max-h-64 object-contain rounded"
+                    />
+                  </div>
+                </div>
+
+                {selectedRequest.status === "pending" && (
+                  <div className="space-y-4 pt-4 border-t">
+                    <h4 className="font-medium">Process Request</h4>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="approvalAmount"
+                        className="text-sm font-medium"
+                      >
+                        Amount to Add
+                      </label>
+                      <Input
+                        id="approvalAmount"
+                        type="number"
+                        value={approvalData.amount}
+                        onChange={(e) =>
+                          setApprovalData({
+                            ...approvalData,
+                            amount: e.target.value,
+                          })
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="approvalNotes"
+                        className="text-sm font-medium"
+                      >
+                        Notes (Optional)
+                      </label>
+                      <textarea
+                        id="approvalNotes"
+                        value={approvalData.notes}
+                        onChange={(e) =>
+                          setApprovalData({
+                            ...approvalData,
+                            notes: e.target.value,
+                          })
+                        }
+                        placeholder="Add any notes for the user..."
+                        className="w-full p-2 border rounded-md"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleRejectRequest(selectedRequest._id)}
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          handleApproveRequest(selectedRequest._id)
+                        }
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Approve & Add Funds
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.status === "approved" &&
+                  selectedRequest.adminNotes && (
+                    <div className="pt-4 border-t">
+                      <label className="text-sm font-medium text-gray-500">
+                        Admin Notes
+                      </label>
+                      <p className="mt-1 text-sm">
+                        {selectedRequest.adminNotes}
+                      </p>
+                    </div>
+                  )}
+
+                {selectedRequest.status === "rejected" &&
+                  selectedRequest.rejectionReason && (
+                    <div className="pt-4 border-t">
+                      <label className="text-sm font-medium text-gray-500">
+                        Rejection Reason
+                      </label>
+                      <p className="mt-1 text-sm text-red-600">
+                        {selectedRequest.rejectionReason}
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>

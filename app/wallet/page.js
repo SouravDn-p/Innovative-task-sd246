@@ -7,6 +7,7 @@ import { WalletDashboard } from "@/components/wallet/wallet-dashboard";
 import { WithdrawalForm } from "@/components/wallet/withdrawal-form";
 import { AddFunds } from "@/components/wallet/add-funds";
 import { TransactionHistory } from "@/components/wallet/transaction-history";
+import { WalletRequestForm } from "@/components/wallet/wallet-request-form";
 
 export default function WalletPage() {
   const { data: session, status } = useSession();
@@ -38,11 +39,31 @@ export default function WalletPage() {
   const renderContent = () => {
     switch (currentView) {
       case "dashboard":
-        return <WalletDashboard userType={userType} />;
+        return (
+          <WalletDashboard
+            userType={userType}
+            onAddFunds={(view) => {
+              if (view === "request") {
+                setCurrentView("request-funds");
+              } else {
+                setCurrentView("add-funds");
+              }
+            }}
+            onWithdraw={() => setCurrentView("withdraw")}
+            onViewHistory={() => setCurrentView("history")}
+          />
+        );
       case "withdraw":
         return <WithdrawalForm onBack={() => setCurrentView("dashboard")} />;
       case "add-funds":
         return <AddFunds onBack={() => setCurrentView("dashboard")} />;
+      case "request-funds":
+        return (
+          <WalletRequestForm
+            onBack={() => setCurrentView("dashboard")}
+            userType={userType}
+          />
+        );
       case "history":
         return (
           <TransactionHistory onBack={() => setCurrentView("dashboard")} />
