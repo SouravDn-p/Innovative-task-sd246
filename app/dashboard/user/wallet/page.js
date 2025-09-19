@@ -59,6 +59,7 @@ import {
 import { useGetWalletQuery } from "@/redux/api/api";
 import { useToast } from "@/components/ui/use-toast";
 import Swal from "sweetalert2";
+import { WithdrawalForm } from "@/components/wallet/withdrawal-form";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -99,6 +100,9 @@ export default function UserWalletPage() {
   });
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Withdrawal form state
+  const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -473,14 +477,33 @@ export default function UserWalletPage() {
                 <p className="text-base sm:text-lg font-semibold">₹0.00</p>
               </div>
             </div>
-            {/* Add Balance Button */}
-            <div className="mt-4 sm:mt-6">
+            {/* Action Buttons */}
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3">
               <Button
                 className="w-full sm:w-auto bg-white text-teal-600 hover:bg-white/90"
                 onClick={() => setShowWalletRequestForm(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Balance
+              </Button>
+              <Button
+                className="w-full sm:w-auto bg-white text-teal-600 hover:bg-white/90"
+                onClick={() => {
+                  if (walletData?.balance >= 3000) {
+                    setShowWithdrawalForm(true);
+                  } else {
+                    Swal.fire({
+                      title: "Insufficient Balance",
+                      text: "You need a minimum balance of ₹3,000 to withdraw funds.",
+                      icon: "error",
+                      confirmButtonText: "OK"
+                    });
+                  }
+                }}
+                disabled={walletData?.balance < 3000}
+              >
+                <ArrowUpRight className="mr-2 h-4 w-4" />
+                Withdraw
               </Button>
             </div>
           </CardContent>
@@ -624,6 +647,39 @@ export default function UserWalletPage() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Withdrawal Form */}
+      {showWithdrawalForm && (
+        <motion.div variants={fadeInUp}>
+          <Card className="w-full">
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-base sm:text-lg">
+                    Withdraw Funds
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Request to withdraw funds from your wallet
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowWithdrawalForm(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <WithdrawalForm 
+                walletBalance={walletData?.balance || 0} 
+                onBack={() => setShowWithdrawalForm(false)} 
+              />
             </CardContent>
           </Card>
         </motion.div>

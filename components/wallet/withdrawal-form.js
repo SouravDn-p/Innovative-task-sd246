@@ -10,8 +10,11 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Wallet, CreditCard, Banknote, AlertTriangle, CheckCircle } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import Swal from "sweetalert2"
 
 export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
+  const { toast } = useToast()
   const [withdrawalData, setWithdrawalData] = useState({
     amount: "",
     method: "",
@@ -20,9 +23,12 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
     ifscCode: "",
     accountHolder: "",
     notes: "",
+    proofImage: null,
   })
 
+  const [preview, setPreview] = useState(null)
   const [step, setStep] = useState(1) // 1: Amount, 2: Method, 3: Confirmation
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const withdrawalFee = 25
   const minWithdrawal = 3000
@@ -30,6 +36,40 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
 
   const handleInputChange = (field, value) => {
     setWithdrawalData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, etc.)",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setWithdrawalData((prev) => ({ ...prev, proofImage: file }))
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const calculateNetAmount = () => {
@@ -42,10 +82,73 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
     return amount >= minWithdrawal && amount <= maxWithdrawal
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Withdrawal request:", withdrawalData)
-    // Handle withdrawal submission
+    
+    if (!withdrawalData.proofImage) {
+      toast({
+        title: "Proof required",
+        description: "Please upload proof of your bank account or UPI ID",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("amount", withdrawalData.amount)
+      formData.append("method", withdrawalData.method)
+      formData.append("upiId", withdrawalData.upiId || "")
+      formData.append("bankAccount", withdrawalData.bankAccount || "")
+      formData.append("ifscCode", withdrawalData.ifscCode || "")
+      formData.append("accountHolder", withdrawalData.accountHolder || "")
+      formData.append("notes", withdrawalData.notes || "")
+      formData.append("proofImage", withdrawalData.proofImage)
+
+      const response = await fetch("/api/wallet/withdraw", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        Swal.fire({
+          title: "Request Submitted",
+          text: "Your withdrawal request has been submitted successfully and is pending admin approval.",
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then(() => {
+          // Reset form and go back
+          setWithdrawalData({
+            amount: "",
+            method: "",
+            upiId: "",
+            bankAccount: "",
+            ifscCode: "",
+            accountHolder: "",
+            notes: "",
+            proofImage: null,
+          })
+          setPreview(null)
+          setStep(1)
+          onBack()
+        })
+      } else {
+        throw new Error(result.error || "Failed to submit request")
+      }
+    } catch (error) {
+      console.error("Error submitting withdrawal request:", error)
+      toast({
+        title: "Submission failed",
+        description: error.message || "Failed to submit withdrawal request",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const renderStepContent = () => {
@@ -241,6 +344,49 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
                   rows={3}
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="proofImage">Proof of Account *</Label>
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <Input
+                    id="proofImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="proofImage" className="cursor-pointer">
+                    {preview ? (
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={preview}
+                          alt="Preview"
+                          className="max-h-32 rounded-md mb-2 mx-auto"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Click to change image
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <Banknote className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-muted-foreground">
+                          Click to upload proof of account
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          JPEG, PNG up to 5MB
+                        </p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+                {withdrawalData.proofImage && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>{withdrawalData.proofImage.name} selected</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )
@@ -314,6 +460,16 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
                     <p className="text-sm text-muted-foreground">{withdrawalData.notes}</p>
                   </div>
                 )}
+                <div>
+                  <Label className="text-sm font-medium">Proof of Account</Label>
+                  {preview && (
+                    <img
+                      src={preview}
+                      alt="Proof"
+                      className="mt-2 max-h-48 rounded-md mx-auto"
+                    />
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -365,14 +521,19 @@ export function WithdrawalForm({ walletBalance = 2450.75, onBack }) {
                       (step === 2 && withdrawalData.method === "upi" && !withdrawalData.upiId) ||
                       (step === 2 &&
                         withdrawalData.method === "bank" &&
-                        (!withdrawalData.accountHolder || !withdrawalData.bankAccount || !withdrawalData.ifscCode))
+                        (!withdrawalData.accountHolder || !withdrawalData.bankAccount || !withdrawalData.ifscCode)) ||
+                      (step === 2 && !withdrawalData.proofImage)
                     }
                   >
                     Next
                   </Button>
                 ) : (
-                  <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                    Submit Withdrawal
+                  <Button 
+                    type="submit" 
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Withdrawal"}
                   </Button>
                 )}
               </div>
