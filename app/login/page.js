@@ -153,7 +153,20 @@ function LoginPage() {
   };
 
   const handleSocialSignIn = useCallback((provider) => {
-    signIn(provider, { callbackUrl: "/after-login" });
+    // Check if there's a referral ID in localStorage
+    let referrerId = null;
+    if (typeof window !== "undefined") {
+      referrerId = localStorage.getItem("referrerId");
+    }
+    
+    // Prepare state parameter with referral ID if it exists
+    const state = referrerId ? { referrerId } : {};
+    
+    signIn(provider, { 
+      callbackUrl: "/after-login", 
+      redirect: true,
+      ...(referrerId && { state: JSON.stringify(state) })
+    });
   }, []);
 
   if (session) {

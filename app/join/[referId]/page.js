@@ -1,19 +1,31 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function JoinReferralPage() {
   const router = useRouter();
+  const params = useParams();
+  const { referId } = params;
 
-  // Redirect to dashboard since we're handling referrals there now
+  // Store referral ID in localStorage and redirect to register page
   React.useEffect(() => {
-    router.push("/dashboard/user/referrals");
-  }, [router]);
+    if (referId) {
+      // Store the referral ID in localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("referrerId", referId);
+      }
+      // Redirect to registration page
+      router.push("/register");
+    } else {
+      // Redirect to dashboard if no referral ID
+      router.push("/dashboard/user/referrals");
+    }
+  }, [referId, router]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <p className="text-lg">Redirecting to referral dashboard...</p>
+      <p className="text-lg">Processing referral...</p>
     </div>
   );
 }

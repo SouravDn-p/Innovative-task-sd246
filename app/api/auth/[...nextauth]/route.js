@@ -108,7 +108,9 @@ export const authOptions = {
             let referrerId = null;
             if (account?.state) {
               try {
-                const state = JSON.parse(account.state);
+                // Decode the state parameter first
+                const decodedState = decodeURIComponent(account.state);
+                const state = JSON.parse(decodedState);
                 if (state?.referrerId) {
                   // Validate the referrerId
                   if (ObjectId.isValid(state.referrerId)) {
