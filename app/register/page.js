@@ -1,3 +1,5 @@
+// pages/register.tsx
+
 "use client";
 
 import React from "react";
@@ -257,14 +259,13 @@ function RegisterContent({ referrerId: propReferrerId }) {
       return;
     }
 
-    // Pass referrerId in the state parameter for Google OAuth
-    const state = referrerId ? { referrerId } : {};
-    console.log("Google OAuth state:", state);
+    // Pass referrerId as query param in callbackUrl for Google OAuth
+    const callbackUrl = referrerId ? `/after-login?referrerId=${referrerId}` : "/after-login";
+    console.log("Google OAuth callbackUrl:", callbackUrl);
 
     try {
       await signIn("google", {
-        callbackUrl: "/after-login",
-        state: JSON.stringify(state),
+        callbackUrl,
       });
     } catch (err) {
       setApiError("Google registration failed");

@@ -1,3 +1,5 @@
+// app/api/auth/register/route.js
+
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import client from "@/lib/mongoClient";

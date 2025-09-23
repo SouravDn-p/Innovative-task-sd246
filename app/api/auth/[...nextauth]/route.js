@@ -1,5 +1,3 @@
-// app/api/auth/[...nextauth]/route.js (or pages/api/auth/[...nextauth].js) - Modified to set role: null for new Google users
-
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -25,18 +23,13 @@ export const authOptions = {
         }
 
         const db = client.db("TaskEarnDB");
-        const user = await db
-          .collection("Users")
-          .findOne({ email: credentials.email });
+        const user = await db.collection("Users").findOne({ email: credentials.email });
 
         if (!user) {
           throw new Error("No user found");
         }
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error("Invalid password");
         }
@@ -71,128 +64,60 @@ export const authOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user, account, profile, trigger, session }) {
+    async jwt({ token, user, account }) {
       const db = client.db("TaskEarnDB");
 
-      // Validate user exists in database on each JWT callback
-      // This prevents deleted users from still having valid sessions
+      // Validate user exists in database
       if (token?.email) {
-        const existingUser = await db.collection("Users").findOne({
-          email: token.email,
-        });
+        const existingUser = await db.collection("Users").findOne({ email: token.email });
 
-        // If user doesn't exist in DB, invalidate the token
         if (!existingUser) {
-          throw new Error("User no longer exists");
-        }
+          // Handle first-time OAuth users
+          if (account?.provider === "google") {
+            const email = user?.email || token.email;
+            const name = user?.name || token.name;
+            const image = user?.image || token.picture;
 
-        // Ensure token role matches database role
-        // This prevents role manipulation attacks where a user might change their role in the token
-        token.id = existingUser._id.toString();
-        token.role = existingUser.role || null;
-        token.name = existingUser.name;
-        token.email = existingUser.email;
-        token.picture = existingUser.image || token.picture;
-      }
+            if (email) {
+              const { insertedId } = await db.collection("Users").insertOne({
+                name,
+                email,
+                image,
+                role: null, // Set to null for new Google users
+                kycStatus: "none",
+                kycPaidAt: null,
+                kycReferenceId: null,
+                isVerified: false,
+                isSuspended: false,
+                suspendedReason: null,
+                suspensionAt: null,
+                lastSuspensionCount: 0,
+                signupBonusEligibleAt: null,
+                referrerId: null, // Referrer will be set in /after-login
+                dailyReferralsCount: 0,
+                weeklyEarnAmount: 0,
+                walletBalance: 0,
+                totalEarn: 0,
+                Recent_Referrals: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
 
-      // Handle first-time OAuth users
-      if (account?.provider === "google") {
-        const email = user?.email || token.email;
-        const name = user?.name || token.name;
-        const image = user?.image || token.picture;
-
-        if (email) {
-          let existingUser = await db.collection("Users").findOne({ email });
-          if (!existingUser) {
-            // Check if there's a referrerId in the state parameter
-            let referrerId = null;
-            if (account?.state) {
-              try {
-                // Decode the state parameter first
-                const decodedState = decodeURIComponent(account.state);
-                const state = JSON.parse(decodedState);
-                if (state?.referrerId) {
-                  // Validate the referrerId
-                  if (ObjectId.isValid(state.referrerId)) {
-                    const referrer = await db.collection("Users").findOne({
-                      _id: new ObjectId(state.referrerId),
-                    });
-                    if (referrer) {
-                      referrerId = state.referrerId;
-                    }
-                  }
-                }
-              } catch (e) {
-                console.error("Error parsing OAuth state:", e);
-              }
-            }
-
-            const { insertedId } = await db.collection("Users").insertOne({
-              name,
-              email,
-              image,
-              role: null, // Set to null for new Google users so they must select a role
-              kycStatus: "none",
-              kycPaidAt: null,
-              kycReferenceId: null,
-              isVerified: false,
-              isSuspended: false,
-              suspendedReason: null,
-              suspensionAt: null,
-              lastSuspensionCount: 0,
-              signupBonusEligibleAt: null,
-              referrerId: referrerId, // Set referrerId if valid
-              dailyReferralsCount: 0,
-              weeklyEarnAmount: 0,
-              walletBalance: 0,
-              totalEarn: 0,
-              Recent_Referrals: [],
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-
-            token.id = insertedId.toString();
-            token.role = null; // Ensure role is null so user must select one
-
-            // If we have a valid referrer, update their referral records
-            if (referrerId) {
-              try {
-                const referralEntry = {
-                  name: name,
-                  email: email,
-                  joinDate: new Date().toISOString(),
-                  referralDate: new Date().toISOString(),
-                  status: "Active",
-                  kycStatus: "Not Verified",
-                  earned: "₹0",
-                  referredUserId: insertedId.toString(),
-                };
-
-                await db.collection("Users").updateOne(
-                  { _id: new ObjectId(referrerId) },
-                  {
-                    $push: {
-                      Recent_Referrals: {
-                        $each: [referralEntry],
-                        $slice: -10,
-                      },
-                    },
-                    $inc: { totalReferralsCount: 1 },
-                    $set: { updatedAt: new Date().toISOString() },
-                  }
-                );
-              } catch (err) {
-                console.error("Error updating referrer records:", err);
-                // Don't fail the registration if referrer update fails
-              }
+              token.id = insertedId.toString();
+              token.role = null;
+              token.name = name;
+              token.email = email;
+              token.picture = image;
             }
           } else {
-            token.id = existingUser._id.toString();
-            token.role = existingUser.role || null; // Keep existing role or null
+            throw new Error("User no longer exists");
           }
-          token.name = name || existingUser?.name;
-          token.email = email || existingUser?.email;
-          token.picture = image || existingUser?.image;
+        } else {
+          token.id = existingUser._id.toString();
+          token.role = existingUser.role || null;
+          token.name = existingUser.name;
+          token.email = existingUser.email;
+          token.picture = existingUser.image || token.picture;
         }
       }
 
@@ -209,28 +134,21 @@ export const authOptions = {
     },
 
     async session({ session, token }) {
-      // Validate user exists in database on each session callback as well
       const db = client.db("TaskEarnDB");
 
       if (token?.email) {
-        const existingUser = await db.collection("Users").findOne({
-          email: token.email,
-        });
+        const existingUser = await db.collection("Users").findOne({ email: token.email });
 
-        // If user doesn't exist in DB, invalidate the session
         if (!existingUser) {
           throw new Error("User no longer exists");
         }
 
-        // Ensure session role matches database role
-        // This prevents role manipulation attacks where a user might change their role in the token
         session.user.id = existingUser._id.toString();
         session.user.role = existingUser.role || null;
         session.user.name = existingUser.name;
         session.user.email = existingUser.email;
         session.user.image = existingUser.image || token.picture;
       } else {
-        // Fallback to token data if no email in token (shouldn't happen in normal flow)
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.name = token.name;
