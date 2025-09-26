@@ -162,6 +162,8 @@ export const api = createApi({
       // Transform error response to ensure proper error handling
       transformErrorResponse: (response, meta, arg) => {
         console.log("KYC update error response:", response);
+        console.log("Request metadata:", meta);
+        console.log("Request argument:", arg);
         // Return the error data as-is so it can be handled by the component
         return response;
       },
@@ -173,7 +175,7 @@ export const api = createApi({
         formData.append("documentType", documentType);
 
         return {
-          url: "user/kyc-verification",
+          url: "upload", // Fixed: was "user/kyc-verification", now "upload"
           method: "POST",
           body: formData,
           // Don't set Content-Type - let browser set multipart/form-data

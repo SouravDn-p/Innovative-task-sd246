@@ -144,6 +144,12 @@ export async function POST(req) {
   let retryCount = 0;
   const maxRetries = 3;
 
+  // Log the request headers for debugging
+  console.log("Request headers:");
+  for (const [key, value] of req.headers.entries()) {
+    console.log(`${key}: ${value}`);
+  }
+
   while (retryCount <= maxRetries) {
     try {
       const token = await getToken({
@@ -166,15 +172,40 @@ export async function POST(req) {
       let paymentStatus = null;
       let submitForReview = null;
 
-      // Try to parse as FormData first (for file uploads)
-      try {
-        const formData = await req.formData();
-        documentType = formData.get("documentType");
-        file = formData.get("file");
-        paymentStatus = formData.get("paymentStatus");
-        submitForReview = formData.get("submitForReview");
-      } catch (formDataError) {
-        // If FormData parsing fails, try JSON (for URL or other updates)
+      // Check content type to determine parsing method
+      const contentType = req.headers.get("content-type") || "";
+
+      // Log the content type for debugging
+      console.log("Content-Type header:", contentType);
+
+      // More robust content type checking
+      if (contentType.startsWith("multipart/form-data")) {
+        // FormData parsing for file uploads
+        try {
+          const formData = await req.formData();
+          documentType = formData.get("documentType");
+          file = formData.get("file");
+          paymentStatus = formData.get("paymentStatus");
+          submitForReview = formData.get("submitForReview");
+
+          // Log parsed FormData values for debugging
+          console.log("Parsed FormData values:", {
+            documentType,
+            file: file ? "File present" : "No file",
+            paymentStatus,
+            submitForReview,
+          });
+        } catch (formDataError) {
+          console.error("FormData parsing error:", formDataError);
+          return new Response(
+            JSON.stringify({
+              message: "Invalid FormData format.",
+            }),
+            { status: 400 }
+          );
+        }
+      } else {
+        // Default to JSON parsing for other updates
         try {
           const jsonBody = await req.json();
           documentType = jsonBody.documentType || null;
@@ -184,10 +215,27 @@ export async function POST(req) {
           uploadedAt = jsonBody.uploadedAt || null;
           paymentStatus = jsonBody.paymentStatus || null;
           submitForReview = jsonBody.submitForReview || null;
+
+          // Log parsed JSON values for debugging
+          console.log("Parsed JSON values:", {
+            documentType,
+            url,
+            name,
+            size,
+            uploadedAt,
+            paymentStatus,
+            submitForReview,
+          });
         } catch (jsonError) {
+          // Log the error for debugging
+          console.error("JSON parsing error:", jsonError);
+
+          // If JSON parsing fails, return a more specific error
           return new Response(
             JSON.stringify({
               message: "Invalid request format. Expected FormData or JSON.",
+              error: jsonError.message || "Failed to parse request body",
+              contentType: contentType,
             }),
             { status: 400 }
           );
